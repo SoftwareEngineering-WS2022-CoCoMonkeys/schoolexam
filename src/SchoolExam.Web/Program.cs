@@ -1,13 +1,10 @@
-using System.IO;
 using Common.Infrastructure.EFAbstractions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using QuestPDF.Fluent;
 using SchoolExam.Core.Domain.CourseAggregate;
 using SchoolExam.Infrastructure.DataContext;
-using SchoolExam.Infrastructure.PdfGeneration;
 using SchoolExam.Infrastructure.Repository;
 using SchoolExam.Web.Mapping;
 
