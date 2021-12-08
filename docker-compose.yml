@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  school-exam-web:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "55011:80"
+    depends_on:
+      - postgres
+        
+  postgres:
+    image: postgres
+    restart: always
+    hostname: "postgres-develop"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=school_exam
+    ports:
+      - "5433:5432"
+    expose:
+      - "5433"
+    volumes:
+      - school-exam-data:/var/lib/postgresql/data
+
+volumes:
+  school-exam-data:
