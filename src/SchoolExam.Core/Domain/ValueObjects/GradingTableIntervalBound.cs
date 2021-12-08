@@ -21,7 +21,7 @@ namespace SchoolExam.Core.Domain.ValueObjects
                 return 0;
             if (Points == other.Points)
                 return Type == GradingTableIntervalBoundType.Inclusive ? 1 : -1;
-            return Points.CompareTo(other);
+            return Points.CompareTo(other.Points);
         }
 
         public override bool Equals(object? obj)

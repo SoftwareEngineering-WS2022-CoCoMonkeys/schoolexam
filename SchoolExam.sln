@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolExam.Web", "src\Schoo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Infrastructure", "src\Common.Infrastructure\Common.Infrastructure.csproj", "{FDEAA2AB-0485-4A0E-89F7-DEC04EE33B3D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolExam.ModuleTests", "test\SchoolExam.ModuleTests\SchoolExam.ModuleTests.csproj", "{36A1A1FA-2ACA-4706-9246-4731225BF0E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,7 @@ Global
 		{BF162664-892F-4E20-B518-DEBF8EF15B37} = {5A6517C0-65EB-4BA4-AC5C-0967195E8830}
 		{D2659A96-085A-4A1F-9C0F-927AF984CF16} = {5A6517C0-65EB-4BA4-AC5C-0967195E8830}
 		{FDEAA2AB-0485-4A0E-89F7-DEC04EE33B3D} = {5A6517C0-65EB-4BA4-AC5C-0967195E8830}
+		{36A1A1FA-2ACA-4706-9246-4731225BF0E2} = {31AA648D-39AC-4AB4-A8F6-987C4B18DCFB}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A729D1A1-32F1-40BF-86F1-82AC2F3F11F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -47,5 +50,9 @@ Global
 		{FDEAA2AB-0485-4A0E-89F7-DEC04EE33B3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDEAA2AB-0485-4A0E-89F7-DEC04EE33B3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDEAA2AB-0485-4A0E-89F7-DEC04EE33B3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36A1A1FA-2ACA-4706-9246-4731225BF0E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36A1A1FA-2ACA-4706-9246-4731225BF0E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36A1A1FA-2ACA-4706-9246-4731225BF0E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36A1A1FA-2ACA-4706-9246-4731225BF0E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
