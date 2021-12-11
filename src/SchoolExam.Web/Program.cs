@@ -1,10 +1,13 @@
 using Common.Infrastructure.EFAbstractions;
-using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using SchoolExam.Application.Authentication;
+using SchoolExam.Application.QrCode;
 using SchoolExam.Core.Domain.CourseAggregate;
+using SchoolExam.Core.UserManagement.UserAggregate;
+using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Infrastructure.DataContext;
+using SchoolExam.Infrastructure.QrCode;
 using SchoolExam.Infrastructure.Repository;
 using SchoolExam.Web.Mapping;
 
@@ -17,10 +20,25 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(SchoolExamMappingProfile));
 
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+});
+
 builder.Services.AddDbContext<SchoolExamDbContext>();
+builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddSingleton<IDbConnectionConfiguration, DbConnectionConfiguration>();
+builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
+builder.Services.AddSingleton<IQrCodeGenerator, QRCoderQrCodeGenerator>();
+builder.Services.AddSingleton<IQrCodeDataGenerator, RandomQrCodeDataGenerator>();
 builder.Services.AddTransient<SchoolExamDataContext>();
 builder.Services.AddTransient<ICourseRepository, CourseRepository>();
+builder.Services.AddTransient<IUserRepository, UserRepository>();
 
 var app = builder.Build();
 
@@ -39,6 +57,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

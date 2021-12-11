@@ -1,22 +1,16 @@
-using System.Collections.Generic;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using SchoolExam.Core.Domain.CourseAggregate;
 
 namespace SchoolExam.Web.Course
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class CourseController : ControllerBase
+    public class CourseController : ApiController<CourseController>
     {
-        private readonly ILogger<CourseController> _logger;
         private readonly IMapper _mapper;
         private readonly ICourseRepository _courseRepository;
 
-        public CourseController(ILogger<CourseController> logger, IMapper mapper, ICourseRepository courseRepository)
+        public CourseController(ILogger<CourseController> logger, IMapper mapper, ICourseRepository courseRepository) : base(logger)
         {
-            _logger = logger;
             _mapper = mapper;
             _courseRepository = courseRepository;
         }

@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Common.Infrastructure\Common.Infrastructure.csproj" />
+      <ProjectReference Include="..\SchoolExam.Application\SchoolExam.Application.csproj" />
       <ProjectReference Include="..\SchoolExam.Core\SchoolExam.Core.csproj" />
     </ItemGroup>
 
@@ -21,6 +22,7 @@
       <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.0" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0" />
       <PackageReference Include="QRCoder" Version="1.4.2" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.10.0" />
       <PackageReference Include="System.IO" Version="4.3.0" />
     </ItemGroup>
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using Common.Infrastructure.EFAbstractions;
 using Microsoft.EntityFrameworkCore;
+using SchoolExam.Application.Authentication;
 using SchoolExam.Core.Domain.CourseAggregate;
 using SchoolExam.Core.Domain.ExamAggregate;
 using SchoolExam.Core.Domain.PersonAggregate;
@@ -10,11 +11,14 @@ using SchoolExam.Core.Domain.SchoolAggregate;
 using SchoolExam.Core.Domain.SubmissionAggregate;
 using Task = SchoolExam.Core.Domain.TaskAggregate.Task;
 using SchoolExam.Core.Domain.ValueObjects;
+using SchoolExam.Core.UserManagement.UserAggregate;
 
 namespace SchoolExam.Infrastructure.DataContext
 {
     public class SchoolExamDbContext : DbContextBase
     {
+        private readonly IPasswordHasher _passwordHasher;
+
         public DbSet<Course> Courses { get; set; }
         public DbSet<Exam> Exams { get; set; }
         public DbSet<School> Schools { get; set; }
@@ -22,9 +26,12 @@ namespace SchoolExam.Infrastructure.DataContext
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<LegalGuardian> LegalGuardians { get; set; }
         public DbSet<Task> Tasks { get; set; }
+        public DbSet<User> Users { get; set; }
 
-        public SchoolExamDbContext(IDbConnectionConfiguration configuration) : base(configuration)
+        public SchoolExamDbContext(IDbConnectionConfiguration configuration, IPasswordHasher passwordHasher) : base(
+            configuration)
         {
+            _passwordHasher = passwordHasher;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -103,7 +110,7 @@ namespace SchoolExam.Infrastructure.DataContext
                     y.Property(z => z.Y).HasColumnName("EndY");
                 });
             });
-            
+
             modelBuilder.Entity<ExamBooklet>().ToTable("ExamBooklet");
             modelBuilder.Entity<ExamBooklet>().HasKey(x => x.Id);
             modelBuilder.Entity<ExamBooklet>().HasMany(x => x.Pages);
@@ -139,8 +146,15 @@ namespace SchoolExam.Infrastructure.DataContext
             modelBuilder.Entity<Input>().ToTable("Input");
             modelBuilder.Entity<Input>().HasKey(x => x.Id);
             modelBuilder.Entity<Input>().HasDiscriminator();
-            
+
             modelBuilder.Entity<TextInput>();
+
+            modelBuilder.Entity<User>().ToTable("User");
+            modelBuilder.Entity<User>().HasKey(x => x.Id);
+            modelBuilder.Entity<User>().HasOne<Person>().WithOne().HasForeignKey<User>(x => x.PersonId)
+                .IsRequired(false);
+            modelBuilder.Entity<User>().HasData(new User(Guid.NewGuid(), "admin", _passwordHasher.HashPassword("admin"),
+                Roles.Administrator, null));
         }
 
         private void OwnsAddress<TEntity>(ModelBuilder modelBuilder,
