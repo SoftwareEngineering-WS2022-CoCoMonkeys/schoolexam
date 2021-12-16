@@ -1,6 +1,4 @@
-using System;
-
-namespace SchoolExam.SharedKernel
+namespace SchoolExam.Util
 {
     public class EntityBase<TIdentity> : IEntity<TIdentity>
     {

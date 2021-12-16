@@ -4,6 +4,7 @@ using System.Linq;
 using SchoolExam.Core.Domain.CourseAggregate;
 using SchoolExam.Core.Domain.SchoolAggregate;
 using SchoolExam.Core.Domain.ValueObjects;
+using SchoolExam.Core.UserManagement.UserAggregate;
 
 namespace SchoolExam.Core.Domain.PersonAggregate
 {
@@ -21,11 +22,13 @@ namespace SchoolExam.Core.Domain.PersonAggregate
         {
         }
 
-        public Teacher(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address) : base(id,
-            firstName, lastName, dateOfBirth, address)
+        public Teacher(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address,
+            string emailAddress) : base(id, firstName, lastName, dateOfBirth, address, emailAddress)
         {
             _courses = new List<Course>();
             _schools = new List<School>();
         }
+
+        public override string GetRole() => Roles.Teacher;
     }
 }

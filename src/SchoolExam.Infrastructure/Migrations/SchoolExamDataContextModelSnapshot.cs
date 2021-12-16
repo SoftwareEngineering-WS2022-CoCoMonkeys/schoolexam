@@ -184,6 +184,10 @@ namespace SchoolExam.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -368,6 +372,44 @@ namespace SchoolExam.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Task", (string)null);
+                });
+
+            modelBuilder.Entity("SchoolExam.Core.UserManagement.UserAggregate.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId")
+                        .IsUnique();
+
+                    b.ToTable("User", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("640b0338-f0d0-4033-9c13-9f021417cae7"),
+                            Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
+                            Role = "Administrator",
+                            Username = "admin"
+                        });
                 });
 
             modelBuilder.Entity("SchoolTeacher", b =>
@@ -807,6 +849,13 @@ namespace SchoolExam.Infrastructure.Migrations
                     b.HasOne("SchoolExam.Core.Domain.SubmissionAggregate.Submission", null)
                         .WithMany("Pages")
                         .HasForeignKey("SubmissionId");
+                });
+
+            modelBuilder.Entity("SchoolExam.Core.UserManagement.UserAggregate.User", b =>
+                {
+                    b.HasOne("SchoolExam.Core.Domain.PersonAggregate.Person", null)
+                        .WithOne()
+                        .HasForeignKey("SchoolExam.Core.UserManagement.UserAggregate.User", "PersonId");
                 });
 
             modelBuilder.Entity("SchoolTeacher", b =>

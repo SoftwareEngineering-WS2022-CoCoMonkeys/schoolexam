@@ -1,4 +1,4 @@
-﻿namespace SchoolExam.SharedKernel
+﻿namespace SchoolExam.Util
 {
     public interface IEntity<out TIdentity>
     {

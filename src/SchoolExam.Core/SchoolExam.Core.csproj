@@ -8,10 +8,15 @@
 
     <ItemGroup>
       <Folder Include="Domain\ExamArchiveAggregate" />
+      <Folder Include="UserManagement\ValueObjects" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SchoolExam.SharedKernel\SchoolExam.SharedKernel.csproj" />
+      <ProjectReference Include="..\SchoolExam.Util\SchoolExam.Util.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Domain\ValueObjects\QrCode.cs" />
     </ItemGroup>
 
 </Project>

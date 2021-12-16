@@ -1,6 +1,6 @@
 using System;
 using SchoolExam.Core.Domain.ValueObjects;
-using SchoolExam.SharedKernel;
+using SchoolExam.Util;
 
 namespace SchoolExam.Core.Domain.PersonAggregate
 {
@@ -10,17 +10,22 @@ namespace SchoolExam.Core.Domain.PersonAggregate
         public string LastName { get; set; }
         public DateTime DateOfBirth { get; set; }
         public Address? Address { get; set; }
+        public string EmailAddress { get; set; }
+        
 
         protected Person(Guid id) : base(id)
         {
         }
         
-        public Person(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address) : this(id)
+        public Person(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address, string emailAddress) : this(id)
         {
             FirstName = firstName;
             LastName = lastName;
             DateOfBirth = dateOfBirth;
             Address = address;
+            EmailAddress = emailAddress;
         }
+
+        public abstract string GetRole();
     }
 }
