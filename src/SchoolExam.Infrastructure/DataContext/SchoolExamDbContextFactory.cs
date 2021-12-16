@@ -1,9 +1,7 @@
-using System;
-using Common.Infrastructure.EFAbstractions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using SchoolExam.Application.Authentication;
 using SchoolExam.Infrastructure.Authentication;
+using SchoolExam.Util.EFAbstractions;
 
 namespace SchoolExam.Infrastructure.DataContext
 {

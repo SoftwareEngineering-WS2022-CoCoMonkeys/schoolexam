@@ -1,4 +1,4 @@
-namespace Common.Infrastructure.EFAbstractions
+namespace SchoolExam.Util.EFAbstractions
 {
     public enum DbTechnology
     {

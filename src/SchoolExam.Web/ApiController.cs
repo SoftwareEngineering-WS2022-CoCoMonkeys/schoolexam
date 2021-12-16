@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Core.UserManagement.UserAggregate;
-using SchoolExam.SharedKernel.Extensions;
+using SchoolExam.Util.Extensions;
 
 namespace SchoolExam.Web;
 

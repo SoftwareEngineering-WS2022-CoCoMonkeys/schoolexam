@@ -7,12 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Common.Infrastructure\Common.Infrastructure.csproj" />
       <ProjectReference Include="..\SchoolExam.Application\SchoolExam.Application.csproj" />
       <ProjectReference Include="..\SchoolExam.Core\SchoolExam.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="BCrypt.Net-Next" Version="4.0.2" />
       <PackageReference Include="itext7" Version="7.2.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
@@ -20,7 +20,7 @@
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.0" />
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.1" />
       <PackageReference Include="QRCoder" Version="1.4.2" />
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.10.0" />
       <PackageReference Include="System.IO" Version="4.3.0" />

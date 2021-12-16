@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SchoolExam.SharedKernel\SchoolExam.SharedKernel.csproj" />
+      <ProjectReference Include="..\SchoolExam.Util\SchoolExam.Util.csproj" />
     </ItemGroup>
 
     <ItemGroup>

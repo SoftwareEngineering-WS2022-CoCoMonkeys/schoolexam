@@ -1,4 +1,3 @@
-using Common.Infrastructure.EFAbstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using SchoolExam.Application.Authentication;
@@ -9,6 +8,7 @@ using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Infrastructure.DataContext;
 using SchoolExam.Infrastructure.QrCode;
 using SchoolExam.Infrastructure.Repository;
+using SchoolExam.Util.EFAbstractions;
 using SchoolExam.Web.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);

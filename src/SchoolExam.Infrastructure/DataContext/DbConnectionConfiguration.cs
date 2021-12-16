@@ -1,4 +1,4 @@
-using Common.Infrastructure.EFAbstractions;
+using SchoolExam.Util.EFAbstractions;
 
 namespace SchoolExam.Infrastructure.DataContext
 {

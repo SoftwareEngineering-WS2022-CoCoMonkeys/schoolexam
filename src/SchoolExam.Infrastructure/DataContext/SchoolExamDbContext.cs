@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using Common.Infrastructure.EFAbstractions;
 using Microsoft.EntityFrameworkCore;
 using SchoolExam.Application.Authentication;
 using SchoolExam.Core.Domain.CourseAggregate;
@@ -12,6 +9,7 @@ using SchoolExam.Core.Domain.SubmissionAggregate;
 using Task = SchoolExam.Core.Domain.TaskAggregate.Task;
 using SchoolExam.Core.Domain.ValueObjects;
 using SchoolExam.Core.UserManagement.UserAggregate;
+using SchoolExam.Util.EFAbstractions;
 
 namespace SchoolExam.Infrastructure.DataContext
 {

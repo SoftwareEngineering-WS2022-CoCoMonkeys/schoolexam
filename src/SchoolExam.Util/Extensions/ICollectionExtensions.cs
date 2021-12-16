@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace SchoolExam.SharedKernel.Extensions
+namespace SchoolExam.Util.Extensions
 {
     public static class CollectionExtensions
     {

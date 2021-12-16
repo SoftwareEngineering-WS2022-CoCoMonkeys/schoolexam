@@ -1,8 +1,4 @@
-using System.Linq;
-using System.Threading.Tasks;
-using SchoolExam.SharedKernel;
-
-namespace Common.Infrastructure.EFAbstractions
+namespace SchoolExam.Util.EFAbstractions
 {
     public abstract class DataContextBase<TContext> : IDataContext where TContext : DbContextBase
     {

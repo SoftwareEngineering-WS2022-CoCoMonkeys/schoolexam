@@ -1,7 +1,4 @@
-using System.Threading.Tasks;
-using SchoolExam.SharedKernel;
-
-namespace Common.Infrastructure.EFAbstractions
+namespace SchoolExam.Util.EFAbstractions
 {
     public interface IDataContext
     {

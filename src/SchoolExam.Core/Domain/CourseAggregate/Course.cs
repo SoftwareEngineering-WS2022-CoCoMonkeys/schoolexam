@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using SchoolExam.Core.Domain.PersonAggregate;
 using SchoolExam.Core.Domain.ValueObjects;
-using SchoolExam.SharedKernel;
+using SchoolExam.Util;
 
 namespace SchoolExam.Core.Domain.CourseAggregate
 {

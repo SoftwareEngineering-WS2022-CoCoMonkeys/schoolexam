@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using SchoolExam.Core.Domain.ValueObjects;
-using SchoolExam.SharedKernel;
-using SchoolExam.SharedKernel.Extensions;
+using SchoolExam.Util;
+using SchoolExam.Util.Extensions;
 
 namespace SchoolExam.Core.Domain.ExamAggregate
 {

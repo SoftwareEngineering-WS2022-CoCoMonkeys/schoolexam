@@ -1,12 +1,10 @@
-using System.Linq;
-using System.Threading.Tasks;
-using Common.Infrastructure.EFAbstractions;
 using Microsoft.EntityFrameworkCore;
 using SchoolExam.Core.Domain.CourseAggregate;
 using SchoolExam.Core.Domain.ExamAggregate;
 using SchoolExam.Core.Domain.PersonAggregate;
 using SchoolExam.Core.Domain.SchoolAggregate;
 using SchoolExam.Core.UserManagement.UserAggregate;
+using SchoolExam.Util.EFAbstractions;
 using Task = SchoolExam.Core.Domain.TaskAggregate.Task;
 
 namespace SchoolExam.Infrastructure.DataContext

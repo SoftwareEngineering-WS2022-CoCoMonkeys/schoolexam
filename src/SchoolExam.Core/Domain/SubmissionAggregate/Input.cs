@@ -1,5 +1,5 @@
 using System;
-using SchoolExam.SharedKernel;
+using SchoolExam.Util;
 
 namespace SchoolExam.Core.Domain.SubmissionAggregate
 {

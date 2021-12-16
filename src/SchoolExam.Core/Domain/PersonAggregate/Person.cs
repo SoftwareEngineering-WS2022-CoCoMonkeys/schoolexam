@@ -1,6 +1,6 @@
 using System;
 using SchoolExam.Core.Domain.ValueObjects;
-using SchoolExam.SharedKernel;
+using SchoolExam.Util;
 
 namespace SchoolExam.Core.Domain.PersonAggregate
 {
