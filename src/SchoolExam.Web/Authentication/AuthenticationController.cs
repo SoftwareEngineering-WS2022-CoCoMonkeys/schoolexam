@@ -1,10 +1,7 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using SchoolExam.Application.Authentication;
-using SchoolExam.Core.UserManagement.UserAggregate;
+using SchoolExam.Application.Repositories;
 
 namespace SchoolExam.Web.Authentication;
 

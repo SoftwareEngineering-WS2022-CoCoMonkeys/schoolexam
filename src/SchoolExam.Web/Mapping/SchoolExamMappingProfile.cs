@@ -1,4 +1,3 @@
-using System.Linq;
 using AutoMapper;
 using SchoolExam.Web.Course;
 
@@ -8,9 +7,13 @@ namespace SchoolExam.Web.Mapping
     {
         public SchoolExamMappingProfile()
         {
-            CreateMap<Core.Domain.CourseAggregate.Course, CourseDto>()
+            CreateMap<Domain.Entities.CourseAggregate.Course, CourseReadModelBase>()
+                .Include<Domain.Entities.CourseAggregate.Course, CourseReadModelStudent>()
+                .Include<Domain.Entities.CourseAggregate.Course, CourseReadModelTeacher>()
                 .ForMember(dst => dst.Subject, opt => opt.PreCondition(src => src.Subject != null))
-                .ForMember(dst => dst.Subject, opt => opt.MapFrom(src => src.Subject!.Name))
+                .ForMember(dst => dst.Subject, opt => opt.MapFrom(src => src.Subject!.Name));
+            CreateMap<Domain.Entities.CourseAggregate.Course, CourseReadModelStudent>();
+            CreateMap<Domain.Entities.CourseAggregate.Course, CourseReadModelTeacher>()
                 .ForMember(dst => dst.StudentCount, opt => opt.MapFrom(src => src.StudentIds.Count()));
         }
     }

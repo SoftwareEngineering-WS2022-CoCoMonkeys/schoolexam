@@ -1,14 +1,20 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using SchoolExam.Application.Authentication;
+using SchoolExam.Application.DataContext;
 using SchoolExam.Application.QrCode;
-using SchoolExam.Core.Domain.CourseAggregate;
-using SchoolExam.Core.UserManagement.UserAggregate;
+using SchoolExam.Application.Repositories;
+using SchoolExam.Domain.Base;
+using SchoolExam.Domain.Entities.CourseAggregate;
+using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Infrastructure.DataContext;
 using SchoolExam.Infrastructure.QrCode;
-using SchoolExam.Infrastructure.Repository;
-using SchoolExam.Util.EFAbstractions;
+using SchoolExam.Infrastructure.Repositories;
+using SchoolExam.Persistence.Base;
+using SchoolExam.Persistence.DataContext;
+using SchoolExam.Web.Authorization;
+using SchoolExam.Web.Course;
 using SchoolExam.Web.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,23 +36,35 @@ builder.Services.AddAuthentication(x =>
     x.SaveToken = true;
 });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(CourseController.CourseTeacherPolicyName, policy =>
+    {
+        policy.RequireRole(Role.Teacher);
+        policy.AddRequirements(new OwnerRequirement<Course>(course => course.TeacherIds,
+            CourseController.CourseIdParameterName, Course.TeachersName));
+    });
+    options.AddPolicy(CourseController.CourseStudentPolicyName, policy =>
+    {
+        policy.RequireRole(Role.Student);
+        policy.AddRequirements(new OwnerRequirement<Course>(course => course.StudentIds,
+            CourseController.CourseIdParameterName, Course.StudentsName));
+    });
+});
+
+builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Course>>();
+
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddSingleton<IDbConnectionConfiguration, DbConnectionConfiguration>();
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 builder.Services.AddSingleton<IQrCodeGenerator, QRCoderQrCodeGenerator>();
 builder.Services.AddSingleton<IQrCodeDataGenerator, RandomQrCodeDataGenerator>();
-builder.Services.AddTransient<SchoolExamDataContext>();
+builder.Services.AddTransient<ISchoolExamDataContext, SchoolExamDataContext>();
 builder.Services.AddTransient<ICourseRepository, CourseRepository>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 
 var app = builder.Build();
-
-using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
-{
-    var context = serviceScope.ServiceProvider.GetService<SchoolExamDbContext>();
-    context!.Database.Migrate();
-}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -63,3 +81,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program
+{
+}
