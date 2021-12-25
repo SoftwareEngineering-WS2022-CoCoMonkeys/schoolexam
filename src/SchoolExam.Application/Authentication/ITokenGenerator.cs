@@ -1,4 +1,4 @@
-using SchoolExam.Core.UserManagement.UserAggregate;
+using SchoolExam.Domain.Entities.UserAggregate;
 
 namespace SchoolExam.Application.Authentication;
 
