@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SchoolExam.Application.Authentication;
+using SchoolExam.Application.DataContext;
 using SchoolExam.Infrastructure.DataContext;
 using SchoolExam.IntegrationTests.Util.Mock;
 using SchoolExam.Persistence.Base;
@@ -70,6 +71,11 @@ public abstract class ApiIntegrationTestBase
         var configuration =
             GetRequiredService<IDbConnectionConfiguration>() as EntityFrameworkInMemoryDbConnectionConfiguration;
         configuration?.NewDbName();
+        SetUpData();
+    }
+
+    protected virtual void SetUpData()
+    {
     }
     
     [TearDown]
@@ -91,7 +97,7 @@ public abstract class ApiIntegrationTestBase
         return context;
     }
 
-    protected SchoolExamDataContext GetSchoolExamDataContext()
+    protected ISchoolExamDataContext GetSchoolExamDataContext()
     {
         var context = GetSchoolExamDbContext();
         var dataContext = new SchoolExamDataContext(context);

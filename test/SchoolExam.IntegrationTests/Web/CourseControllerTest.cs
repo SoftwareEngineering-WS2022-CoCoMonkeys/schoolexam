@@ -18,34 +18,40 @@ namespace SchoolExam.IntegrationTests.Web;
 [TestFixture]
 public class CourseControllerTest : ApiIntegrationTestBase
 {
+    private School _school = null!;
+    private Course _course = null!;
+    private Teacher _teacher = null!;
+    private Student _student = null!;
+    
+    protected override async void SetUpData()
+    {
+        _school = TestEntityFactory.Create<School, Guid>();
+        _course = TestEntityFactory.Create<Course, Guid>();
+        _course.SchoolId = _school.Id;
+        _teacher = TestEntityFactory.Create<Teacher, Guid>();
+        _teacher.SchoolId = _school.Id;
+        var courseTeacher = new CourseTeacher(_course.Id, _teacher.Id);
+        _student = TestEntityFactory.Create<Student, Guid>();
+        _student.SchoolId = _school.Id;
+        var courseStudent = new CourseStudent(_course.Id, _student.Id);
+
+        using var context = GetSchoolExamDataContext();
+        context.Add(_school);
+        context.Add(_course);
+        context.Add(_teacher);
+        context.Add(courseTeacher);
+        context.Add(_student);
+        context.Add(courseStudent);
+        await context.SaveChangesAsync();
+    }
+
     [Test]
     public async Task CourseController_GetByIdTeacherView_CourseTeacher_Success()
     {
-        var school = TestEntityFactory.Create<School, Guid>();
-        var course = TestEntityFactory.Create<Course, Guid>();
-        course.SchoolId = school.Id;
-        var teacher = TestEntityFactory.Create<Course, Guid>();
-        teacher.SchoolId = school.Id;
-        var courseTeacher = new CourseTeacher(course.Id, teacher.Id);
-        var student = TestEntityFactory.Create<Student, Guid>();
-        student.SchoolId = school.Id;
-        var courseStudent = new CourseStudent(course.Id, student.Id);
-        
-        using (var context = GetSchoolExamDataContext())
-        {
-            context.Add(school);
-            context.Add(course);
-            context.Add(teacher);
-            context.Add(courseTeacher);
-            context.Add(student);
-            context.Add(courseStudent);
-            await context.SaveChangesAsync();
-        }
-
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
-            new Claim(CustomClaimTypes.PersonId, teacher.Id.ToString()));
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()));
         
-        var response = await this.Client.GetAsync($"/Course/{course.Id}/TeacherView");
+        var response = await this.Client.GetAsync($"/Course/{_course.Id}/TeacherView");
         response.EnsureSuccessStatusCode();
         
         var result = await response.Content.ReadAsStringAsync();
@@ -55,8 +61,8 @@ public class CourseControllerTest : ApiIntegrationTestBase
 
         var expectedCourseDto = new CourseReadModelTeacher
         {
-            Id = course.Id.ToString(), Description = course.Description, Name = course.Name,
-            Subject = course.Subject?.Name, Year = course.Year, StudentCount = 1
+            Id = _course.Id.ToString(), Description = _course.Description, Name = _course.Name,
+            Subject = _course.Subject?.Name, Year = _course.Year, StudentCount = 1
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
     }
@@ -64,26 +70,10 @@ public class CourseControllerTest : ApiIntegrationTestBase
     [Test]
     public async Task CourseController_GetByIdTeacherView_NoCourseTeacher_Unauthorized()
     {
-        var school = TestEntityFactory.Create<School, Guid>();
-        var course = TestEntityFactory.Create<Course, Guid>();
-        course.SchoolId = school.Id;
-        var teacher = TestEntityFactory.Create<Course, Guid>();
-        teacher.SchoolId = school.Id;
-        var courseTeacher = new CourseTeacher(course.Id, teacher.Id);
-
-        using (var context = GetSchoolExamDataContext())
-        {
-            context.Add(school);
-            context.Add(course);
-            context.Add(teacher);
-            context.Add(courseTeacher);
-            await context.SaveChangesAsync();
-        }
-        
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, Guid.NewGuid().ToString()));
         
-        var response = await this.Client.GetAsync($"/Course/{course.Id}/TeacherView");
+        var response = await this.Client.GetAsync($"/Course/{_course.Id}/TeacherView");
         
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
@@ -91,31 +81,10 @@ public class CourseControllerTest : ApiIntegrationTestBase
     [Test]
     public async Task CourseController_GetByIdStudentView_CourseStudent_Success()
     {
-        var school = TestEntityFactory.Create<School, Guid>();
-        var course = TestEntityFactory.Create<Course, Guid>();
-        course.SchoolId = school.Id;
-        var teacher = TestEntityFactory.Create<Course, Guid>();
-        teacher.SchoolId = school.Id;
-        var courseTeacher = new CourseTeacher(course.Id, teacher.Id);
-        var student = TestEntityFactory.Create<Student, Guid>();
-        student.SchoolId = school.Id;
-        var courseStudent = new CourseStudent(course.Id, student.Id);
-        
-        using (var context = GetSchoolExamDataContext())
-        {
-            context.Add(school);
-            context.Add(course);
-            context.Add(teacher);
-            context.Add(courseTeacher);
-            context.Add(student);
-            context.Add(courseStudent);
-            await context.SaveChangesAsync();
-        }
-
         SetClaims(new Claim(ClaimTypes.Role, Role.Student),
-            new Claim(CustomClaimTypes.PersonId, student.Id.ToString()));
+            new Claim(CustomClaimTypes.PersonId, _student.Id.ToString()));
         
-        var response = await this.Client.GetAsync($"/Course/{course.Id}/StudentView");
+        var response = await this.Client.GetAsync($"/Course/{_course.Id}/StudentView");
         response.EnsureSuccessStatusCode();
         
         var result = await response.Content.ReadAsStringAsync();
@@ -125,8 +94,8 @@ public class CourseControllerTest : ApiIntegrationTestBase
 
         var expectedCourseDto = new CourseReadModelStudent
         {
-            Id = course.Id.ToString(), Description = course.Description, Name = course.Name,
-            Subject = course.Subject?.Name, Year = course.Year
+            Id = _course.Id.ToString(), Description = _course.Description, Name = _course.Name,
+            Subject = _course.Subject?.Name, Year = _course.Year
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
     }
@@ -134,31 +103,10 @@ public class CourseControllerTest : ApiIntegrationTestBase
     [Test]
     public async Task CourseController_GetByIdStudentView_NoCourseStudent_Unauthorized()
     {
-        var school = TestEntityFactory.Create<School, Guid>();
-        var course = TestEntityFactory.Create<Course, Guid>();
-        course.SchoolId = school.Id;
-        var teacher = TestEntityFactory.Create<Course, Guid>();
-        teacher.SchoolId = school.Id;
-        var courseTeacher = new CourseTeacher(course.Id, teacher.Id);
-        var student = TestEntityFactory.Create<Student, Guid>();
-        student.SchoolId = school.Id;
-        var courseStudent = new CourseStudent(course.Id, student.Id);
-
-        using (var context = GetSchoolExamDataContext())
-        {
-            context.Add(school);
-            context.Add(course);
-            context.Add(teacher);
-            context.Add(courseTeacher);
-            context.Add(student);
-            context.Add(courseStudent);
-            await context.SaveChangesAsync();
-        }
-        
         SetClaims(new Claim(ClaimTypes.Role, Role.Student),
             new Claim(CustomClaimTypes.PersonId, Guid.NewGuid().ToString()));
         
-        var response = await this.Client.GetAsync($"/Course/{course.Id}/StudentView");
+        var response = await this.Client.GetAsync($"/Course/{_course.Id}/StudentView");
         
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
