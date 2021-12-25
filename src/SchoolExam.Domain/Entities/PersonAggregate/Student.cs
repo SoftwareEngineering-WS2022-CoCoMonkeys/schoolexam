@@ -10,8 +10,8 @@ public class Student : Person
     public IEnumerable<Guid> CourseIds => _courses.Select(x => x.CourseId);
 
     public static string LegalGuardiansName => nameof(_legalGuardians);
-    private readonly ICollection<LegalGuardian> _legalGuardians;
-    public IEnumerable<Guid> LegalGuardianIds => _legalGuardians.Select(x => x.Id);
+    private readonly ICollection<StudentLegalGuardian> _legalGuardians;
+    public IEnumerable<Guid> LegalGuardianIds => _legalGuardians.Select(x => x.LegalGuardianId);
     public Guid SchoolId { get; set; }
 
     protected Student(Guid id) : base(id)
@@ -23,7 +23,7 @@ public class Student : Person
     {
         SchoolId = schoolId;
         _courses = new List<CourseStudent>();
-        _legalGuardians = new List<LegalGuardian>();
+        _legalGuardians = new List<StudentLegalGuardian>();
     }
 
     public override Role GetRole() => Role.Student;

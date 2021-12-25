@@ -17,13 +17,18 @@ namespace SchoolExam.Persistence.Migrations
                 name: "Remark");
 
             migrationBuilder.DropTable(
-                name: "SchoolTeacher");
-
-            migrationBuilder.DropTable(
                 name: "Task");
 
             migrationBuilder.DropTable(
                 name: "Input");
+
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_StudentLegalGuardian",
+                table: "StudentLegalGuardian");
+
+            migrationBuilder.DropIndex(
+                name: "IX_StudentLegalGuardian_StudentId",
+                table: "StudentLegalGuardian");
 
             migrationBuilder.DropIndex(
                 name: "IX_Course_TeacherId",
@@ -80,6 +85,11 @@ namespace SchoolExam.Persistence.Migrations
                 oldType: "integer",
                 oldNullable: true);
 
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_StudentLegalGuardian",
+                table: "StudentLegalGuardian",
+                columns: new[] { "StudentId", "LegalGuardianId" });
+
             migrationBuilder.CreateTable(
                 name: "CourseTeacher",
                 columns: table => new
@@ -105,9 +115,9 @@ namespace SchoolExam.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Person_Teacher_SchoolId",
-                table: "Person",
-                column: "Teacher_SchoolId");
+                name: "IX_StudentLegalGuardian_LegalGuardianId",
+                table: "StudentLegalGuardian",
+                column: "LegalGuardianId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Exam_CreatorId",
@@ -126,14 +136,6 @@ namespace SchoolExam.Persistence.Migrations
                 principalTable: "Person",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Person_School_Teacher_SchoolId",
-                table: "Person",
-                column: "Teacher_SchoolId",
-                principalTable: "School",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -142,16 +144,16 @@ namespace SchoolExam.Persistence.Migrations
                 name: "FK_Exam_Person_CreatorId",
                 table: "Exam");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_Person_School_Teacher_SchoolId",
-                table: "Person");
-
             migrationBuilder.DropTable(
                 name: "CourseTeacher");
 
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_StudentLegalGuardian",
+                table: "StudentLegalGuardian");
+
             migrationBuilder.DropIndex(
-                name: "IX_Person_Teacher_SchoolId",
-                table: "Person");
+                name: "IX_StudentLegalGuardian_LegalGuardianId",
+                table: "StudentLegalGuardian");
 
             migrationBuilder.DropIndex(
                 name: "IX_Exam_CreatorId",
@@ -214,6 +216,11 @@ namespace SchoolExam.Persistence.Migrations
                 nullable: false,
                 defaultValue: 0);
 
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_StudentLegalGuardian",
+                table: "StudentLegalGuardian",
+                columns: new[] { "LegalGuardianId", "StudentId" });
+
             migrationBuilder.CreateTable(
                 name: "Input",
                 columns: table => new
@@ -225,30 +232,6 @@ namespace SchoolExam.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Input", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "SchoolTeacher",
-                columns: table => new
-                {
-                    SchoolId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TeacherId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SchoolTeacher", x => new { x.SchoolId, x.TeacherId });
-                    table.ForeignKey(
-                        name: "FK_SchoolTeacher_Person_TeacherId",
-                        column: x => x.TeacherId,
-                        principalTable: "Person",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_SchoolTeacher_School_SchoolId",
-                        column: x => x.SchoolId,
-                        principalTable: "School",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -308,6 +291,11 @@ namespace SchoolExam.Persistence.Migrations
                 values: new object[] { new Guid("640b0338-f0d0-4033-9c13-9f021417cae7"), "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2", null, "Administrator", "admin" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_StudentLegalGuardian_StudentId",
+                table: "StudentLegalGuardian",
+                column: "StudentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Course_TeacherId",
                 table: "Course",
                 column: "TeacherId");
@@ -331,11 +319,6 @@ namespace SchoolExam.Persistence.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Remark_TeacherId",
                 table: "Remark",
-                column: "TeacherId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SchoolTeacher_TeacherId",
-                table: "SchoolTeacher",
                 column: "TeacherId");
 
             migrationBuilder.AddForeignKey(

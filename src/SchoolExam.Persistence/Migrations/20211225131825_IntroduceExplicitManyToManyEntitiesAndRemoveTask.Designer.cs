@@ -12,7 +12,7 @@ using SchoolExam.Persistence.DataContext;
 namespace SchoolExam.Persistence.Migrations
 {
     [DbContext(typeof(SchoolExamDbContext))]
-    [Migration("20211225093253_IntroduceExplicitManyToManyEntitiesAndRemoveTask")]
+    [Migration("20211225131825_IntroduceExplicitManyToManyEntitiesAndRemoveTask")]
     partial class IntroduceExplicitManyToManyEntitiesAndRemoveTask
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -217,6 +217,21 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasDiscriminator<string>("Discriminator").HasValue("Person");
                 });
 
+            modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.StudentLegalGuardian", b =>
+                {
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LegalGuardianId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("StudentId", "LegalGuardianId");
+
+                    b.HasIndex("LegalGuardianId");
+
+                    b.ToTable("StudentLegalGuardian", (string)null);
+                });
+
             modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.School", b =>
                 {
                     b.Property<Guid>("Id")
@@ -233,6 +248,21 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("School", (string)null);
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.SchoolTeacher", b =>
+                {
+                    b.Property<Guid>("SchoolId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("SchoolId", "TeacherId");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("SchoolTeacher", (string)null);
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.Answer", b =>
@@ -331,21 +361,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.ToTable("User", (string)null);
                 });
 
-            modelBuilder.Entity("StudentLegalGuardian", b =>
-                {
-                    b.Property<Guid>("LegalGuardianId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("LegalGuardianId", "StudentId");
-
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("StudentLegalGuardian");
-                });
-
             modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.LegalGuardian", b =>
                 {
                     b.HasBaseType("SchoolExam.Domain.Entities.PersonAggregate.Person");
@@ -370,8 +385,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.Property<Guid>("SchoolId")
                         .HasColumnType("uuid")
                         .HasColumnName("Teacher_SchoolId");
-
-                    b.HasIndex("SchoolId");
 
                     b.HasDiscriminator().HasValue("Teacher");
                 });
@@ -663,6 +676,21 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("Address");
                 });
 
+            modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.StudentLegalGuardian", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.LegalGuardian", null)
+                        .WithMany("_children")
+                        .HasForeignKey("LegalGuardianId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Student", null)
+                        .WithMany("_legalGuardians")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.School", b =>
                 {
                     b.OwnsOne("SchoolExam.Domain.ValueObjects.Address", "Location", b1 =>
@@ -704,6 +732,21 @@ namespace SchoolExam.Persistence.Migrations
                         });
 
                     b.Navigation("Location")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.SchoolTeacher", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.SchoolAggregate.School", null)
+                        .WithMany("_teachers")
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Teacher", null)
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -770,30 +813,6 @@ namespace SchoolExam.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("StudentLegalGuardian", b =>
-                {
-                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.LegalGuardian", null)
-                        .WithMany()
-                        .HasForeignKey("LegalGuardianId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Student", null)
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Teacher", b =>
-                {
-                    b.HasOne("SchoolExam.Domain.Entities.SchoolAggregate.School", null)
-                        .WithMany()
-                        .HasForeignKey("SchoolId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("SchoolExam.Domain.Entities.CourseAggregate.Course", b =>
                 {
                     b.Navigation("_students");
@@ -813,6 +832,11 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("Pages");
                 });
 
+            modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.School", b =>
+                {
+                    b.Navigation("_teachers");
+                });
+
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.Submission", b =>
                 {
                     b.Navigation("Answers");
@@ -820,9 +844,16 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("Pages");
                 });
 
+            modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.LegalGuardian", b =>
+                {
+                    b.Navigation("_children");
+                });
+
             modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Student", b =>
                 {
                     b.Navigation("_courses");
+
+                    b.Navigation("_legalGuardians");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Teacher", b =>
