@@ -33,6 +33,6 @@ public class GradingTableIntervalBound : IComparable<GradingTableIntervalBound>
 
     public override int GetHashCode()
     {
-        return Points.GetHashCode() ^ Type.GetHashCode();
+        return HashCode.Combine(Points, Type);
     }
 }
