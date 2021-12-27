@@ -24,13 +24,6 @@ public class ExamController : ApiController<ExamController>
         await using var memoryStream = new MemoryStream();
         await taskPdfFormFile.CopyToAsync(memoryStream);
 
-        // maximum file size of 50MB
-        // TODO: make maximum file size configurable
-        if (memoryStream.Length > 52428800)
-        {
-            return this.BadRequest();
-        }
-
         await _examRepository.SetTaskPdfFile(examId, taskPdfFormFile.FileName, GetUserId()!.Value,
             memoryStream.ToArray());
 

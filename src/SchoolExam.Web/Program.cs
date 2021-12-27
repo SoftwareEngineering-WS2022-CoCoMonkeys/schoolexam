@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using SchoolExam.Application.Authentication;
 using SchoolExam.Application.DataContext;
 using SchoolExam.Application.QrCode;
@@ -61,6 +62,12 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(Role.Teacher);
         policy.AddRequirements(new OwnerRequirement<Exam>(exam => exam.CreatorId, ExamController.ExamIdParameterName));
     });
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    // maximum file size limit of 50MB
+    options.MultipartBodyLengthLimit = 52428800;
 });
 
 builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Course>>();
