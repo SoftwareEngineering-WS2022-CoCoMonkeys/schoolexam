@@ -6,6 +6,7 @@ using SchoolExam.Application.QrCode;
 using SchoolExam.Application.RandomGenerator;
 using SchoolExam.Application.Repositories;
 using SchoolExam.Domain.Entities.CourseAggregate;
+using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Infrastructure.DataContext;
@@ -16,6 +17,7 @@ using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
 using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Course;
+using SchoolExam.Web.Exam;
 using SchoolExam.Web.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,6 +41,7 @@ builder.Services.AddAuthentication(x =>
 
 builder.Services.AddAuthorization(options =>
 {
+    // CourseController authorization policies
     options.AddPolicy(CourseController.CourseTeacherPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
@@ -51,9 +54,17 @@ builder.Services.AddAuthorization(options =>
         policy.AddRequirements(new OwnerRequirement<Course>(course => course.StudentIds,
             CourseController.CourseIdParameterName, Course.StudentsName));
     });
+    
+    // ExamController authorization policies
+    options.AddPolicy(ExamController.ExamCreatorPolicyName, policy =>
+    {
+        policy.RequireRole(Role.Teacher);
+        policy.AddRequirements(new OwnerRequirement<Exam>(exam => exam.CreatorId, ExamController.ExamIdParameterName));
+    });
 });
 
 builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Course>>();
+builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Exam>>();
 
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();

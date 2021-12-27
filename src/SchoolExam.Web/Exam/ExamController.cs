@@ -1,14 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Repositories;
-using SchoolExam.Domain.Entities.ExamAggregate;
-using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Web.Exam;
 
 public class ExamController : ApiController<ExamController>
 {
-    public const string ExamIdParameter = "examId";
+    public const string ExamIdParameterName = "examId";
+    public const string ExamCreatorPolicyName = "ExamCreatorPolicy";
 
     private readonly IExamRepository _examRepository;
 
@@ -18,8 +17,8 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpPost]
-    [Route($"{{{ExamIdParameter}}}/UploadTaskPdf")]
-    [Authorize(Roles = Role.TeacherName)]
+    [Route($"{{{ExamIdParameterName}}}/UploadTaskPdf")]
+    [Authorize(ExamCreatorPolicyName)]
     public async Task<IActionResult> UploadTaskPdf(Guid examId, IFormFile taskPdfFormFile)
     {
         await using var memoryStream = new MemoryStream();
