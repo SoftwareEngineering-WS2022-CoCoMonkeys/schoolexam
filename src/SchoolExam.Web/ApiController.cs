@@ -7,22 +7,24 @@ namespace SchoolExam.Web;
 
 [ApiController]
 [Route("[controller]")]
-public class ApiController<TController> : ControllerBase where TController : ApiController<TController>
+public abstract class ApiController<TController> : ControllerBase where TController : ApiController<TController>
 {
     protected ILogger<TController> Logger { get; private set; }
 
-    public ApiController(ILogger<TController> logger)
+    protected ApiController(ILogger<TController> logger)
     {
         Logger = logger;
     }
 
-    protected string? GetUserId()
+    protected Guid? GetUserId()
     {
-        return User.GetClaim(CustomClaimTypes.UserId);
+        var userId = User.GetClaim(CustomClaimTypes.UserId);
+        return userId != null ? Guid.Parse(userId) : null;
     }
 
-    protected string? GetPersonId()
+    protected Guid? GetPersonId()
     {
-        return User.GetClaim(CustomClaimTypes.PersonId);
+        var personId = User.GetClaim(CustomClaimTypes.PersonId);
+        return personId != null ? Guid.Parse(personId) : null;
     }
 }

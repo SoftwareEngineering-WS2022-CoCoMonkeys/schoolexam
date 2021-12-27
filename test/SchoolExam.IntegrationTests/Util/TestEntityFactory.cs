@@ -2,8 +2,10 @@ using System;
 using AutoFixture;
 using SchoolExam.Domain.Base;
 using SchoolExam.Domain.Entities.CourseAggregate;
+using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SchoolAggregate;
+using SchoolExam.Domain.Entities.UserAggregate;
 
 namespace SchoolExam.IntegrationTests.Util;
 
@@ -11,7 +13,9 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     ITestEntityFactory<School, Guid>,
     ITestEntityFactory<Course, Guid>,
     ITestEntityFactory<Teacher, Guid>,
-    ITestEntityFactory<Student, Guid>
+    ITestEntityFactory<Student, Guid>,
+    ITestEntityFactory<Exam, Guid>,
+    ITestEntityFactory<User, Guid>
 {
     private readonly Fixture _fixture;
 
@@ -49,5 +53,16 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     Student ITestEntityFactory<Student, Guid>.Create()
     {
         return _fixture.Create<Student>();
+    }
+
+    public Exam Create()
+    {
+        return _fixture.Build<Exam>().Without(x => x.Booklets).Without(x => x.Tasks).Without(x => x.GradingTable)
+            .Without(x => x.TaskPdfFile).Create();
+    }
+
+    User ITestEntityFactory<User, Guid>.Create()
+    {
+        return _fixture.Create<User>();
     }
 }

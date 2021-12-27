@@ -14,8 +14,8 @@ namespace SchoolExam.Infrastructure.DataContext;
 public class SchoolExamDataContext : DataContextBase<SchoolExamDbContext>, ISchoolExamDataContext
 {
     public IQueryable<Course> Courses => Context.Courses.Include(Course.StudentsName).Include(Course.TeachersName);
-    public IQueryable<Exam> Exams => Context.Exams.Include(x => x.GradingTable).Include(x => x.Tasks)
-        .Include(x => x.Booklets).ThenInclude(x => x.Pages);
+    public IQueryable<Exam> Exams => Context.Exams.Include(x => x.GradingTable).Include(x => x.TaskPdfFile)
+        .Include(x => x.Tasks).Include(x => x.Booklets).ThenInclude(x => x.Pages);
     public IQueryable<Student> Students =>
         Context.Students.Include(Student.CoursesName).Include(Student.LegalGuardiansName);
     public IQueryable<Teacher> Teachers =>

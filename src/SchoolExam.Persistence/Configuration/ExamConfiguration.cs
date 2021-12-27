@@ -13,5 +13,6 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
         builder.HasOne(x => x.GradingTable);
         builder.HasMany(x => x.Tasks);
         builder.HasMany(x => x.Booklets);
+        builder.HasOne(x => x.TaskPdfFile).WithOne().HasForeignKey<TaskPdfFile>(x => x.ExamId);
     }
 }

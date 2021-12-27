@@ -8,7 +8,6 @@ public class School : EntityBase<Guid>
 {
     public string Name { get; set; }
     public Address Location { get; set; }
-    public bool HasScanner { get; set; }
 
     public static string TeachersName = nameof(_teachers);
     private readonly ICollection<SchoolTeacher> _teachers;
@@ -18,11 +17,10 @@ public class School : EntityBase<Guid>
     {
     }
         
-    public School(Guid id, string name, Address location, bool hasScanner) : this(id)
+    public School(Guid id, string name, Address location) : this(id)
     {
         Name = name;
         Location = location;
-        HasScanner = hasScanner;
         _teachers = new List<SchoolTeacher>();
     }
 }

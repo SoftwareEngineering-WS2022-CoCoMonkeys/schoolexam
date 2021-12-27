@@ -30,6 +30,8 @@ public class SchoolExamDbContext : DbContextBase
         modelBuilder.ApplyConfiguration(new SchoolConfiguration());
         modelBuilder.ApplyConfiguration(new SchoolTeacherConfiguration());
 
+        modelBuilder.ApplyConfiguration(new FileBaseConfiguration());
+
         modelBuilder.ApplyConfiguration(new PersonConfiguration());
         modelBuilder.ApplyConfiguration(new StudentConfiguration());
         modelBuilder.ApplyConfiguration(new StudentLegalGuardianConfiguration());
@@ -41,6 +43,7 @@ public class SchoolExamDbContext : DbContextBase
         modelBuilder.ApplyConfiguration(new CourseStudentConfiguration());
 
         modelBuilder.ApplyConfiguration(new ExamConfiguration());
+        modelBuilder.ApplyConfiguration(new TaskPdfFileConfiguration());
         modelBuilder.ApplyConfiguration(new GradingTableConfiguration());
         modelBuilder.ApplyConfiguration(new ExamTaskConfiguration());
         modelBuilder.ApplyConfiguration(new ExamBookletConfiguration());
