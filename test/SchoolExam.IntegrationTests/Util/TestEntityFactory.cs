@@ -1,5 +1,10 @@
 using System;
+using System.IO;
+using System.Linq;
 using AutoFixture;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
 using SchoolExam.Domain.Base;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
@@ -15,7 +20,8 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     ITestEntityFactory<Teacher, Guid>,
     ITestEntityFactory<Student, Guid>,
     ITestEntityFactory<Exam, Guid>,
-    ITestEntityFactory<User, Guid>
+    ITestEntityFactory<User, Guid>,
+    ITestEntityFactory<TaskPdfFile, Guid>
 {
     private readonly Fixture _fixture;
 
@@ -64,5 +70,27 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     User ITestEntityFactory<User, Guid>.Create()
     {
         return _fixture.Create<User>();
+    }
+
+    TaskPdfFile ITestEntityFactory<TaskPdfFile, Guid>.Create()
+    {
+        return _fixture.Build<TaskPdfFile>().With(x => x.Content, CreatePdfFile()).Create();
+    }
+
+    private byte[] CreatePdfFile()
+    {
+        var stream = new MemoryStream();
+        var writer = new PdfWriter(stream);
+        var pdf = new PdfDocument(writer);
+        var document = new Document(pdf);
+
+        document.Add(new Paragraph(_fixture.Create<string>()));
+        document.Add(new AreaBreak());
+        document.Add(new Paragraph(_fixture.Create<string>()));
+        document.Close();
+
+        var result = stream.ToArray();
+
+        return result.ToArray();
     }
 }

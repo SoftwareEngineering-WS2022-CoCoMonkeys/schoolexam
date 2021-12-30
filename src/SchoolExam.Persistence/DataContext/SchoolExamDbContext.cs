@@ -14,11 +14,13 @@ public class SchoolExamDbContext : DbContextBase
 {
     public DbSet<Course> Courses { get; set; }
     public DbSet<Exam> Exams { get; set; }
+    public DbSet<ExamBookletPage> ExamBookletPages { get; set; }
     public DbSet<School> Schools { get; set; }
     public DbSet<Student> Students { get; set; }
     public DbSet<Teacher> Teachers { get; set; }
     public DbSet<LegalGuardian> LegalGuardians { get; set; }
     public DbSet<Submission> Submissions { get; set; }
+    public DbSet<SubmissionPage> SubmissionPages { get; set; }
     public DbSet<User> Users { get; set; }
 
     public SchoolExamDbContext(IDbConnectionConfiguration configuration) : base(configuration)
@@ -47,10 +49,12 @@ public class SchoolExamDbContext : DbContextBase
         modelBuilder.ApplyConfiguration(new GradingTableConfiguration());
         modelBuilder.ApplyConfiguration(new ExamTaskConfiguration());
         modelBuilder.ApplyConfiguration(new ExamBookletConfiguration());
+        modelBuilder.ApplyConfiguration(new BookletPdfFileConfiguration());
         modelBuilder.ApplyConfiguration(new ExamBookletPageConfiguration());
 
         modelBuilder.ApplyConfiguration(new SubmissionConfiguration());
         modelBuilder.ApplyConfiguration(new SubmissionPageConfiguration());
+        modelBuilder.ApplyConfiguration(new SubmissionPagePdfFileConfiguration());
         modelBuilder.ApplyConfiguration(new AnswerConfiguration());
 
         modelBuilder.ApplyConfiguration(new UserConfiguration());

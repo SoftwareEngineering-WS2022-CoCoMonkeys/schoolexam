@@ -11,5 +11,6 @@ public class ExamBookletConfiguration : IEntityTypeConfiguration<ExamBooklet>
         builder.ToTable("ExamBooklet");
         builder.HasKey(x => x.Id);
         builder.HasMany(x => x.Pages);
+        builder.HasOne(x => x.PdfFile).WithOne().HasForeignKey<BookletPdfFile>(x => x.BookletId);
     }
 }

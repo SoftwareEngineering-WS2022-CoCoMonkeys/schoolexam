@@ -29,4 +29,31 @@ public class ExamController : ApiController<ExamController>
 
         return Ok();
     }
+
+    [HttpPost]
+    [Route($"{{{ExamIdParameterName}}}/Build")]
+    [Authorize(ExamCreatorPolicyName)]
+    public async Task<IActionResult> Build(Guid examId, [FromBody] BuildExamModel buildExamModel)
+    {
+        await _examRepository.Build(examId, buildExamModel.Count, GetUserId()!.Value);
+
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route($"{{{ExamIdParameterName}}}/Match")]
+    [Authorize(ExamCreatorPolicyName)]
+    public async Task<IActionResult> Match(Guid examId, IFormFile submissionPdfFormFile)
+    {
+        await using var memoryStream = new MemoryStream();
+        await submissionPdfFormFile.CopyToAsync(memoryStream);
+
+        await _examRepository.Match(examId, memoryStream.ToArray(), GetUserId()!.Value);
+
+        return Ok();
+    }
+
+    // TODO: HttpGet Conflicts (two (or more) different submission pages (based on content) mapped to same booklet page)
+    // TODO: HttpGet Unmatched (page that has no corresponding submission page)
+    // TODO: HttpPut Match manually
 }

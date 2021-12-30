@@ -10,7 +10,8 @@ public class Exam : EntityBase<Guid>
     public DateTime Date { get; set; }
     public Guid CourseId { get; set; }
     public Guid CreatorId { get; set; }
-    public TaskPdfFile? TaskPdfFile { get; set; } 
+    public TaskPdfFile? TaskPdfFile { get; set; }
+    public bool HasBeenBuilt => Booklets.Count > 0;
 
     protected Exam(Guid id) : base(id)
     {

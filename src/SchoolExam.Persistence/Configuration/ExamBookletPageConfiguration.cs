@@ -10,6 +10,7 @@ public class ExamBookletPageConfiguration : IEntityTypeConfiguration<ExamBooklet
     {
         builder.ToTable("ExamBookletPage");
         builder.HasKey(x => x.Id);
-        builder.HasIndex(x => x.QrCode).IsUnique();
+        builder.HasIndex(x => x.QrCodeData).IsUnique();
+        builder.Property(x => x.QrCodeData).HasMaxLength(32).IsFixedLength();
     }
 }

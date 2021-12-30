@@ -15,6 +15,6 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         builder.HasOne<Student>().WithMany();
         builder.HasOne<ExamBooklet>().WithMany();
         builder.HasMany(x => x.Answers);
-        builder.HasMany(x => x.Pages);
+        builder.HasMany(x => x.Pages).WithOne().HasForeignKey(x => x.SubmissionId);
     }
 }

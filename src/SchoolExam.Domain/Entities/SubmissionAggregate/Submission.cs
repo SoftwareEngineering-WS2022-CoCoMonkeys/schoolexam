@@ -6,9 +6,9 @@ namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 public class Submission : EntityBase<Guid>
 {
     public double? AchievedPoints => Answers.Sum(x => x.AchievedPoints);
-    public CorrectableState State => CorrectableState.Finalized;
+    public CorrectableState State => GetState();
     public Guid BookletId { get; set; }
-    public Guid StudentId { get; set; }
+    public Guid? StudentId { get; set; }
     public ICollection<Answer> Answers { get; set; }
     public ICollection<SubmissionPage> Pages { get; set; }
 
@@ -16,7 +16,7 @@ public class Submission : EntityBase<Guid>
     {
     }
 
-    public Submission(Guid id, int? achievedPoints, CorrectableState state, Guid studentId, Guid bookletId) :
+    public Submission(Guid id, Guid? studentId, Guid bookletId) :
         this(id)
     {
         StudentId = studentId;
@@ -27,7 +27,7 @@ public class Submission : EntityBase<Guid>
 
     private CorrectableState GetState()
     {
-        var count = Answers.Count();
+        var count = Answers.Count;
         var correctedCount = Answers.Count(x => x.AchievedPoints != null);
         if (correctedCount == 0)
         {
