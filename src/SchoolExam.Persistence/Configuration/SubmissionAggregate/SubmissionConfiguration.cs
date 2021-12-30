@@ -4,7 +4,7 @@ using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 
-namespace SchoolExam.Persistence.Configuration;
+namespace SchoolExam.Persistence.Configuration.SubmissionAggregate;
 
 public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
 {

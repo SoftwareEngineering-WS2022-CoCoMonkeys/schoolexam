@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 
-namespace SchoolExam.Persistence.Configuration;
+namespace SchoolExam.Persistence.Configuration.PersonAggregate;
 
 public class TeacherConfiguration : IEntityTypeConfiguration<Teacher>
 {

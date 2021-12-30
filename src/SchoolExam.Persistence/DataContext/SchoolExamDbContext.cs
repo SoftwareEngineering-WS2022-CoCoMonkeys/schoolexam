@@ -7,6 +7,12 @@ using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.Configuration;
+using SchoolExam.Persistence.Configuration.CourseAggregate;
+using SchoolExam.Persistence.Configuration.ExamAggregate;
+using SchoolExam.Persistence.Configuration.PersonAggregate;
+using SchoolExam.Persistence.Configuration.SchoolAggregate;
+using SchoolExam.Persistence.Configuration.SubmissionAggregate;
+using SchoolExam.Persistence.Configuration.UserAggregate;
 
 namespace SchoolExam.Persistence.DataContext;
 

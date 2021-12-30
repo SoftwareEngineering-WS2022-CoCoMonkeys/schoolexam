@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolExam.Domain.Entities.PersonAggregate;
 
-namespace SchoolExam.Persistence.Configuration;
+namespace SchoolExam.Persistence.Configuration.PersonAggregate;
 
 public class StudentLegalGuardianConfiguration : IEntityTypeConfiguration<StudentLegalGuardian>
 {

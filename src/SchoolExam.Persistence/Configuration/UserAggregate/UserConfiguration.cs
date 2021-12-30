@@ -4,7 +4,7 @@ using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Persistence.Extensions;
 
-namespace SchoolExam.Persistence.Configuration;
+namespace SchoolExam.Persistence.Configuration.UserAggregate;
 
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {

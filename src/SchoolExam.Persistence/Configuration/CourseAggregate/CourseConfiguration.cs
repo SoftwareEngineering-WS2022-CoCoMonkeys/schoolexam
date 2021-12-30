@@ -4,7 +4,7 @@ using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Persistence.Extensions;
 
-namespace SchoolExam.Persistence.Configuration;
+namespace SchoolExam.Persistence.Configuration.CourseAggregate;
 
 public class CourseConfiguration : IEntityTypeConfiguration<Course>
 {
