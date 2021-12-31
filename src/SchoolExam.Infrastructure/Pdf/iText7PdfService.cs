@@ -11,6 +11,8 @@ namespace SchoolExam.Infrastructure.Pdf;
 
 public class iText7PdfService : IPdfService
 {
+    private const string ModificationDateName = "ModificationDate";
+    
     private readonly ILogger<iText7PdfService> _logger;
     
     public iText7PdfService(ILogger<iText7PdfService> logger)
@@ -117,5 +119,35 @@ public class iText7PdfService : IPdfService
         pdfTargetDocument.Close();
 
         return writeStream.ToArray();
+    }
+
+    public bool Compare(byte[] first, byte[] second)
+    {
+        var comparer = new CompareTool();
+        using var streamFirst = new MemoryStream(first);
+        using var streamSecond = new MemoryStream(second);
+        var readerFirst = new PdfReader(streamFirst);
+        var readerSecond = new PdfReader(streamSecond);
+        var pdfDocumentFirst = new PdfDocument(readerFirst);
+        var pdfDocumentSecond = new PdfDocument(readerSecond);
+        
+        var result = comparer.CompareByCatalog(pdfDocumentFirst, pdfDocumentSecond);
+        
+        pdfDocumentFirst.Close();
+        pdfDocumentSecond.Close();
+        return result.IsOk();
+    }
+
+    public DateTime GetModificationDate(byte[] pdf)
+    {
+        using var stream = new MemoryStream(pdf);
+        var reader = new PdfReader(stream);
+        var pdfDocument = new PdfDocument(reader);
+        var pdfDocumentInfo = pdfDocument.GetDocumentInfo();
+        var modificationDateString = pdfDocumentInfo.GetMoreInfo(ModificationDateName);
+        var result = PdfDate.Decode(modificationDateString);
+
+        pdfDocument.Close();
+        return result;
     }
 }
