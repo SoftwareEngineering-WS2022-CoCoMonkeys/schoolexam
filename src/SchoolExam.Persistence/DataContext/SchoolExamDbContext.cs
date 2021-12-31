@@ -20,6 +20,7 @@ public class SchoolExamDbContext : DbContextBase
 {
     public DbSet<Course> Courses { get; set; }
     public DbSet<Exam> Exams { get; set; }
+    public DbSet<ExamBooklet> ExamBooklets { get; set; }
     public DbSet<ExamBookletPage> ExamBookletPages { get; set; }
     public DbSet<School> Schools { get; set; }
     public DbSet<Student> Students { get; set; }

@@ -10,6 +10,7 @@ using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SchoolAggregate;
+using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
 
 namespace SchoolExam.IntegrationTests.Util;
@@ -21,13 +22,22 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     ITestEntityFactory<Student, Guid>,
     ITestEntityFactory<Exam, Guid>,
     ITestEntityFactory<User, Guid>,
-    ITestEntityFactory<TaskPdfFile, Guid>
+    ITestEntityFactory<TaskPdfFile, Guid>,
+    ITestEntityFactory<Submission, Guid>,
+    ITestEntityFactory<SubmissionPagePdfFile, Guid>,
+    ITestEntityFactory<SubmissionPage, Guid>,
+    ITestEntityFactory<ExamBooklet, Guid>,
+    ITestEntityFactory<ExamBookletPage, Guid>
 {
     private readonly Fixture _fixture;
 
     public AutoFixtureTestEntityFactory()
     {
         _fixture = new Fixture();
+
+        _fixture.Customize<ExamBooklet>(opts => opts.Without(x => x.Pages));
+        _fixture.Customize<Submission>(opts => opts.Without(x => x.Pages));
+        _fixture.Customize<ExamBookletPage>(opts => opts.Without(x => x.SubmissionPage));
     }
 
     public TEntity Create<TEntity, TIdentity>() where TEntity : IEntity<TIdentity>
@@ -75,6 +85,31 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     TaskPdfFile ITestEntityFactory<TaskPdfFile, Guid>.Create()
     {
         return _fixture.Build<TaskPdfFile>().With(x => x.Content, CreatePdfFile()).Create();
+    }
+    
+    SubmissionPagePdfFile ITestEntityFactory<SubmissionPagePdfFile, Guid>.Create()
+    {
+        return _fixture.Build<SubmissionPagePdfFile>().With(x => x.Content, CreatePdfFile()).Create();
+    }
+    
+    SubmissionPage ITestEntityFactory<SubmissionPage, Guid>.Create()
+    {
+        return _fixture.Create<SubmissionPage>();
+    }
+    
+    ExamBooklet ITestEntityFactory<ExamBooklet, Guid>.Create()
+    {
+        return _fixture.Create<ExamBooklet>();
+    }
+
+    ExamBookletPage ITestEntityFactory<ExamBookletPage, Guid>.Create()
+    {
+        return _fixture.Create<ExamBookletPage>();
+    }
+    
+    Submission ITestEntityFactory<Submission, Guid>.Create()
+    {
+        return _fixture.Create<Submission>();
     }
 
     private byte[] CreatePdfFile()

@@ -10,7 +10,7 @@ public class ExamBookletConfiguration : IEntityTypeConfiguration<ExamBooklet>
     {
         builder.ToTable("ExamBooklet");
         builder.HasKey(x => x.Id);
-        builder.HasMany(x => x.Pages);
+        builder.HasMany(x => x.Pages).WithOne().HasForeignKey(x => x.BookletId);
         builder.HasOne(x => x.PdfFile).WithOne().HasForeignKey<BookletPdfFile>(x => x.BookletId);
     }
 }

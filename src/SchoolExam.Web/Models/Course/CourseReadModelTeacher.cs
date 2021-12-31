@@ -1,4 +1,4 @@
-namespace SchoolExam.Web.Course;
+namespace SchoolExam.Web.Models.Course;
 
 public class CourseReadModelTeacher : CourseReadModelBase
 {

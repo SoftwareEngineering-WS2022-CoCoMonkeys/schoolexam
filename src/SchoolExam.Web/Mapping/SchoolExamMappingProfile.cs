@@ -1,5 +1,9 @@
 using AutoMapper;
-using SchoolExam.Web.Course;
+using SchoolExam.Domain.Entities.CourseAggregate;
+using SchoolExam.Domain.Entities.ExamAggregate;
+using SchoolExam.Domain.Entities.SubmissionAggregate;
+using SchoolExam.Web.Models.Course;
+using SchoolExam.Web.Models.Exam;
 
 namespace SchoolExam.Web.Mapping
 {
@@ -7,14 +11,21 @@ namespace SchoolExam.Web.Mapping
     {
         public SchoolExamMappingProfile()
         {
-            CreateMap<Domain.Entities.CourseAggregate.Course, CourseReadModelBase>()
-                .Include<Domain.Entities.CourseAggregate.Course, CourseReadModelStudent>()
-                .Include<Domain.Entities.CourseAggregate.Course, CourseReadModelTeacher>()
+            CreateMap<Course, CourseReadModelBase>()
+                .Include<Course, CourseReadModelStudent>()
+                .Include<Course, CourseReadModelTeacher>()
                 .ForMember(dst => dst.Subject, opt => opt.PreCondition(src => src.Subject != null))
                 .ForMember(dst => dst.Subject, opt => opt.MapFrom(src => src.Subject!.Name));
-            CreateMap<Domain.Entities.CourseAggregate.Course, CourseReadModelStudent>();
-            CreateMap<Domain.Entities.CourseAggregate.Course, CourseReadModelTeacher>()
+            CreateMap<Course, CourseReadModelStudent>();
+            CreateMap<Course, CourseReadModelTeacher>()
                 .ForMember(dst => dst.StudentCount, opt => opt.MapFrom(src => src.StudentIds.Count()));
+
+            CreateMap<SubmissionPage, UnmatchedSubmissionPageReadModel>()
+                .ForMember(dst => dst.Size, opt => opt.MapFrom(src => src.PdfFile.Size))
+                .ForMember(dst => dst.FileId, opt => opt.MapFrom(src => src.PdfFile.Id))
+                .ForMember(dst => dst.UploadedAt, opt => opt.MapFrom(src => src.PdfFile.UploadedAt))
+                .ForMember(dst => dst.UploadedBy, opt => opt.MapFrom(src => src.PdfFile.Uploader.Username));
+            CreateMap<ExamBookletPage, UnmatchedBookletPageReadModel>();
         }
     }
 }

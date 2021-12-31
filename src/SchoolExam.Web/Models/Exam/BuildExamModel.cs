@@ -1,4 +1,4 @@
-namespace SchoolExam.Web.Exam;
+namespace SchoolExam.Web.Models.Exam;
 
 public class BuildExamModel
 {

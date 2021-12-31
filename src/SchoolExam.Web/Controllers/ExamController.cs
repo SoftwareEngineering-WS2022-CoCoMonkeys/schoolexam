@@ -1,8 +1,10 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Repositories;
+using SchoolExam.Web.Models.Exam;
 
-namespace SchoolExam.Web.Exam;
+namespace SchoolExam.Web.Controllers;
 
 public class ExamController : ApiController<ExamController>
 {
@@ -11,7 +13,8 @@ public class ExamController : ApiController<ExamController>
 
     private readonly IExamRepository _examRepository;
 
-    public ExamController(ILogger<ExamController> logger, IExamRepository examRepository) : base(logger)
+    public ExamController(ILogger<ExamController> logger, IMapper mapper, IExamRepository examRepository) : base(logger,
+        mapper)
     {
         _examRepository = examRepository;
     }
@@ -53,7 +56,38 @@ public class ExamController : ApiController<ExamController>
         return Ok();
     }
 
-    // TODO: HttpGet Conflicts (two (or more) different submission pages (based on content) mapped to same booklet page)
-    // TODO: HttpGet Unmatched (page that has no corresponding submission page)
-    // TODO: HttpPut Match manually
+    [HttpGet]
+    [Route($"{{{ExamIdParameterName}}}/UnmatchedPages")]
+    [Authorize(ExamCreatorPolicyName)]
+    public UnmatchedPagesReadModel GetUnmatchedPages(Guid examId)
+    {
+        var unmatchedBookletPages = _examRepository.GetUnmatchedBookletPages(examId);
+        var unmatchedBookletPagesMapped = Mapper.Map<IEnumerable<UnmatchedBookletPageReadModel>>(unmatchedBookletPages);
+
+        var unmatchedSubmissionPages = _examRepository.GetUnmatchedSubmissionPages(examId);
+        var unmatchedSubmissionPagesMapped =
+            Mapper.Map<IEnumerable<UnmatchedSubmissionPageReadModel>>(unmatchedSubmissionPages);
+
+        return new UnmatchedPagesReadModel
+        {
+            UnmatchedBookletPages = unmatchedBookletPagesMapped,
+            UnmatchedSubmissionPages = unmatchedSubmissionPagesMapped
+        };
+    }
+
+    [HttpPost]
+    [Route($"{{{ExamIdParameterName}}}/MatchPages")]
+    [Authorize(ExamCreatorPolicyName)]
+    public async Task<IActionResult> MatchManually(Guid examId, ManualMatchesModel manualMatchesModel)
+    {
+        foreach (var manualMatchModel in manualMatchesModel.Matches)
+        {
+            await _examRepository.MatchManually(examId, manualMatchModel.BookletPageId,
+                manualMatchModel.SubmissionPageId);
+        }
+
+        return Ok();
+    }
+    
+    // TODO: rebuild if exam has already been built
 }

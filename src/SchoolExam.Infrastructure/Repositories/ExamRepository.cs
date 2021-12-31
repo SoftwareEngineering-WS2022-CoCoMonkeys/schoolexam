@@ -81,10 +81,10 @@ public class ExamRepository : IExamRepository
             var bookletPdfFile = new BookletPdfFile(Guid.NewGuid(), $"{i + 1}.pdf", bookletContent.LongLength,
                 DateTime.Now, userId, bookletContent, bookletId);
             var booklet = new ExamBooklet(bookletId, bookletPdfFile, examId);
-            
+
             for (int page = 1; page <= pageCount; page++)
             {
-                var bookletPage = new ExamBookletPage(Guid.NewGuid(), page, booklet.Id, qrCodeData[page - 1]);
+                var bookletPage = new ExamBookletPage(Guid.NewGuid(), page, bookletId, qrCodeData[page - 1]);
                 _context.Add(bookletPage);
             }
 
@@ -109,15 +109,15 @@ public class ExamRepository : IExamRepository
             var submissionPageId = Guid.NewGuid();
             var submissionPagePdf = new SubmissionPagePdfFile(Guid.NewGuid(), $"{page}.pdf", pagePdf.LongLength,
                 DateTime.Now, userId, pagePdf, submissionPageId);
-            
+
             var images = _pdfService.ParseImages(pagePdf).ToList();
             var qrCodes = images.SelectMany(x => _qrCodeReader.ReadQrCodes(x.Data)).ToList();
 
-            var matchedQrCode = qrCodes.SingleOrDefault(qrCode =>
-                _context.ExamBookletPages.SingleOrDefault(x => x.QrCodeData.Equals(qrCode)) != null);
+            var bookletPages = exam.Booklets.SelectMany(x => x.Pages);
+            var matchedQrCode = qrCodes.SingleOrDefault(qrCode => bookletPages.Any(x => x.QrCodeData.Equals(qrCode)));
             if (matchedQrCode != null)
             {
-                var matchedPage = _context.ExamBookletPages.Single(x => x.QrCodeData.Equals(matchedQrCode));
+                var matchedPage = bookletPages.Single(x => x.QrCodeData.Equals(matchedQrCode));
 
                 // get existing submission for booklet
                 if (!submissions.ContainsKey(matchedPage.BookletId))
@@ -131,25 +131,31 @@ public class ExamRepository : IExamRepository
                 var submission = submissions[matchedPage.BookletId];
 
                 // check if page has already been matched previously
-                if (submission.Pages.All(x => x.Page != matchedPage.Page))
+                if (matchedPage.SubmissionPage == null)
                 {
-                    var submissionPage =
-                        new SubmissionPage(submissionPageId, examId, submissionPagePdf, submission.Id, matchedPage.Page);
+                    var submissionPage = new SubmissionPage(submissionPageId, examId, submissionPagePdf, submission.Id,
+                        matchedPage.Id);
                     submission.Pages.Add(submissionPage);
-                    _context.Add(submissionPagePdf);
                     _context.Add(submissionPage);
                 }
                 else
                 {
                     _logger.LogInformation(
-                        $"Exam booklet page corresponding to {page} of PDF document has already been matched.");
+                        $"Exam booklet page corresponding to {page} of PDF document has already been matched. The previously matched PDF page was replaced by the most recently parsed page.");
+
+                    var previouslyMatchedPage = submission.Pages.Single(x => x.BookletPageId.Equals(matchedPage.Id));
+                    _context.Remove(previouslyMatchedPage.PdfFile);
+                    previouslyMatchedPage.PdfFile = submissionPagePdf;
+                    _context.Update(previouslyMatchedPage);
                 }
+
+                _context.Add(submissionPagePdf);
             }
             else
             {
                 _logger.LogWarning(
                     $"Page {page} of PDF document could not be matched to an existing exam booklet page.");
-                
+
                 // persist unmatched submission pages such that they can be matched manually afterwards
                 var submissionPage = new SubmissionPage(submissionPageId, examId, submissionPagePdf, null, null);
                 _context.Add(submissionPage);
@@ -160,12 +166,80 @@ public class ExamRepository : IExamRepository
         await _context.SaveChangesAsync();
     }
 
+    public IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId)
+    {
+        EnsureExamExists(examId);
+        var submissionPages = _context.SubmissionPages.Where(x => x.ExamId.Equals(examId));
+
+        var result = submissionPages.Where(x => !x.SubmissionId.HasValue);
+        return result;
+    }
+
+    public IEnumerable<ExamBookletPage> GetUnmatchedBookletPages(Guid examId)
+    {
+        var exam = EnsureExamExists(examId);
+        var bookletPages = exam.Booklets.SelectMany(x => x.Pages);
+
+        var result = bookletPages.Where(x => x.SubmissionPage == null);
+        return result;
+    }
+
+    public async Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId)
+    {
+        var exam = EnsureExamExists(examId);
+        var bookletPage = _context.ExamBookletPages.SingleOrDefault(x => x.Id.Equals(bookletPageId));
+        if (bookletPage == null)
+        {
+            throw new ArgumentException("Booklet page does not exist.");
+        }
+
+        var bookletExamId = _context.ExamBooklets.SingleOrDefault(x => x.Id.Equals(bookletPage.BookletId))?.ExamId;
+        if (!examId.Equals(bookletExamId))
+        {
+            throw new InvalidOperationException("Booklet page is not part of the exam.");
+        }
+
+        var submissionPage = _context.SubmissionPages.SingleOrDefault(x => x.Id.Equals(submissionPageId));
+        if (submissionPage == null)
+        {
+            throw new ArgumentException("Submission page does not exist.");
+        }
+
+        if (!examId.Equals(submissionPage.ExamId))
+        {
+            throw new InvalidOperationException("Submission page is not part of the exam.");
+        }
+
+        var bookletPageMatched = _context.SubmissionPages.Any(x => x.BookletPageId.Equals(bookletPageId));
+        
+        // not possible to manually match a previously matched pages
+        if (bookletPageMatched || submissionPage.BookletPageId.HasValue)
+        {
+            throw new InvalidOperationException(
+                "The booklet page and/or the submission page have already been matched.");
+        }
+
+        var bookletId = bookletPage.BookletId;
+        var submission = _context.Submissions.SingleOrDefault(x => x.BookletId.Equals(bookletId));
+        if (submission == null)
+        {
+            // create new submission if no submission has been created previously for booklet
+            submission = new Submission(Guid.NewGuid(), null, bookletId);
+        }
+
+        submissionPage.SubmissionId = submission.Id;
+        submissionPage.BookletPageId = bookletPageId;
+
+        _context.Update(submissionPage);
+        await _context.SaveChangesAsync();
+    }
+
     private Exam EnsureExamExists(Guid examId)
     {
         var exam = _context.Exams.SingleOrDefault(x => x.Id.Equals(examId));
         if (exam == null)
         {
-            throw new ArgumentException("Exam does not exist");
+            throw new ArgumentException("Exam does not exist,");
         }
 
         return exam;

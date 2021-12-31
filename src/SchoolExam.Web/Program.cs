@@ -19,8 +19,7 @@ using SchoolExam.Infrastructure.Repositories;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
 using SchoolExam.Web.Authorization;
-using SchoolExam.Web.Course;
-using SchoolExam.Web.Exam;
+using SchoolExam.Web.Controllers;
 using SchoolExam.Web.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,7 +29,10 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAutoMapper(typeof(SchoolExamMappingProfile));
+builder.Services.AddAutoMapper(config =>
+{
+    config.AddProfile<SchoolExamMappingProfile>();
+});
 
 builder.Services.AddAuthentication(x =>
 {

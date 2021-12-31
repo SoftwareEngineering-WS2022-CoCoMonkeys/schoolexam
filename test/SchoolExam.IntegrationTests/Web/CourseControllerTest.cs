@@ -11,7 +11,7 @@ using SchoolExam.Domain.Entities.SchoolAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.IntegrationTests.Util;
-using SchoolExam.Web.Course;
+using SchoolExam.Web.Models.Course;
 
 namespace SchoolExam.IntegrationTests.Web;
 

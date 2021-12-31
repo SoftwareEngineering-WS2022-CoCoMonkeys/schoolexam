@@ -1,7 +1,7 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Util.Extensions;
-using SchoolExam.Web.Authentication;
 
 namespace SchoolExam.Web;
 
@@ -10,10 +10,12 @@ namespace SchoolExam.Web;
 public abstract class ApiController<TController> : ControllerBase where TController : ApiController<TController>
 {
     protected ILogger<TController> Logger { get; private set; }
+    protected IMapper Mapper { get; private set; }
 
-    protected ApiController(ILogger<TController> logger)
+    protected ApiController(ILogger<TController> logger, IMapper mapper)
     {
         Logger = logger;
+        Mapper = mapper;
     }
 
     protected Guid? GetUserId()

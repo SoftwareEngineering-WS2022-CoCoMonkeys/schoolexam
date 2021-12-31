@@ -11,6 +11,7 @@ public interface ISchoolExamDataContext : IDataContext
 {
     IQueryable<Course> Courses { get; }
     IQueryable<Exam> Exams { get; }
+    IQueryable<ExamBooklet> ExamBooklets { get; }
     IQueryable<ExamBookletPage> ExamBookletPages { get; }
     IQueryable<Student> Students { get; }
     IQueryable<Teacher> Teachers { get; }

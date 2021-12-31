@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Repositories;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Web.Models.Course;
 
-namespace SchoolExam.Web.Course;
+namespace SchoolExam.Web.Controllers;
 
 public class CourseController : ApiController<CourseController>
 {
@@ -12,13 +13,11 @@ public class CourseController : ApiController<CourseController>
     public const string CourseTeacherPolicyName = "CourseTeacherPolicy";
     public const string CourseStudentPolicyName = "CourseStudentPolicy";
     
-    private readonly IMapper _mapper;
     private readonly ICourseRepository _courseRepository;
     
     public CourseController(ILogger<CourseController> logger, IMapper mapper, ICourseRepository courseRepository) :
-        base(logger)
+        base(logger, mapper)
     {
-        _mapper = mapper;
         _courseRepository = courseRepository;
     }
 
@@ -28,7 +27,7 @@ public class CourseController : ApiController<CourseController>
     public CourseReadModelTeacher? GetByIdTeacherView(Guid courseId)
     {
         var course = _courseRepository.GetById(courseId);
-        return _mapper.Map<CourseReadModelTeacher>(course);
+        return Mapper.Map<CourseReadModelTeacher>(course);
     }
     
     [HttpGet]
@@ -37,7 +36,7 @@ public class CourseController : ApiController<CourseController>
     public CourseReadModelTeacher? GetByIdStudentView(Guid courseId)
     {
         var course = _courseRepository.GetById(courseId);
-        return _mapper.Map<CourseReadModelTeacher>(course);
+        return Mapper.Map<CourseReadModelTeacher>(course);
     }
 
     [HttpGet]
@@ -46,6 +45,6 @@ public class CourseController : ApiController<CourseController>
     public IEnumerable<CourseReadModelTeacher> GetByTeacher(Guid teacherId)
     {
         var courses = _courseRepository.GetByTeacher(teacherId);
-        return _mapper.Map<IEnumerable<CourseReadModelTeacher>>(courses);
+        return Mapper.Map<IEnumerable<CourseReadModelTeacher>>(courses);
     }
 }
