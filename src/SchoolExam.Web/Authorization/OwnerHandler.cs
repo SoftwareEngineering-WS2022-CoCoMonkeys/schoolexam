@@ -35,6 +35,11 @@ public class OwnerHandler<TEntity> : AuthorizationHandler<OwnerRequirement<TEnti
                         context.Succeed(requirement);
                     }
                 }
+                else
+                {
+                    // authorization successful if entity does not exist
+                    context.Succeed(requirement);
+                }
             }
         }
 

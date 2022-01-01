@@ -27,7 +27,8 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     ITestEntityFactory<SubmissionPagePdfFile, Guid>,
     ITestEntityFactory<SubmissionPage, Guid>,
     ITestEntityFactory<ExamBooklet, Guid>,
-    ITestEntityFactory<ExamBookletPage, Guid>
+    ITestEntityFactory<ExamBookletPage, Guid>,
+    ITestEntityFactory<BookletPdfFile, Guid>
 {
     private readonly Fixture _fixture;
 
@@ -35,8 +36,11 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     {
         _fixture = new Fixture();
 
+        _fixture.Customize<TaskPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<ExamBooklet>(opts => opts.Without(x => x.Pages));
+        _fixture.Customize<BookletPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<Submission>(opts => opts.Without(x => x.Pages));
+        _fixture.Customize<SubmissionPagePdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<ExamBookletPage>(opts => opts.Without(x => x.SubmissionPage));
     }
 
@@ -84,12 +88,12 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
 
     TaskPdfFile ITestEntityFactory<TaskPdfFile, Guid>.Create()
     {
-        return _fixture.Build<TaskPdfFile>().With(x => x.Content, CreatePdfFile()).Create();
+        return _fixture.Create<TaskPdfFile>();
     }
     
     SubmissionPagePdfFile ITestEntityFactory<SubmissionPagePdfFile, Guid>.Create()
     {
-        return _fixture.Build<SubmissionPagePdfFile>().With(x => x.Content, CreatePdfFile()).Create();
+        return _fixture.Create<SubmissionPagePdfFile>();
     }
     
     SubmissionPage ITestEntityFactory<SubmissionPage, Guid>.Create()
@@ -110,6 +114,11 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     Submission ITestEntityFactory<Submission, Guid>.Create()
     {
         return _fixture.Create<Submission>();
+    }
+    
+    BookletPdfFile ITestEntityFactory<BookletPdfFile, Guid>.Create()
+    {
+        return _fixture.Create<BookletPdfFile>();
     }
 
     private byte[] CreatePdfFile()

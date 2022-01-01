@@ -24,13 +24,13 @@ public abstract class ApiIntegrationTestBase
 
     protected ApiIntegrationTestBase()
     {
-        _factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
                 {
                     services
-                        .AddSingleton<IDbConnectionConfiguration, EntityFrameworkInMemoryDbConnectionConfiguration>();
+                        .AddSingleton<IDbConnectionConfiguration,
+                            EntityFrameworkInMemoryDbConnectionConfiguration>();
                     services.AddSingleton<IPasswordHasher, TestPasswordHasher>();
                     services.AddAuthentication(options =>
                         {
@@ -39,9 +39,9 @@ public abstract class ApiIntegrationTestBase
                         })
                         .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(
                             TestAuthenticationHandler.AuthenticationScheme, options => { });
-                });
-                builder.ConfigureTestServices(ConfigureTestServices);
-            });
+                })
+                .ConfigureTestServices(ConfigureTestServices);
+        });
         TestEntityFactory = new AutoFixtureTestEntityFactory();
     }
 
@@ -77,7 +77,7 @@ public abstract class ApiIntegrationTestBase
     protected virtual void SetUpData()
     {
     }
-    
+
     [TearDown]
     protected virtual void TearDown()
     {

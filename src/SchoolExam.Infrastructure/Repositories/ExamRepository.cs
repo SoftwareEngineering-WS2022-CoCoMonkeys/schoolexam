@@ -146,7 +146,6 @@ public class ExamRepository : IExamRepository
                     var previouslyMatchedPage = submission.Pages.Single(x => x.BookletPageId.Equals(matchedPage.Id));
                     _context.Remove(previouslyMatchedPage.PdfFile);
                     previouslyMatchedPage.PdfFile = submissionPagePdf;
-                    _context.Update(previouslyMatchedPage);
                 }
 
                 _context.Add(submissionPagePdf);
@@ -239,7 +238,7 @@ public class ExamRepository : IExamRepository
         var exam = _context.Exams.SingleOrDefault(x => x.Id.Equals(examId));
         if (exam == null)
         {
-            throw new ArgumentException("Exam does not exist,");
+            throw new ArgumentException("Exam does not exist.");
         }
 
         return exam;
