@@ -22,7 +22,7 @@ public class SchoolExamDataContext : DataContextBase<SchoolExamDbContext>, IScho
 
     public IQueryable<ExamBooklet> ExamBooklets => Context.ExamBooklets;
 
-    public IQueryable<ExamBookletPage> ExamBookletPages => Context.ExamBookletPages;
+    public IQueryable<ExamBookletPage> ExamBookletPages => Context.ExamBookletPages.Include(x => x.SubmissionPage);
 
     public IQueryable<Student> Students =>
         Context.Students.Include(Student.CoursesName).Include(Student.LegalGuardiansName);

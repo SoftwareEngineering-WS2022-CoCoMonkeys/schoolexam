@@ -9,6 +9,7 @@ public class ExamBookletPage : EntityBase<Guid>
     public Guid BookletId { get; set; }
     public string QrCodeData { get; set; }
     public SubmissionPage? SubmissionPage { get; set; }
+    public bool IsMatched => SubmissionPage != null;
         
     protected ExamBookletPage(Guid id) : base(id)
     {

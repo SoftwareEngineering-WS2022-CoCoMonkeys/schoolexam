@@ -176,9 +176,9 @@ public class ExamRepository : IExamRepository
     public IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId)
     {
         EnsureExamExists(examId);
-        var submissionPages = _context.SubmissionPages.Where(x => x.ExamId.Equals(examId));
+        var submissionPages = _context.SubmissionPages.Where(x => x.ExamId.Equals(examId)).ToList();
 
-        var result = submissionPages.Where(x => !x.SubmissionId.HasValue);
+        var result = submissionPages.Where(x => !x.IsMatched);
         return result;
     }
 
@@ -187,7 +187,7 @@ public class ExamRepository : IExamRepository
         var exam = EnsureExamExists(examId);
         var bookletPages = exam.Booklets.SelectMany(x => x.Pages);
 
-        var result = bookletPages.Where(x => x.SubmissionPage == null);
+        var result = bookletPages.Where(x => !x.IsMatched);
         return result;
     }
 

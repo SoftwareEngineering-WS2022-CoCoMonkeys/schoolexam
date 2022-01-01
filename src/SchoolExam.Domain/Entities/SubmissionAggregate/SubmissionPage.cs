@@ -8,6 +8,7 @@ public class SubmissionPage : EntityBase<Guid>
     public SubmissionPagePdfFile PdfFile { get; set; }
     public Guid? SubmissionId { get; set; }
     public Guid? BookletPageId { get; set; }
+    public bool IsMatched => SubmissionId.HasValue && BookletPageId.HasValue;
 
     protected SubmissionPage(Guid id) : base(id)
     {
