@@ -48,6 +48,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var courseTeacher = new CourseTeacher(_course.Id, _teacher.Id);
         _exam = TestEntityFactory.Create<Exam, Guid>();
         _exam.CreatorId = _teacher.Id;
+        _exam.CourseId = _course.Id;
         _taskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
         _taskPdfFile.ExamId = _exam.Id;
         _user = TestEntityFactory.Create<User, Guid>();
@@ -71,6 +72,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         
         var otherExam = TestEntityFactory.Create<Exam, Guid>();
         otherExam.CreatorId = _teacher.Id;
+        otherExam.CourseId = _course.Id;
         var otherTaskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
         otherTaskPdfFile.ExamId = otherExam.Id;
         var otherBooklet = TestEntityFactory.Create<ExamBooklet, Guid>();

@@ -4,6 +4,7 @@ using iText.Kernel.Pdf.Canvas.Parser;
 using iText.Kernel.Utils;
 using iText.Layout;
 using iText.Layout.Element;
+using iText.Layout.Properties;
 using Microsoft.Extensions.Logging;
 using SchoolExam.Application.Pdf;
 
@@ -12,14 +13,14 @@ namespace SchoolExam.Infrastructure.Pdf;
 public class iText7PdfService : IPdfService
 {
     private const string ModificationDateName = "ModificationDate";
-    
+
     private readonly ILogger<iText7PdfService> _logger;
-    
+
     public iText7PdfService(ILogger<iText7PdfService> logger)
     {
         _logger = logger;
     }
-    
+
     public int GetNumberOfPages(byte[] pdf)
     {
         using var memoryStream = new MemoryStream(pdf);
@@ -45,6 +46,32 @@ public class iText7PdfService : IPdfService
             var imageData = ImageDataFactory.CreatePng(image.Data);
             var pdfImage = new Image(imageData, image.Left, image.Bottom, image.Width).SetPageNumber(image.Page);
             document.Add(pdfImage);
+        }
+
+        document.Close();
+        var result = writeStream.ToArray();
+
+        return result;
+    }
+
+    public byte[] RenderTexts(byte[] pdf, params PdfTextRenderInfo[] texts)
+    {
+        using var readStream = new MemoryStream(pdf);
+        using var writeStream = new MemoryStream();
+        var pdfReader = new PdfReader(readStream);
+        var pdfWriter = new PdfWriter(writeStream);
+        var pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+        var document = new Document(pdfDocument);
+
+        foreach (var text in texts)
+        {
+            var div = new Div().SetPageNumber(text.Page).SetWidth(text.Width).SetHeight(text.Height)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE).SetFixedPosition(text.Left, text.Bottom, text.Width);
+
+            var paragraph = new Paragraph(text.Text);
+            div.Add(paragraph);
+
+            document.Add(div);
         }
 
         document.Close();
@@ -88,7 +115,7 @@ public class iText7PdfService : IPdfService
 
         var splitter = new InMemorySplitter(pdfDocument);
         var pdfSplit = splitter.SplitByPageCount(1);
-        
+
         var result = new List<byte[]>();
         for (int i = 0; i < pdfSplit.Count; i++)
         {
@@ -107,7 +134,7 @@ public class iText7PdfService : IPdfService
         var pdfWriter = new PdfWriter(writeStream);
         var pdfTargetDocument = new PdfDocument(pdfWriter);
         var merger = new PdfMerger(pdfTargetDocument);
-        
+
         foreach (var pdf in pdfs)
         {
             using var readStream = new MemoryStream(pdf);
@@ -116,6 +143,7 @@ public class iText7PdfService : IPdfService
             merger.Merge(pdfSourceDocument, 1, pdfSourceDocument.GetNumberOfPages());
             pdfSourceDocument.Close();
         }
+
         pdfTargetDocument.Close();
 
         return writeStream.ToArray();
@@ -130,9 +158,9 @@ public class iText7PdfService : IPdfService
         var readerSecond = new PdfReader(streamSecond);
         var pdfDocumentFirst = new PdfDocument(readerFirst);
         var pdfDocumentSecond = new PdfDocument(readerSecond);
-        
+
         var result = comparer.CompareByCatalog(pdfDocumentFirst, pdfDocumentSecond);
-        
+
         pdfDocumentFirst.Close();
         pdfDocumentSecond.Close();
         return result.IsOk();

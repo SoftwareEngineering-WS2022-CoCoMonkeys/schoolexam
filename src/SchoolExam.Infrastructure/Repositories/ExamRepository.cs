@@ -65,6 +65,8 @@ public class ExamRepository : IExamRepository
             throw new InvalidOperationException("Exam does not have a task PDF file.");
         }
 
+        var course = _context.Courses.Single(x => x.Id.Equals(exam.CourseId));
+
         var content = exam.TaskPdfFile.Content;
         var pageCount = _pdfService.GetNumberOfPages(content);
         // generate exam booklets
@@ -77,10 +79,16 @@ public class ExamRepository : IExamRepository
                 .Select(x => new PdfImageRenderInfo(x, 10.0f, 10.0f, 42.0f, qrCodes[x - 1])).ToArray();
             var bookletContent = _pdfService.RenderImages(content, pdfImageInfos);
 
+            var footerText = $"{course.Name} - {exam.Date:d} - {i + 1}";
+            var pdfTextInfos = Enumerable.Range(1, pageCount)
+                .Select(x =>
+                    new PdfTextRenderInfo(footerText, x, 62.0f, 10.0f, 523.0f, 42.0f)).ToArray();
+            bookletContent = _pdfService.RenderTexts(bookletContent, pdfTextInfos);
+
             var bookletId = Guid.NewGuid();
             var bookletPdfFile = new BookletPdfFile(Guid.NewGuid(), $"{i + 1}.pdf", bookletContent.LongLength,
                 DateTime.Now, userId, bookletContent, bookletId);
-            var booklet = new ExamBooklet(bookletId, bookletPdfFile, examId);
+            var booklet = new ExamBooklet(bookletId, examId, i + 1, bookletPdfFile);
 
             for (int page = 1; page <= pageCount; page++)
             {
@@ -210,7 +218,7 @@ public class ExamRepository : IExamRepository
         }
 
         var bookletPageMatched = _context.SubmissionPages.Any(x => x.BookletPageId.Equals(bookletPageId));
-        
+
         // not possible to manually match a previously matched pages
         if (bookletPageMatched || submissionPage.BookletPageId.HasValue)
         {
