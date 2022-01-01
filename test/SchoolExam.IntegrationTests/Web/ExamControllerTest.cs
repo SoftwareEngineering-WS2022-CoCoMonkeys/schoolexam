@@ -220,8 +220,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
             new MultipartFormDataContent {{new ByteArrayContent(submissionPdf), "submissionPdfFormFile", fileName}});
-
-        var content = await response.Content.ReadAsStringAsync();
+        
         response.EnsureSuccessStatusCode();
 
         using (var context = GetSchoolExamDataContext())
@@ -328,6 +327,70 @@ public class ExamControllerTest : ApiIntegrationTestBase
             bookletPages.Count(x => x.SubmissionPage != null).Should().Be(1);
             bookletPages.Single(x => x.SubmissionPage != null).Id.Should().Be(_matchedBookletPage.Id);
         }
+    }
+    
+    [Test]
+    public async Task ExamController_Clean_ExamCreator_Success()
+    {
+        using (var context = GetSchoolExamDataContext())
+        {
+            foreach (var submission in context.Submissions)
+            {
+                context.Remove(submission);
+            }
+
+            foreach (var submissionPage in context.SubmissionPages)
+            {
+                context.Remove(submissionPage);
+            }
+            await context.SaveChangesAsync();
+        }
+
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Clean", null);
+        response.EnsureSuccessStatusCode();
+        
+        using (var context = GetSchoolExamDataContext())
+        {
+            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            var booklets = exam?.Booklets;
+            booklets.Should().HaveCount(0);
+        }
+    }
+    
+    [Test]
+    public async Task ExamController_Clean_ExamNotBuiltPreviously_ThrowsException()
+    {
+        await ResetExam();
+
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Clean", null);
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain(nameof(InvalidOperationException));
+        content.Should().Contain("The exam has not been built yet.");
+    }
+    
+    [Test]
+    public async Task ExamController_Clean_ExamWithSubmissionPages_ThrowsException()
+    {
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Clean", null);
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain(nameof(InvalidOperationException));
+        content.Should().Contain("An exam with existing submission pages must not be cleaned.");
     }
     
     [Test]
@@ -568,7 +631,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             context.Remove(booklet);
         }
 
-        foreach (var submissionPage in context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)))
+        foreach (var submissionPage in context.SubmissionPages)
         {
             context.Remove(submissionPage);
         }

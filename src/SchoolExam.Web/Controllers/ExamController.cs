@@ -44,6 +44,27 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpPost]
+    [Route($"{{{ExamIdParameterName}}}/Clean")]
+    [Authorize(ExamCreatorPolicyName)]
+    public async Task<IActionResult> Clean(Guid examId)
+    {
+        await _examRepository.Clean(examId);
+        
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route($"{{{ExamIdParameterName}}}/Rebuild")]
+    [Authorize(ExamCreatorPolicyName)]
+    public async Task<IActionResult> Rebuild(Guid examId, [FromBody] BuildExamModel buildExamModel)
+    {
+        await _examRepository.Clean(examId);
+        await _examRepository.Build(examId, buildExamModel.Count, GetUserId()!.Value);
+
+        return Ok();
+    }
+
+    [HttpPost]
     [Route($"{{{ExamIdParameterName}}}/Match")]
     [Authorize(ExamCreatorPolicyName)]
     public async Task<IActionResult> Match(Guid examId, IFormFile submissionPdfFormFile)
@@ -88,6 +109,4 @@ public class ExamController : ApiController<ExamController>
 
         return Ok();
     }
-    
-    // TODO: rebuild if exam has already been built
 }

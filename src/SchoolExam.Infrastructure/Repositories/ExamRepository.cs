@@ -103,6 +103,29 @@ public class ExamRepository : IExamRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task Clean(Guid examId)
+    {
+        var exam = EnsureExamExists(examId);
+
+        var submissionPages = _context.SubmissionPages.Where(x => x.ExamId.Equals(examId));
+        if (submissionPages.Any())
+        {
+            throw new InvalidOperationException("An exam with existing submission pages must not be cleaned.");
+        }
+
+        var booklets = exam.Booklets;
+        if (booklets.Count < 1)
+        {
+            throw new InvalidOperationException("The exam has not been built yet.");
+        }
+        foreach (var booklet in booklets)
+        {
+            _context.Remove(booklet);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
     public async Task Match(Guid examId, byte[] pdf, Guid userId)
     {
         var exam = EnsureExamExists(examId);
