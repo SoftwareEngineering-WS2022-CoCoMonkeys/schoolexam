@@ -90,7 +90,17 @@ public class iText7PdfService : IPdfService
         int page = 0;
 
         var strategy = new ImageRenderListener();
-        strategy.ImageParsed += (sender, e) => { images.Add(new PdfImageParseInfo(page, e.Data)); };
+        strategy.ImageParsed += (sender, e) =>
+        {
+            // get rotation of PDF page
+            float pageRotation = (float) (pdfDocument.GetPage(page).GetRotation() * Math.PI / 180.0);
+            // create rotation matrix for PDF page rotation from rotation angle
+            var pageRotationMatrix = new RotationMatrix(pageRotation);
+            // multiply rotation matrix of PDF page with rotation of image
+            var rotationMatrix = pageRotationMatrix * e.RotationMatrix;
+
+            images.Add(new PdfImageParseInfo(page, e.Data, rotationMatrix));
+        };
         strategy.ImageParsingFailed += (sender, e) =>
         {
             _logger.LogWarning($"Image on page {page} could not be parsed. Reason: {e.Reason}.");
@@ -147,6 +157,29 @@ public class iText7PdfService : IPdfService
         pdfTargetDocument.Close();
 
         return writeStream.ToArray();
+    }
+
+    public byte[] Rotate(byte[] pdf, int degrees)
+    {
+        using var readStream = new MemoryStream(pdf);
+        using var writeStream = new MemoryStream();
+        var pdfReader = new PdfReader(readStream);
+        var pdfWriter = new PdfWriter(writeStream);
+        var pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+        var document = new Document(pdfDocument);
+
+        for (int page = 1; page <= pdfDocument.GetNumberOfPages(); page++)
+        {
+            var pdfPage = pdfDocument.GetPage(page);
+            var current = pdfPage.GetRotation();
+            pdfPage.SetRotation((current + degrees) % 360);
+            pdfPage.SetIgnorePageRotationForContent(true);
+        }
+
+        document.Close();
+        var result = writeStream.ToArray();
+
+        return result;
     }
 
     public bool Compare(byte[] first, byte[] second)

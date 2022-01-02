@@ -1,6 +1,8 @@
+using SchoolExam.Application.Pdf;
+
 namespace SchoolExam.Application.QrCode;
 
 public interface IQrCodeReader
 {
-    IEnumerable<string> ReadQrCodes(byte[] image);
+    IEnumerable<QrCodeParseInfo> ReadQrCodes(byte[] image, RotationMatrix rotationMatrix);
 }

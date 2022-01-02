@@ -72,7 +72,7 @@ public class ExamRepository : IExamRepository
         // generate exam booklets
         for (int i = 0; i < count; i++)
         {
-            var qrCodeData = Enumerable.Range(0, pageCount).Select(x => _randomGenerator.GenerateHexString(32))
+            var qrCodeData = Enumerable.Range(0, pageCount).Select(_ => _randomGenerator.GenerateHexString(32))
                 .ToArray();
             var qrCodes = qrCodeData.Select(x => _qrCodeGenerator.GeneratePngQrCode(x, 2)).ToArray();
             var pdfImageInfos = Enumerable.Range(1, pageCount)
@@ -118,6 +118,7 @@ public class ExamRepository : IExamRepository
         {
             throw new InvalidOperationException("The exam has not been built yet.");
         }
+
         foreach (var booklet in booklets)
         {
             _context.Remove(booklet);
@@ -142,13 +143,17 @@ public class ExamRepository : IExamRepository
                 DateTime.Now, userId, pagePdf, submissionPageId);
 
             var images = _pdfService.ParseImages(pagePdf).ToList();
-            var qrCodes = images.SelectMany(x => _qrCodeReader.ReadQrCodes(x.Data)).ToList();
+            var qrCodes = images.SelectMany(x => _qrCodeReader.ReadQrCodes(x.Data, x.RotationMatrix)).ToList();
 
             var bookletPages = exam.Booklets.SelectMany(x => x.Pages);
-            var matchedQrCode = qrCodes.SingleOrDefault(qrCode => bookletPages.Any(x => x.QrCodeData.Equals(qrCode)));
+            var matchedQrCode =
+                qrCodes.SingleOrDefault(qrCode => bookletPages.Any(x => x.QrCodeData.Equals(qrCode.Data)));
             if (matchedQrCode != null)
             {
-                var matchedPage = bookletPages.Single(x => x.QrCodeData.Equals(matchedQrCode));
+                // rotate PDF of submission page according to added QR code on page
+                submissionPagePdf.Content = _pdfService.Rotate(submissionPagePdf.Content, -matchedQrCode.Degrees);
+
+                var matchedPage = bookletPages.Single(x => x.QrCodeData.Equals(matchedQrCode.Data));
 
                 // get existing submission for booklet
                 if (!submissions.ContainsKey(matchedPage.BookletId))
@@ -178,8 +183,6 @@ public class ExamRepository : IExamRepository
                     _context.Remove(previouslyMatchedPage.PdfFile);
                     previouslyMatchedPage.PdfFile = submissionPagePdf;
                 }
-
-                _context.Add(submissionPagePdf);
             }
             else
             {
@@ -189,8 +192,9 @@ public class ExamRepository : IExamRepository
                 // persist unmatched submission pages such that they can be matched manually afterwards
                 var submissionPage = new SubmissionPage(submissionPageId, examId, submissionPagePdf, null, null);
                 _context.Add(submissionPage);
-                _context.Add(submissionPagePdf);
             }
+
+            _context.Add(submissionPagePdf);
         }
 
         await _context.SaveChangesAsync();
@@ -216,7 +220,7 @@ public class ExamRepository : IExamRepository
 
     public async Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId)
     {
-        var exam = EnsureExamExists(examId);
+        EnsureExamExists(examId);
         var bookletPage = _context.ExamBookletPages.SingleOrDefault(x => x.Id.Equals(bookletPageId));
         if (bookletPage == null)
         {
@@ -250,12 +254,8 @@ public class ExamRepository : IExamRepository
         }
 
         var bookletId = bookletPage.BookletId;
-        var submission = _context.Submissions.SingleOrDefault(x => x.BookletId.Equals(bookletId));
-        if (submission == null)
-        {
-            // create new submission if no submission has been created previously for booklet
-            submission = new Submission(Guid.NewGuid(), null, bookletId);
-        }
+        var submission = _context.Submissions.SingleOrDefault(x => x.BookletId.Equals(bookletId)) ??
+                         new Submission(Guid.NewGuid(), null, bookletId);
 
         submissionPage.SubmissionId = submission.Id;
         submissionPage.BookletPageId = bookletPageId;

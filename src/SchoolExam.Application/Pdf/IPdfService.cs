@@ -8,6 +8,7 @@ public interface IPdfService
     IEnumerable<PdfImageParseInfo> ParseImages(byte[] pdf);
     IList<byte[]> Split(byte[] pdf);
     byte[] Merge(params byte[][] pdfs);
+    byte[] Rotate(byte[] pdf, int degrees);
     bool Compare(byte[] first, byte[] second);
     DateTime GetModificationDate(byte[] pdf);
 }
