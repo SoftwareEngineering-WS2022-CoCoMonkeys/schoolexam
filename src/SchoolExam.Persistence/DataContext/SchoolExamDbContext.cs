@@ -60,6 +60,7 @@ public class SchoolExamDbContext : DbContextBase
         modelBuilder.ApplyConfiguration(new ExamBookletPageConfiguration());
 
         modelBuilder.ApplyConfiguration(new SubmissionConfiguration());
+        modelBuilder.ApplyConfiguration(new SubmissionPdfFileConfiguration());
         modelBuilder.ApplyConfiguration(new SubmissionPageConfiguration());
         modelBuilder.ApplyConfiguration(new SubmissionPagePdfFileConfiguration());
         modelBuilder.ApplyConfiguration(new AnswerConfiguration());

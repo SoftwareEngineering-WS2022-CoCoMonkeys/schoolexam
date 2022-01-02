@@ -8,6 +8,7 @@ public class ExamBooklet : EntityBase<Guid>
     public int SequenceNumber { get; set; }
     public BookletPdfFile PdfFile { get; set; }
     public ICollection<ExamBookletPage> Pages { get; set; }
+    public bool HasCompleteSubmission => Pages.All(x => x.IsMatched); 
 
     protected ExamBooklet(Guid id) : base(id)
     {

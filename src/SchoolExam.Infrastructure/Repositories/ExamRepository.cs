@@ -6,6 +6,8 @@ using SchoolExam.Application.RandomGenerator;
 using SchoolExam.Application.Repositories;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
+using SchoolExam.Domain.Extensions;
+using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Infrastructure.Repositories;
 
@@ -35,7 +37,7 @@ public class ExamRepository : IExamRepository
     {
         var examId = Guid.NewGuid();
         var exam = new Exam(examId, title, description, date, courseId);
-        
+
         _context.Add(exam);
         await _context.SaveChangesAsync();
     }
@@ -54,7 +56,7 @@ public class ExamRepository : IExamRepository
     public async Task Delete(Guid examId)
     {
         var exam = EnsureExamExists(examId);
-        if (exam.HasBeenBuilt)
+        if (exam.State.HasBeenBuilt())
         {
             throw new InvalidOperationException("An exam that already has been built must not be deleted.");
         }
@@ -67,6 +69,12 @@ public class ExamRepository : IExamRepository
     {
         var exam = EnsureExamExists(examId);
 
+        if (exam.State.HasBeenBuilt())
+        {
+            throw new InvalidOperationException(
+                "The task PDF file of an exam that already has been built cannot be changed.");
+        }
+
         // remove previously existing task PDF file
         if (exam.TaskPdfFile != null)
         {
@@ -75,6 +83,9 @@ public class ExamRepository : IExamRepository
 
         var taskPdfFile =
             new TaskPdfFile(Guid.NewGuid(), name, content.LongLength, DateTime.Now, userId, content, examId);
+        // exam is ready to be built after having a task PDF file
+        exam.State = ExamState.BuildReady;
+        _context.Update(exam);
         _context.Add(taskPdfFile);
         await _context.SaveChangesAsync();
     }
@@ -87,7 +98,7 @@ public class ExamRepository : IExamRepository
         }
 
         var exam = EnsureExamExists(examId);
-        if (exam.HasBeenBuilt)
+        if (exam.State.HasBeenBuilt())
         {
             throw new InvalidOperationException("Exam has already been built.");
         }
@@ -132,6 +143,9 @@ public class ExamRepository : IExamRepository
             _context.Add(bookletPdfFile);
         }
 
+        exam.State = ExamState.SubmissionReady;
+        _context.Update(exam);
+
         await _context.SaveChangesAsync();
     }
 
@@ -145,16 +159,19 @@ public class ExamRepository : IExamRepository
             throw new InvalidOperationException("An exam with existing submission pages must not be cleaned.");
         }
 
-        var booklets = exam.Booklets;
-        if (booklets.Count < 1)
+        if (!exam.State.HasBeenBuilt())
         {
             throw new InvalidOperationException("The exam has not been built yet.");
         }
 
+        var booklets = exam.Booklets;
         foreach (var booklet in booklets)
         {
             _context.Remove(booklet);
         }
+
+        exam.State = ExamState.BuildReady;
+        _context.Update(exam);
 
         await _context.SaveChangesAsync();
     }
@@ -163,15 +180,15 @@ public class ExamRepository : IExamRepository
     {
         var exam = EnsureExamExists(examId);
 
-        if (!exam.HasBeenBuilt)
+        if (exam.State != ExamState.SubmissionReady && exam.State != ExamState.CorrectionReady)
         {
-            throw new InvalidOperationException(
-                "Matching cannot not be performed if exam has not been built previously.");
+            throw new InvalidOperationException("Exam is not ready to match submissions.");
         }
 
         var pages = _pdfService.Split(pdf);
 
         var submissions = _context.Submissions.ToDictionary(x => x.BookletId, x => x);
+        var updatedSubmissionIds = new List<Guid>();
         for (int page = 1; page <= pages.Count; page++)
         {
             var pagePdf = pages[page - 1];
@@ -203,6 +220,7 @@ public class ExamRepository : IExamRepository
                 }
 
                 var submission = submissions[matchedPage.BookletId];
+                updatedSubmissionIds.Add(submission.Id);
 
                 // check if page has already been matched previously
                 if (matchedPage.SubmissionPage == null)
@@ -236,6 +254,8 @@ public class ExamRepository : IExamRepository
         }
 
         await _context.SaveChangesAsync();
+        await MergeCompleteSubmissions(examId, updatedSubmissionIds, userId);
+        await CheckCompletenessOfExamSubmissions(examId);
     }
 
     public IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId)
@@ -256,7 +276,7 @@ public class ExamRepository : IExamRepository
         return result;
     }
 
-    public async Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId)
+    public async Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId, Guid userId)
     {
         EnsureExamExists(examId);
         var bookletPage = _context.ExamBookletPages.SingleOrDefault(x => x.Id.Equals(bookletPageId));
@@ -300,6 +320,9 @@ public class ExamRepository : IExamRepository
 
         _context.Update(submissionPage);
         await _context.SaveChangesAsync();
+        
+        await MergeCompleteSubmissions(examId, new[] {submission.Id}, userId);
+        await CheckCompletenessOfExamSubmissions(examId);
     }
 
     private Exam EnsureExamExists(Guid examId)
@@ -311,5 +334,47 @@ public class ExamRepository : IExamRepository
         }
 
         return exam;
+    }
+
+    private async Task MergeCompleteSubmissions(Guid examId, IEnumerable<Guid> updatedSubmissionIds, Guid userId)
+    {
+        var updatedSubmissionIdsSet = updatedSubmissionIds.ToHashSet();
+        var updatedSubmissions = _context.Submissions.Where(x => updatedSubmissionIdsSet.Contains(x.Id));
+        var updatedSubmissionsDict = updatedSubmissions.ToDictionary(x => x.BookletId, x => x);
+        var exam = _context.Exams.Single(x => x.Id.Equals(examId));
+
+        // get updated booklets with a complete submission
+        var booklets = exam.Booklets
+            .Where(x => x.HasCompleteSubmission)
+            .Where(x => updatedSubmissionsDict.ContainsKey(x.Id)).ToList();
+        var bookletPagesDict = booklets.SelectMany(x => x.Pages).ToDictionary(x => x.Id, x => x.Page);
+
+        foreach (var booklet in booklets)
+        {
+            var submission = updatedSubmissionsDict[booklet.Id];
+            if (submission.PdfFile != null)
+            {
+                _context.Remove(submission.PdfFile);
+            }
+            var pages = submission.Pages.OrderBy(x => bookletPagesDict[x.BookletPageId!.Value])
+                .Select(x => x.PdfFile.Content).ToArray();
+            var submissionPdf = _pdfService.Merge(pages);
+
+            var submissionPdfFile = new SubmissionPdfFile(Guid.NewGuid(), $"submission_{submission.Id}.pdf",
+                submissionPdf.LongLength, DateTime.Now, userId, submissionPdf, submission.Id);
+            _context.Add(submissionPdfFile);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task CheckCompletenessOfExamSubmissions(Guid examId)
+    {
+        var exam = _context.Exams.Single(x => x.Id.Equals(examId));
+        var isComplete = exam.Booklets.All(x => x.HasCompleteSubmission);
+        exam.State = isComplete ? ExamState.CorrectionReady : ExamState.SubmissionReady;
+
+        _context.Update(exam);
+        await _context.SaveChangesAsync();
     }
 }

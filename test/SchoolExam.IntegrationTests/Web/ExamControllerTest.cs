@@ -50,6 +50,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _exam = TestEntityFactory.Create<Exam, Guid>();
         _exam.CreatorId = _teacher.Id;
         _exam.CourseId = _course.Id;
+        _exam.State = ExamState.SubmissionReady;
         _taskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
         _taskPdfFile.ExamId = _exam.Id;
         _user = TestEntityFactory.Create<User, Guid>();
@@ -198,6 +199,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
     [Test]
     public async Task ExamController_UploadTaskPdf_ExamCreator_Success()
     {
+        await ResetExam();
+        
         var fileName = "test-exam.pdf";
         var content = Encoding.UTF8.GetBytes("This is a test exam.");
 
@@ -211,6 +214,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         using var context = GetSchoolExamDataContext();
         var exam = context.Find<Exam, Guid>(_exam.Id, nameof(Exam.TaskPdfFile));
+        exam?.State.Should().Be(ExamState.BuildReady);
         var taskPdfFile = exam?.TaskPdfFile;
 
         var expectedTaskPdfFile =
@@ -223,6 +227,25 @@ public class ExamControllerTest : ApiIntegrationTestBase
             taskPdfFile.Should().BeEquivalentTo(expectedTaskPdfFile,
                 opts => opts.Excluding(x => x.Id).Excluding(x => x.UploadedAt));
         }
+    }
+    
+    [Test]
+    public async Task ExamController_UploadTaskPdf_ExamBuiltPreviously_ThrowsException()
+    {
+        var fileName = "test-exam.pdf";
+        var pdfContent = Encoding.UTF8.GetBytes("This is a test exam.");
+
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/UploadTaskPdf",
+            new MultipartFormDataContent {{new ByteArrayContent(pdfContent), "taskPdfFormFile", fileName}});
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain(nameof(InvalidOperationException));
+        content.Should().Contain("The task PDF file of an exam that already has been built cannot be changed.");
     }
 
     [Test]
@@ -244,6 +267,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         using (var context = GetSchoolExamDataContext())
         {
             var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            exam?.State.Should().Be(ExamState.SubmissionReady);
             var booklets = exam?.Booklets;
             booklets.Should().HaveCount(2);
             var pages = booklets?.SelectMany(x => x.Pages);
@@ -266,6 +290,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         using (var context = GetSchoolExamDataContext())
         {
+            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            exam?.State.Should().Be(ExamState.CorrectionReady);
             var pages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)).ToList();
             pages.Should().HaveCount(4);
             pages.Select(x => x.SubmissionId.HasValue).Should().AllBeEquivalentTo(true);
@@ -291,6 +317,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         using (var context = GetSchoolExamDataContext())
         {
             var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            exam?.State.Should().Be(ExamState.SubmissionReady);
             var booklets = exam?.Booklets;
             booklets.Should().HaveCount(2);
             var pages = booklets?.SelectMany(x => x.Pages);
@@ -314,6 +341,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         using (var context = GetSchoolExamDataContext())
         {
+            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            exam?.State.Should().Be(ExamState.CorrectionReady);
             var pages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)).ToList();
             pages.Should().HaveCount(4);
             pages.Select(x => x.SubmissionId.HasValue).Should().AllBeEquivalentTo(true);
@@ -411,6 +440,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             bookletPages.Should().HaveCount(2);
             bookletPages.Count(x => x.SubmissionPage != null).Should().Be(1);
             bookletPages.Single(x => x.SubmissionPage != null).Id.Should().Be(_matchedBookletPage.Id);
+            
+            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            exam?.State.Should().Be(ExamState.SubmissionReady);
         }
     }
     
@@ -432,7 +464,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(nameof(InvalidOperationException));
-        content.Should().Contain("Matching cannot not be performed if exam has not been built previously.");
+        content.Should().Contain("Exam is not ready to match submissions.");
     }
     
     [Test]
@@ -462,6 +494,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         using (var context = GetSchoolExamDataContext())
         {
             var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            exam?.State.Should().Be(ExamState.BuildReady);
             var booklets = exam?.Booklets;
             booklets.Should().HaveCount(0);
         }
@@ -557,6 +590,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var submissionPages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id));
         submissionPages.Select(x => x.SubmissionId.HasValue).Should().AllBeEquivalentTo(true);
         var exam = context.Exams.SingleOrDefault(x => x.Id.Equals(_exam.Id));
+        exam?.State.Should().Be(ExamState.CorrectionReady);
         var bookletPages = exam?.Booklets.SelectMany(x => x.Pages);
         bookletPages?.Select(x => x.SubmissionPage != null).Should().AllBeEquivalentTo(true);
     }
@@ -707,6 +741,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         using (var context = GetSchoolExamDataContext())
         {
             _matchedSubmissionPage.BookletPageId = null;
+            _matchedSubmissionPage.SubmissionId = null;
             context.Update(_matchedSubmissionPage);
             context.Remove(_submission);
             await context.SaveChangesAsync();
@@ -727,6 +762,16 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/MatchPages", manualMatchesModel);
         response.EnsureSuccessStatusCode();
+
+        using (var context = GetSchoolExamDataContext())
+        {
+            var submissionPages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id));
+            submissionPages.Count(x => x.SubmissionId.HasValue).Should().Be(1);
+            var exam = context.Exams.SingleOrDefault(x => x.Id.Equals(_exam.Id));
+            exam?.State.Should().Be(ExamState.SubmissionReady);
+            var bookletPages = exam?.Booklets.SelectMany(x => x.Pages);
+            bookletPages?.Count(x => x.SubmissionPage != null).Should().Be(1);
+        }
     }
 
     private async Task ResetExam()
@@ -747,6 +792,10 @@ public class ExamControllerTest : ApiIntegrationTestBase
             context.Remove(submission);
         }
 
+        var exam = context.Exams.Single(x => x.Id.Equals(_exam.Id));
+        exam.State = ExamState.BuildReady;
+        context.Update(exam);
+        
         await context.SaveChangesAsync();
     }
 }

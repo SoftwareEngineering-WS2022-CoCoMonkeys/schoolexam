@@ -129,7 +129,7 @@ public class ExamController : ApiController<ExamController>
         foreach (var manualMatchModel in manualMatchesModel.Matches)
         {
             await _examRepository.MatchManually(examId, manualMatchModel.BookletPageId,
-                manualMatchModel.SubmissionPageId);
+                manualMatchModel.SubmissionPageId, GetUserId()!.Value);
         }
 
         return Ok();

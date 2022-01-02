@@ -1,4 +1,5 @@
 using SchoolExam.Domain.Base;
+using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
 
@@ -13,7 +14,7 @@ public class Exam : EntityBase<Guid>
     public Guid CourseId { get; set; }
     public Guid CreatorId { get; set; }
     public TaskPdfFile? TaskPdfFile { get; set; }
-    public bool HasBeenBuilt => Booklets.Count > 0;
+    public ExamState State { get; set; }
 
     protected Exam(Guid id) : base(id)
     {
@@ -27,5 +28,6 @@ public class Exam : EntityBase<Guid>
         CourseId = courseId;
         Tasks = new List<ExamTask>();
         Booklets = new List<ExamBooklet>();
+        State = ExamState.Planned;
     }
 }

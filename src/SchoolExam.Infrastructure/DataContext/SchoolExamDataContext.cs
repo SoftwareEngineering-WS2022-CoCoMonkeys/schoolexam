@@ -33,8 +33,8 @@ public class SchoolExamDataContext : DataContextBase<SchoolExamDbContext>, IScho
     public IQueryable<LegalGuardian> LegalGuardians => Context.LegalGuardians.Include(LegalGuardian.ChildrenName);
 
     public IQueryable<Submission> Submissions => Context.Submissions.Include(x => x.Pages).ThenInclude(x => x.PdfFile)
-        .ThenInclude(x => x.Uploader).Include(x => x.Answers);
-
+        .ThenInclude(x => x.Uploader).Include(x => x.Answers).Include(x => x.PdfFile).ThenInclude(x => x.Uploader);
+    
     public IQueryable<SubmissionPage> SubmissionPages =>
         Context.SubmissionPages.Include(x => x.PdfFile).ThenInclude(x => x.Uploader);
 

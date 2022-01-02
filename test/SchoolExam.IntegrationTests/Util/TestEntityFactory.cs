@@ -12,6 +12,7 @@ using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SchoolAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
+using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.IntegrationTests.Util;
 
@@ -36,6 +37,7 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     {
         _fixture = new Fixture();
 
+        _fixture.Customize<Exam>(opts => opts.With(x => x.State, ExamState.Planned));
         _fixture.Customize<TaskPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<ExamBooklet>(opts => opts.Without(x => x.Pages));
         _fixture.Customize<BookletPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));

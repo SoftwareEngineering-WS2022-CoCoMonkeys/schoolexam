@@ -11,6 +11,7 @@ public class Submission : EntityBase<Guid>
     public Guid? StudentId { get; set; }
     public ICollection<Answer> Answers { get; set; }
     public ICollection<SubmissionPage> Pages { get; set; }
+    public SubmissionPdfFile? PdfFile { get; set; }
 
     public Submission(Guid id) : base(id)
     {
