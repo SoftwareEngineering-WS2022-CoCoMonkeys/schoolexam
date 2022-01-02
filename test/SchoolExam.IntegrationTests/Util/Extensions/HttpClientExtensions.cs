@@ -15,4 +15,12 @@ public static class HttpClientExtensions
 
         return httpClient.PostAsync(requestUri, stringContent);
     }
+    
+    public static Task<HttpResponseMessage> PutAsJsonAsync<T>(this HttpClient httpClient, string requestUri, T data)
+    {
+        var json = JsonConvert.SerializeObject(data);
+        var stringContent = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
+
+        return httpClient.PutAsync(requestUri, stringContent);
+    }
 }

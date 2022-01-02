@@ -31,6 +31,38 @@ public class ExamRepository : IExamRepository
         _qrCodeReader = qrCodeReader;
     }
 
+    public async Task Create(string title, string description, DateTime date, Guid courseId)
+    {
+        var examId = Guid.NewGuid();
+        var exam = new Exam(examId, title, description, date, courseId);
+        
+        _context.Add(exam);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task Update(Guid examId, string title, string description, DateTime date)
+    {
+        var exam = EnsureExamExists(examId);
+        exam.Title = title;
+        exam.Description = description;
+        exam.Date = date;
+
+        _context.Update(exam);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task Delete(Guid examId)
+    {
+        var exam = EnsureExamExists(examId);
+        if (exam.HasBeenBuilt)
+        {
+            throw new InvalidOperationException("An exam that already has been built must not be deleted.");
+        }
+
+        _context.Remove(exam);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task SetTaskPdfFile(Guid examId, string name, Guid userId, byte[] content)
     {
         var exam = EnsureExamExists(examId);
@@ -130,6 +162,12 @@ public class ExamRepository : IExamRepository
     public async Task Match(Guid examId, byte[] pdf, Guid userId)
     {
         var exam = EnsureExamExists(examId);
+
+        if (!exam.HasBeenBuilt)
+        {
+            throw new InvalidOperationException(
+                "Matching cannot not be performed if exam has not been built previously.");
+        }
 
         var pages = _pdfService.Split(pdf);
 

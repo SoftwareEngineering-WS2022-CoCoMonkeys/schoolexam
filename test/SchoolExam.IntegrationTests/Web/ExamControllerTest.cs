@@ -21,6 +21,7 @@ using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.IntegrationTests.Util;
 using SchoolExam.IntegrationTests.Util.Extensions;
 using SchoolExam.Web.Models.Exam;
+using Guid = System.Guid;
 
 namespace SchoolExam.IntegrationTests.Web;
 
@@ -104,6 +105,94 @@ public class ExamControllerTest : ApiIntegrationTestBase
         context.Add(_otherBookletPage);
         context.Add(_otherSubmissionPage);
         await context.SaveChangesAsync();
+    }
+    
+    [Test]
+    public async Task ExamController_Create_CourseTeacher_Success()
+    {
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var newExam = TestEntityFactory.Create<Exam, Guid>();
+
+        var examWriteModel = new ExamWriteModel
+            {Title = newExam.Title, Description = newExam.Description, Date = newExam.Date};
+
+        var response = await this.Client.PostAsJsonAsync($"/Exam/Create/{_course.Id}", examWriteModel);
+        response.EnsureSuccessStatusCode();
+
+        using var context = GetSchoolExamDataContext();
+        var exams = context.Exams.Where(x => x.CourseId.Equals(_course.Id));
+        exams.Should().HaveCount(3);
+
+        exams.Should().ContainEquivalentOf(newExam,
+            opts => opts.Including(x => x.Title).Including(x => x.Description).Including(x => x.Date));
+    }
+    
+    [Test]
+    public async Task ExamController_Update_CourseTeacher_Success()
+    {
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var updatedExam = TestEntityFactory.Create<Exam, Guid>();
+        updatedExam.Id = _exam.Id;
+
+        var examWriteModel = new ExamWriteModel
+            {Title = updatedExam.Title, Description = updatedExam.Description, Date = updatedExam.Date};
+
+        var response = await this.Client.PutAsJsonAsync($"/Exam/{_exam.Id}/Update", examWriteModel);
+        response.EnsureSuccessStatusCode();
+
+        using var context = GetSchoolExamDataContext();
+        var exams = context.Exams.Where(x => x.CourseId.Equals(_course.Id));
+        exams.Should().HaveCount(2);
+
+        exams.Should().ContainEquivalentOf(updatedExam,
+            opts => opts.Including(x => x.Id).Including(x => x.Title).Including(x => x.Description)
+                .Including(x => x.Date));
+    }
+    
+    [Test]
+    public async Task ExamController_Delete_ExamCreator_Success()
+    {
+        await ResetExam();
+        
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var response = await this.Client.DeleteAsync($"/Exam/{_exam.Id}/Delete");
+        response.EnsureSuccessStatusCode();
+
+        using var context = GetSchoolExamDataContext();
+        var exams = context.Exams.Where(x => x.CourseId.Equals(_course.Id));
+        exams.Should().HaveCount(1);
+
+        exams.Should().NotContainEquivalentOf(_exam,
+            opts => opts.Including(x => x.Id).Including(x => x.Title).Including(x => x.Description)
+                .Including(x => x.Date));
+    }
+    
+    [Test]
+    public async Task ExamController_Delete_ExamBuiltPreviously_ThrowsException()
+    {
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var response = await this.Client.DeleteAsync($"/Exam/{_exam.Id}/Delete");
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain(nameof(InvalidOperationException));
+        content.Should().Contain("An exam that already has been built must not be deleted.");
+
+        using var context = GetSchoolExamDataContext();
+        var exams = context.Exams.Where(x => x.CourseId.Equals(_course.Id));
+        exams.Should().HaveCount(2);
     }
 
     [Test]
@@ -306,10 +395,6 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var fileName = "test-submission.pdf";
 
-        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
-            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
-            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-
         var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
             new MultipartFormDataContent
                 {{new ByteArrayContent(_booklet.PdfFile.Content), "submissionPdfFormFile", fileName}});
@@ -327,6 +412,27 @@ public class ExamControllerTest : ApiIntegrationTestBase
             bookletPages.Count(x => x.SubmissionPage != null).Should().Be(1);
             bookletPages.Single(x => x.SubmissionPage != null).Id.Should().Be(_matchedBookletPage.Id);
         }
+    }
+    
+    [Test]
+    public async Task ExamController_Match_ExamNotBuiltPreviously_ThrowsException()
+    {
+        await ResetExam();
+
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var submissionPdf = TestEntityFactory.Create<SubmissionPagePdfFile, Guid>();
+
+        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
+            new MultipartFormDataContent
+                {{new ByteArrayContent(submissionPdf.Content), "submissionPdfFormFile", $"{submissionPdf.Name}.pdf"}});
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain(nameof(InvalidOperationException));
+        content.Should().Contain("Matching cannot not be performed if exam has not been built previously.");
     }
     
     [Test]

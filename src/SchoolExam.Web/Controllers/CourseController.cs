@@ -3,16 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Repositories;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Models.Course;
 
 namespace SchoolExam.Web.Controllers;
 
 public class CourseController : ApiController<CourseController>
 {
-    public const string CourseIdParameterName = "courseId";
-    public const string CourseTeacherPolicyName = "CourseTeacherPolicy";
-    public const string CourseStudentPolicyName = "CourseStudentPolicy";
-    
     private readonly ICourseRepository _courseRepository;
     
     public CourseController(ILogger<CourseController> logger, IMapper mapper, ICourseRepository courseRepository) :
@@ -22,8 +19,8 @@ public class CourseController : ApiController<CourseController>
     }
 
     [HttpGet]
-    [Route($"{{{CourseIdParameterName}}}/TeacherView")]
-    [Authorize(CourseTeacherPolicyName)]
+    [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/TeacherView")]
+    [Authorize(PolicyNames.CourseTeacherPolicyName)]
     public CourseReadModelTeacher? GetByIdTeacherView(Guid courseId)
     {
         var course = _courseRepository.GetById(courseId);
@@ -31,8 +28,8 @@ public class CourseController : ApiController<CourseController>
     }
     
     [HttpGet]
-    [Route($"{{{CourseIdParameterName}}}/StudentView")]
-    [Authorize(CourseStudentPolicyName)]
+    [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/StudentView")]
+    [Authorize(PolicyNames.CourseStudentPolicyName)]
     public CourseReadModelTeacher? GetByIdStudentView(Guid courseId)
     {
         var course = _courseRepository.GetById(courseId);

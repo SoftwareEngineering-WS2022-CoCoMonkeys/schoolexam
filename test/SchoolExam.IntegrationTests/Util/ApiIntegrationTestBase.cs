@@ -18,7 +18,7 @@ namespace SchoolExam.IntegrationTests.Util;
 public abstract class ApiIntegrationTestBase
 {
     protected HttpClient Client { get; private set; }
-    protected ISchoolExamTestEntityFactory TestEntityFactory { get; private set; }
+    protected ISchoolExamTestEntityFactory TestEntityFactory { get; }
 
     private readonly WebApplicationFactory<Program> _factory;
 

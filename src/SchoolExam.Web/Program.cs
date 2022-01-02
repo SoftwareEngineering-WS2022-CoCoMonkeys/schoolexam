@@ -47,24 +47,25 @@ builder.Services.AddAuthentication(x =>
 builder.Services.AddAuthorization(options =>
 {
     // CourseController authorization policies
-    options.AddPolicy(CourseController.CourseTeacherPolicyName, policy =>
+    options.AddPolicy(PolicyNames.CourseTeacherPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
         policy.AddRequirements(new OwnerRequirement<Course>(course => course.TeacherIds,
-            CourseController.CourseIdParameterName, Course.TeachersName));
+            RouteParameterNames.CourseIdParameterName, Course.TeachersName));
     });
-    options.AddPolicy(CourseController.CourseStudentPolicyName, policy =>
+    options.AddPolicy(PolicyNames.CourseStudentPolicyName, policy =>
     {
         policy.RequireRole(Role.Student);
         policy.AddRequirements(new OwnerRequirement<Course>(course => course.StudentIds,
-            CourseController.CourseIdParameterName, Course.StudentsName));
+            RouteParameterNames.CourseIdParameterName, Course.StudentsName));
     });
     
     // ExamController authorization policies
-    options.AddPolicy(ExamController.ExamCreatorPolicyName, policy =>
+    options.AddPolicy(PolicyNames.ExamCreatorPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
-        policy.AddRequirements(new OwnerRequirement<Exam>(exam => exam.CreatorId, ExamController.ExamIdParameterName));
+        policy.AddRequirements(new OwnerRequirement<Exam>(exam => exam.CreatorId,
+            RouteParameterNames.ExamIdParameterName));
     });
 });
 

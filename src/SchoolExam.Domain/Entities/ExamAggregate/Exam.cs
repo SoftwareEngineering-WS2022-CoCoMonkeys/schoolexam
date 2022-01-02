@@ -4,6 +4,8 @@ namespace SchoolExam.Domain.Entities.ExamAggregate;
 
 public class Exam : EntityBase<Guid>
 {
+    public string Title { get; set; }
+    public string Description { get; set; }
     public GradingTable? GradingTable { get; set; }
     public ICollection<ExamTask> Tasks { get; set; }
     public ICollection<ExamBooklet> Booklets { get; set; }
@@ -17,8 +19,10 @@ public class Exam : EntityBase<Guid>
     {
     }
 
-    public Exam(Guid id, DateTime date, Guid courseId) : this(id)
+    public Exam(Guid id, string title, string description, DateTime date, Guid courseId) : this(id)
     {
+        Title = title;
+        Description = description;
         Date = date;
         CourseId = courseId;
         Tasks = new List<ExamTask>();
