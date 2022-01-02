@@ -1,7 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Infrastructure.Authentication;
-using SchoolExam.Util.Extensions;
+using SchoolExam.Web.Extensions;
 
 namespace SchoolExam.Web;
 

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace SchoolExam.Util.Extensions;
+namespace SchoolExam.Web.Extensions;
 
 public static class ClaimsPrincipalsExtension
 {
