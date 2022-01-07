@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using SchoolExam.Application.DataContext;
 using SchoolExam.Domain.Base;
 using SchoolExam.Infrastructure.Authentication;
-using SchoolExam.Util.Extensions;
-using SchoolExam.Web.Authentication;
+using SchoolExam.Web.Extensions;
 
 namespace SchoolExam.Web.Authorization;
 
@@ -34,6 +33,11 @@ public class OwnerHandler<TEntity> : AuthorizationHandler<OwnerRequirement<TEnti
                     {
                         context.Succeed(requirement);
                     }
+                }
+                else
+                {
+                    // authorization successful if entity does not exist
+                    context.Succeed(requirement);
                 }
             }
         }

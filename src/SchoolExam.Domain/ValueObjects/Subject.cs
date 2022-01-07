@@ -2,7 +2,7 @@ namespace SchoolExam.Domain.ValueObjects;
 
 public class Subject
 {
-    public string Name { get; set; }
+    public string Name { get; }
 
     public Subject(string name)
     {

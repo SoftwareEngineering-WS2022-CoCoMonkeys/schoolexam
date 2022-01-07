@@ -8,21 +8,16 @@ public class School : EntityBase<Guid>
 {
     public string Name { get; set; }
     public Address Location { get; set; }
-    public bool HasScanner { get; set; }
-
-    public static string TeachersName = nameof(_teachers);
-    private readonly ICollection<Teacher> _teachers;
-    public IEnumerable<Guid> TeacherIds => _teachers.Select(x => x.Id);
+    public ICollection<SchoolTeacher> Teachers { get; set; }
 
     protected School(Guid id) : base(id) 
     {
     }
         
-    public School(Guid id, string name, Address location, bool hasScanner) : this(id)
+    public School(Guid id, string name, Address location) : this(id)
     {
         Name = name;
         Location = location;
-        HasScanner = hasScanner;
-        _teachers = new List<Teacher>();
+        Teachers = new List<SchoolTeacher>();
     }
 }

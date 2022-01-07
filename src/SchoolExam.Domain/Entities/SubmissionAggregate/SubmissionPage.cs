@@ -4,16 +4,21 @@ namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 
 public class SubmissionPage : EntityBase<Guid>
 {
-    public int Page { get; set; }
-    public byte[] ScanData { get; set; }
-        
+    public Guid ExamId { get; set; }
+    public SubmissionPagePdfFile PdfFile { get; set; }
+    public Guid? SubmissionId { get; set; }
+    public Guid? BookletPageId { get; set; }
+    public bool IsMatched => SubmissionId.HasValue && BookletPageId.HasValue;
+
     protected SubmissionPage(Guid id) : base(id)
     {
     }
 
-    public SubmissionPage(Guid id, int page, byte[] scanData) : this(id)
+    public SubmissionPage(Guid id, Guid examId, SubmissionPagePdfFile pdfFile, Guid? submissionId, Guid? bookletPageId) : this(id)
     {
-        Page = page;
-        ScanData = scanData;
+        ExamId = examId;
+        PdfFile = pdfFile;
+        BookletPageId = bookletPageId;
+        SubmissionId = submissionId;
     }
 }

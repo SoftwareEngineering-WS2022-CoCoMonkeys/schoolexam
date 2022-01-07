@@ -1,3 +1,4 @@
+using System.Text;
 using QRCoder;
 using SchoolExam.Application.QrCode;
 
@@ -11,10 +12,11 @@ public class QRCoderQrCodeGenerator : IQrCodeGenerator
         _qrCodeGenerator = new QRCodeGenerator();
     }
 
-    public (byte[] qrCode, byte[] pngQrCode) GeneratePngQrCode(string data, int pixelsPerModule)
+    public byte[] GeneratePngQrCode(string message, int pixelsPerModule)
     {
+        var data = Encoding.ASCII.GetBytes(message);
         var qrCodeData = _qrCodeGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.H);
         var pngByteQrCode = new PngByteQRCode(qrCodeData);
-        return (qrCodeData.GetRawData(QRCodeData.Compression.Uncompressed), pngByteQrCode.GetGraphic(pixelsPerModule));
+        return pngByteQrCode.GetGraphic(pixelsPerModule);
     }
 }

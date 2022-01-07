@@ -1,21 +1,24 @@
 using SchoolExam.Domain.Base;
+using SchoolExam.Domain.Entities.SubmissionAggregate;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
 
 public class ExamBookletPage : EntityBase<Guid>
 {
     public int Page { get; set; }
-    public Guid ExamBookletId { get; set; }
-    public byte[] QrCode { get; set; }
+    public Guid BookletId { get; set; }
+    public string QrCodeData { get; set; }
+    public SubmissionPage? SubmissionPage { get; set; }
+    public bool IsMatched => SubmissionPage != null;
         
     protected ExamBookletPage(Guid id) : base(id)
     {
     }
 
-    public ExamBookletPage(Guid id, int page, Guid examBookletId, byte[] qrCode) : this(id)
+    public ExamBookletPage(Guid id, int page, Guid bookletId, string qrCodeData) : this(id)
     {
         Page = page;
-        ExamBookletId = examBookletId;
-        QrCode = qrCode;
+        BookletId = bookletId;
+        QrCodeData = qrCodeData;
     }
 }

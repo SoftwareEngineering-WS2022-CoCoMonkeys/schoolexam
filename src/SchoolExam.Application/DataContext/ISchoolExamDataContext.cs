@@ -11,10 +11,13 @@ public interface ISchoolExamDataContext : IDataContext
 {
     IQueryable<Course> Courses { get; }
     IQueryable<Exam> Exams { get; }
+    IQueryable<ExamBooklet> ExamBooklets { get; }
+    IQueryable<ExamBookletPage> ExamBookletPages { get; }
     IQueryable<Student> Students { get; }
     IQueryable<Teacher> Teachers { get; }
     IQueryable<LegalGuardian> LegalGuardians { get; }
     IQueryable<Submission> Submissions { get; }
+    IQueryable<SubmissionPage> SubmissionPages { get; }
     IQueryable<School> Schools { get; }
     IQueryable<User> Users { get; }
 }

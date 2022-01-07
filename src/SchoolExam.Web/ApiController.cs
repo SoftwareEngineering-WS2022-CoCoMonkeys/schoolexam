@@ -1,28 +1,32 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Infrastructure.Authentication;
-using SchoolExam.Util.Extensions;
-using SchoolExam.Web.Authentication;
+using SchoolExam.Web.Extensions;
 
 namespace SchoolExam.Web;
 
 [ApiController]
 [Route("[controller]")]
-public class ApiController<TController> : ControllerBase where TController : ApiController<TController>
+public abstract class ApiController<TController> : ControllerBase where TController : ApiController<TController>
 {
     protected ILogger<TController> Logger { get; private set; }
+    protected IMapper Mapper { get; private set; }
 
-    public ApiController(ILogger<TController> logger)
+    protected ApiController(ILogger<TController> logger, IMapper mapper)
     {
         Logger = logger;
+        Mapper = mapper;
     }
 
-    protected string? GetUserId()
+    protected Guid? GetUserId()
     {
-        return User.GetClaim(CustomClaimTypes.UserId);
+        var userId = User.GetClaim(CustomClaimTypes.UserId);
+        return userId != null ? Guid.Parse(userId) : null;
     }
 
-    protected string? GetPersonId()
+    protected Guid? GetPersonId()
     {
-        return User.GetClaim(CustomClaimTypes.PersonId);
+        var personId = User.GetClaim(CustomClaimTypes.PersonId);
+        return personId != null ? Guid.Parse(personId) : null;
     }
 }

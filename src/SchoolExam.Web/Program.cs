@@ -1,20 +1,24 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using SchoolExam.Application.Authentication;
 using SchoolExam.Application.DataContext;
+using SchoolExam.Application.Pdf;
 using SchoolExam.Application.QrCode;
+using SchoolExam.Application.RandomGenerator;
 using SchoolExam.Application.Repositories;
-using SchoolExam.Domain.Base;
 using SchoolExam.Domain.Entities.CourseAggregate;
+using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Infrastructure.DataContext;
+using SchoolExam.Infrastructure.Pdf;
 using SchoolExam.Infrastructure.QrCode;
+using SchoolExam.Infrastructure.RandomGenerator;
 using SchoolExam.Infrastructure.Repositories;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
 using SchoolExam.Web.Authorization;
-using SchoolExam.Web.Course;
 using SchoolExam.Web.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +28,10 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAutoMapper(typeof(SchoolExamMappingProfile));
+builder.Services.AddAutoMapper(config =>
+{
+    config.AddProfile<SchoolExamMappingProfile>();
+});
 
 builder.Services.AddAuthentication(x =>
 {
@@ -38,33 +45,60 @@ builder.Services.AddAuthentication(x =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy(CourseController.CourseTeacherPolicyName, policy =>
+    // CourseController authorization policies
+    options.AddPolicy(PolicyNames.CourseTeacherPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
-        policy.AddRequirements(new OwnerRequirement<Course>(course => course.TeacherIds,
-            CourseController.CourseIdParameterName, Course.TeachersName));
+        policy.AddRequirements(new OwnerRequirement<Course>(course => course.Teachers.Select(x => x.TeacherId),
+            RouteParameterNames.CourseIdParameterName, nameof(Course.Teachers)));
     });
-    options.AddPolicy(CourseController.CourseStudentPolicyName, policy =>
+    options.AddPolicy(PolicyNames.CourseStudentPolicyName, policy =>
     {
         policy.RequireRole(Role.Student);
-        policy.AddRequirements(new OwnerRequirement<Course>(course => course.StudentIds,
-            CourseController.CourseIdParameterName, Course.StudentsName));
+        policy.AddRequirements(new OwnerRequirement<Course>(course => course.Students.Select(x => x.StudentId),
+            RouteParameterNames.CourseIdParameterName, nameof(Course.Students)));
+    });
+    
+    // ExamController authorization policies
+    options.AddPolicy(PolicyNames.ExamCreatorPolicyName, policy =>
+    {
+        policy.RequireRole(Role.Teacher);
+        policy.AddRequirements(new OwnerRequirement<Exam>(exam => exam.CreatorId,
+            RouteParameterNames.ExamIdParameterName));
     });
 });
 
+builder.Services.Configure<FormOptions>(options =>
+{
+    // maximum file size limit of 50MB
+    options.MultipartBodyLengthLimit = 52428800;
+});
+
 builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Course>>();
+builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Exam>>();
 
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddSingleton<IDbConnectionConfiguration, DbConnectionConfiguration>();
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 builder.Services.AddSingleton<IQrCodeGenerator, QRCoderQrCodeGenerator>();
-builder.Services.AddSingleton<IQrCodeDataGenerator, RandomQrCodeDataGenerator>();
+builder.Services.AddSingleton<Random>();
+builder.Services.AddSingleton<IRandomGenerator, RandomGenerator>();
+builder.Services.AddSingleton<IPdfService, iText7PdfService>();
+builder.Services.AddSingleton<IQrCodeReader, ZXingNetQrCodeReader>();
 builder.Services.AddTransient<ISchoolExamDataContext, SchoolExamDataContext>();
 builder.Services.AddTransient<ICourseRepository, CourseRepository>();
+builder.Services.AddTransient<IExamRepository, ExamRepository>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISchoolExamDataContextInitService, SchoolExamDataContextInitService>();
 
 var app = builder.Build();
+
+using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+{
+    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamDataContextInitService>();
+    await initService!.Init();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

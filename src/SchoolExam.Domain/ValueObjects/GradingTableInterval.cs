@@ -35,4 +35,23 @@ public class GradingTableInterval
     {
         return Start.CompareTo(other.End) == -1 && other.Start.CompareTo(End) == -1;
     }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null)
+            return false;
+        if (obj is not GradingTableInterval other)
+            return false;
+        return Equals(other);
+    }
+
+    protected bool Equals(GradingTableInterval other)
+    {
+        return Start.Equals(other.Start) && End.Equals(other.End) && Grade.Equals(other.Grade);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Start, End, Grade);
+    }
 }

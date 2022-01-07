@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Authentication;
@@ -9,10 +10,11 @@ public class AuthenticationController : ApiController<AuthenticationController>
 {
     private readonly IUserRepository _userRepository;
     private readonly ITokenGenerator _tokenGenerator;
-    private readonly IPasswordHasher _passwordHasher; 
+    private readonly IPasswordHasher _passwordHasher;
 
-    public AuthenticationController(ILogger<AuthenticationController> logger, IUserRepository userRepository,
-        ITokenGenerator tokenGenerator, IPasswordHasher passwordHasher) : base(logger)
+    public AuthenticationController(ILogger<AuthenticationController> logger, IMapper mapper,
+        IUserRepository userRepository, ITokenGenerator tokenGenerator, IPasswordHasher passwordHasher) : base(logger,
+        mapper)
     {
         _userRepository = userRepository;
         _tokenGenerator = tokenGenerator;

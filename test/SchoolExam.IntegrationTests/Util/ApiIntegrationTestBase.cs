@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SchoolExam.Application.Authentication;
+using SchoolExam.Application.DataContext;
 using SchoolExam.Infrastructure.DataContext;
 using SchoolExam.IntegrationTests.Util.Mock;
 using SchoolExam.Persistence.Base;
@@ -17,20 +18,21 @@ namespace SchoolExam.IntegrationTests.Util;
 public abstract class ApiIntegrationTestBase
 {
     protected HttpClient Client { get; private set; }
-    protected ISchoolExamTestEntityFactory TestEntityFactory { get; private set; }
+    protected ISchoolExamTestEntityFactory TestEntityFactory { get; }
 
     private readonly WebApplicationFactory<Program> _factory;
 
     protected ApiIntegrationTestBase()
     {
-        _factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
                 {
                     services
-                        .AddSingleton<IDbConnectionConfiguration, EntityFrameworkInMemoryDbConnectionConfiguration>();
+                        .AddSingleton<IDbConnectionConfiguration,
+                            EntityFrameworkInMemoryDbConnectionConfiguration>();
                     services.AddSingleton<IPasswordHasher, TestPasswordHasher>();
+                    services.AddScoped<ISchoolExamDataContextInitService, TestSchoolExamDataContextInitService>();
                     services.AddAuthentication(options =>
                         {
                             options.DefaultAuthenticateScheme = TestAuthenticationHandler.AuthenticationScheme;
@@ -38,9 +40,9 @@ public abstract class ApiIntegrationTestBase
                         })
                         .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(
                             TestAuthenticationHandler.AuthenticationScheme, options => { });
-                });
-                builder.ConfigureTestServices(ConfigureTestServices);
-            });
+                })
+                .ConfigureTestServices(ConfigureTestServices);
+        });
         TestEntityFactory = new AutoFixtureTestEntityFactory();
     }
 
@@ -70,8 +72,13 @@ public abstract class ApiIntegrationTestBase
         var configuration =
             GetRequiredService<IDbConnectionConfiguration>() as EntityFrameworkInMemoryDbConnectionConfiguration;
         configuration?.NewDbName();
+        SetUpData();
     }
-    
+
+    protected virtual void SetUpData()
+    {
+    }
+
     [TearDown]
     protected virtual void TearDown()
     {
@@ -91,7 +98,7 @@ public abstract class ApiIntegrationTestBase
         return context;
     }
 
-    protected SchoolExamDataContext GetSchoolExamDataContext()
+    protected ISchoolExamDataContext GetSchoolExamDataContext()
     {
         var context = GetSchoolExamDbContext();
         var dataContext = new SchoolExamDataContext(context);

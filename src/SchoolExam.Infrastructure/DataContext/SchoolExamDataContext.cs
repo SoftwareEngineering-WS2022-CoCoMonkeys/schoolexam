@@ -13,16 +13,30 @@ namespace SchoolExam.Infrastructure.DataContext;
 
 public class SchoolExamDataContext : DataContextBase<SchoolExamDbContext>, ISchoolExamDataContext
 {
-    public IQueryable<Course> Courses => Context.Courses.Include(Course.StudentsName).Include(Course.TeachersName);
-    public IQueryable<Exam> Exams => Context.Exams.Include(x => x.GradingTable).Include(x => x.Tasks)
-        .Include(x => x.Booklets).ThenInclude(x => x.Pages);
-    public IQueryable<Student> Students =>
-        Context.Students.Include(Student.CoursesName).Include(Student.LegalGuardiansName);
-    public IQueryable<Teacher> Teachers =>
-        Context.Teachers.Include(Teacher.CoursesName);
-    public IQueryable<LegalGuardian> LegalGuardians => Context.LegalGuardians.Include(LegalGuardian.ChildrenName);
-    public IQueryable<Submission> Submissions => Context.Submissions.Include(x => x.Pages).Include(x => x.Answers);
-    public IQueryable<School> Schools => Context.Schools.Include(School.TeachersName);
+    public IQueryable<Course> Courses => Context.Courses.Include(x => x.Students).Include(x => x.Teachers);
+
+    public IQueryable<Exam> Exams => Context.Exams.Include(x => x.GradingTable).Include(x => x.TaskPdfFile)
+        .ThenInclude(x => x.Uploader).Include(x => x.Tasks).Include(x => x.Booklets).ThenInclude(x => x.PdfFile)
+        .ThenInclude(x => x.Uploader).Include(x => x.Booklets).ThenInclude(x => x.Pages)
+        .ThenInclude(x => x.SubmissionPage);
+
+    public IQueryable<ExamBooklet> ExamBooklets => Context.ExamBooklets;
+
+    public IQueryable<ExamBookletPage> ExamBookletPages => Context.ExamBookletPages.Include(x => x.SubmissionPage);
+
+    public IQueryable<Student> Students => Context.Students.Include(x => x.Courses).Include(x => x.LegalGuardians);
+
+    public IQueryable<Teacher> Teachers => Context.Teachers.Include(x => x.Courses);
+
+    public IQueryable<LegalGuardian> LegalGuardians => Context.LegalGuardians.Include(x => x.Children);
+
+    public IQueryable<Submission> Submissions => Context.Submissions.Include(x => x.Pages).ThenInclude(x => x.PdfFile)
+        .ThenInclude(x => x.Uploader).Include(x => x.Answers).Include(x => x.PdfFile).ThenInclude(x => x.Uploader);
+    
+    public IQueryable<SubmissionPage> SubmissionPages =>
+        Context.SubmissionPages.Include(x => x.PdfFile).ThenInclude(x => x.Uploader);
+
+    public IQueryable<School> Schools => Context.Schools.Include(x => x.Teachers);
     public IQueryable<User> Users => Context.Users;
 
     public SchoolExamDataContext(SchoolExamDbContext context) : base(context)
