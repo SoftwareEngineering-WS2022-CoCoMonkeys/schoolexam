@@ -25,6 +25,4 @@ public class Student : Person
         _courses = new List<CourseStudent>();
         _legalGuardians = new List<StudentLegalGuardian>();
     }
-
-    public override Role GetRole() => Role.Student;
 }

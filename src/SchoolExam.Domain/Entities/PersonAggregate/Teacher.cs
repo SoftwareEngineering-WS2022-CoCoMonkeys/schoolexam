@@ -21,6 +21,4 @@ public class Teacher : Person
         SchoolId = schoolId;
         _courses = new List<CourseTeacher>();
     }
-
-    public override Role GetRole() => Role.Teacher;
 }

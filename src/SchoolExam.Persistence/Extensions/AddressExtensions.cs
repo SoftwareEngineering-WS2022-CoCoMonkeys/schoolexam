@@ -8,7 +8,7 @@ namespace SchoolExam.Persistence.Extensions;
 public static class AddressExtensions
 {
     public static EntityTypeBuilder<TEntity> OwnsAddress<TEntity>(this EntityTypeBuilder<TEntity> builder,
-        Expression<Func<TEntity, Address?>> navigationExpression, bool isRequired = true) where TEntity : class
+        Expression<Func<TEntity, Address?>> navigationExpression, bool isRequired, params object[] data) where TEntity : class
     {
         return builder.OwnsOne(navigationExpression,
             x =>
@@ -18,6 +18,7 @@ public static class AddressExtensions
                 x.Property(y => y.PostCode).HasColumnName("PostalCode").IsRequired(isRequired);
                 x.Property(y => y.City).HasColumnName("City").IsRequired(isRequired);
                 x.Property(y => y.Country).HasColumnName("Country").IsRequired(isRequired);
+                x.HasData(data);
             });
     }
 }

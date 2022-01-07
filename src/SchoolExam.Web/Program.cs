@@ -91,8 +91,15 @@ builder.Services.AddTransient<ISchoolExamDataContext, SchoolExamDataContext>();
 builder.Services.AddTransient<ICourseRepository, CourseRepository>();
 builder.Services.AddTransient<IExamRepository, ExamRepository>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISchoolExamDataContextInitService, SchoolExamDataContextInitService>();
 
 var app = builder.Build();
+
+using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+{
+    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamDataContextInitService>();
+    await initService!.Init();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

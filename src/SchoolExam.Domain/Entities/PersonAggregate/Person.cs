@@ -3,7 +3,7 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.PersonAggregate;
 
-public abstract class Person : EntityBase<Guid>
+public class Person : EntityBase<Guid>
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
@@ -16,7 +16,7 @@ public abstract class Person : EntityBase<Guid>
     {
     }
         
-    public Person(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address, string emailAddress) : this(id)
+    public Person(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress) : this(id)
     {
         FirstName = firstName;
         LastName = lastName;
@@ -24,6 +24,4 @@ public abstract class Person : EntityBase<Guid>
         Address = address;
         EmailAddress = emailAddress;
     }
-
-    public abstract Role GetRole();
 }

@@ -17,6 +17,4 @@ public class LegalGuardian : Person
     {
         _children = new List<StudentLegalGuardian>();
     }
-
-    public override Role GetRole() => Role.LegalGuardian;
 }

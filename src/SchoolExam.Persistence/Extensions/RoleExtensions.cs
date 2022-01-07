@@ -8,8 +8,12 @@ namespace SchoolExam.Persistence.Extensions;
 public static class RoleExtensions
 {
     public static EntityTypeBuilder<TEntity> OwnsRole<TEntity>(this EntityTypeBuilder<TEntity> builder,
-        Expression<Func<TEntity, Role?>> navigationExpression) where TEntity : class
+        Expression<Func<TEntity, Role?>> navigationExpression, params object[] data) where TEntity : class
     {
-        return builder.OwnsOne(navigationExpression, x => { x.Property(s => s.Name).HasColumnName("Role"); });
+        return builder.OwnsOne(navigationExpression, x =>
+        {
+            x.Property(s => s.Name).HasColumnName("Role");
+            x.HasData(data);
+        });
     }
 }

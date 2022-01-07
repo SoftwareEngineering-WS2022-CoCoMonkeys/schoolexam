@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SchoolExam.Persistence.DataContext;
@@ -11,9 +12,10 @@ using SchoolExam.Persistence.DataContext;
 namespace SchoolExam.Persistence.Migrations
 {
     [DbContext(typeof(SchoolExamDbContext))]
-    partial class SchoolExamDataContextModelSnapshot : ModelSnapshot
+    [Migration("20220107155940_ChangeBookletSubmissionModel")]
+    partial class ChangeBookletSubmissionModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -265,17 +267,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.ToTable("Person", (string)null);
 
                     b.HasDiscriminator<string>("Discriminator").HasValue("Person");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
-                            DateOfBirth = new DateTime(1974, 5, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Discriminator = "Teacher",
-                            EmailAddress = "thorsten.thurn@school-exam.de",
-                            FirstName = "Briggite",
-                            LastName = "Schweinebauer"
-                        });
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.StudentLegalGuardian", b =>
@@ -306,13 +297,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("School", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("04bceee7-a744-48a7-9a0a-eda2d4a142d5"),
-                            Name = "Schmuttertal-Gymnasium Diedorf"
-                        });
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.SchoolTeacher", b =>
@@ -428,15 +412,6 @@ namespace SchoolExam.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("User", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("314ddd2e-62bb-4a29-8517-bb38ef96c897"),
-                            Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
-                            PersonId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
-                            Username = "admin"
-                        });
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.BookletPdfFile", b =>
@@ -812,17 +787,6 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("PersonId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    PersonId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
-                                    City = "Hamburg",
-                                    Country = "Deutschland",
-                                    PostCode = "20095",
-                                    StreetName = "Klarer-Kopf-Weg",
-                                    StreetNumber = "1a"
-                                });
                         });
 
                     b.Navigation("Address");
@@ -881,17 +845,6 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("SchoolId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    SchoolId = new Guid("04bceee7-a744-48a7-9a0a-eda2d4a142d5"),
-                                    City = "Diedorf",
-                                    Country = "Deutschland",
-                                    PostCode = "86420",
-                                    StreetName = "Schmetterlingsplatz",
-                                    StreetNumber = "1"
-                                });
                         });
 
                     b.Navigation("Location")
@@ -978,13 +931,6 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("UserId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    UserId = new Guid("314ddd2e-62bb-4a29-8517-bb38ef96c897"),
-                                    Name = "Teacher"
-                                });
                         });
 
                     b.Navigation("Role")
