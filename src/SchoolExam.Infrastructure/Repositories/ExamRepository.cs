@@ -180,7 +180,8 @@ public class ExamRepository : IExamRepository
     {
         var exam = EnsureExamExists(examId);
 
-        if (exam.State != ExamState.SubmissionReady && exam.State != ExamState.CorrectionReady)
+        if (exam.State != ExamState.SubmissionReady && exam.State != ExamState.InCorrection &&
+            exam.State != ExamState.Corrected)
         {
             throw new InvalidOperationException("Exam is not ready to match submissions.");
         }
@@ -254,8 +255,11 @@ public class ExamRepository : IExamRepository
         }
 
         await _context.SaveChangesAsync();
-        await MergeCompleteSubmissions(examId, updatedSubmissionIds, userId);
-        await CheckCompletenessOfExamSubmissions(examId);
+        if (updatedSubmissionIds.Count > 0)
+        {
+            await MergeCompleteSubmissions(examId, updatedSubmissionIds, userId);
+            await CheckCompletenessOfExamSubmissions(examId);
+        }
     }
 
     public IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId)
@@ -356,6 +360,7 @@ public class ExamRepository : IExamRepository
             {
                 _context.Remove(submission.PdfFile);
             }
+
             var pages = submission.Pages.OrderBy(x => bookletPagesDict[x.BookletPageId!.Value])
                 .Select(x => x.PdfFile.Content).ToArray();
             var submissionPdf = _pdfService.Merge(pages);
@@ -371,8 +376,8 @@ public class ExamRepository : IExamRepository
     private async Task CheckCompletenessOfExamSubmissions(Guid examId)
     {
         var exam = _context.Exams.Single(x => x.Id.Equals(examId));
-        var isComplete = exam.Booklets.All(x => x.HasCompleteSubmission);
-        exam.State = isComplete ? ExamState.CorrectionReady : ExamState.SubmissionReady;
+        var hasSubmission = exam.Booklets.Any(x => x.HasCompleteSubmission);
+        exam.State = hasSubmission ? ExamState.InCorrection : ExamState.SubmissionReady;
 
         _context.Update(exam);
         await _context.SaveChangesAsync();

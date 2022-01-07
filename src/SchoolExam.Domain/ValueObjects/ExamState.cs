@@ -5,8 +5,7 @@ public enum ExamState
     Planned,
     BuildReady,
     SubmissionReady,
-    CorrectionReady,
     InCorrection,
-    PublishReady,
+    Corrected,
     Published
 }

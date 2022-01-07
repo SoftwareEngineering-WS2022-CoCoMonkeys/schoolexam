@@ -291,7 +291,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         using (var context = GetSchoolExamDataContext())
         {
             var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
-            exam?.State.Should().Be(ExamState.CorrectionReady);
+            exam?.State.Should().Be(ExamState.InCorrection);
             var pages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)).ToList();
             pages.Should().HaveCount(4);
             pages.Select(x => x.SubmissionId.HasValue).Should().AllBeEquivalentTo(true);
@@ -342,7 +342,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         using (var context = GetSchoolExamDataContext())
         {
             var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
-            exam?.State.Should().Be(ExamState.CorrectionReady);
+            exam?.State.Should().Be(ExamState.InCorrection);
             var pages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)).ToList();
             pages.Should().HaveCount(4);
             pages.Select(x => x.SubmissionId.HasValue).Should().AllBeEquivalentTo(true);
@@ -590,7 +590,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var submissionPages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id));
         submissionPages.Select(x => x.SubmissionId.HasValue).Should().AllBeEquivalentTo(true);
         var exam = context.Exams.SingleOrDefault(x => x.Id.Equals(_exam.Id));
-        exam?.State.Should().Be(ExamState.CorrectionReady);
+        exam?.State.Should().Be(ExamState.InCorrection);
         var bookletPages = exam?.Booklets.SelectMany(x => x.Pages);
         bookletPages?.Select(x => x.SubmissionPage != null).Should().AllBeEquivalentTo(true);
     }
