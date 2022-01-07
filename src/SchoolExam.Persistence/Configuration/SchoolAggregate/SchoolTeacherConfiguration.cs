@@ -11,7 +11,7 @@ public class SchoolTeacherConfiguration : IEntityTypeConfiguration<SchoolTeacher
     {
         builder.ToTable("SchoolTeacher");
         builder.HasKey(x => new {x.SchoolId, x.TeacherId});
-        builder.HasOne<School>().WithMany(School.TeachersName).HasForeignKey(x => x.SchoolId);
+        builder.HasOne<School>().WithMany(x => x.Teachers).HasForeignKey(x => x.SchoolId);
         builder.HasOne<Teacher>().WithMany().HasForeignKey(x => x.TeacherId);
     }
 }

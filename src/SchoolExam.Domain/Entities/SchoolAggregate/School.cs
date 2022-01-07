@@ -8,10 +8,7 @@ public class School : EntityBase<Guid>
 {
     public string Name { get; set; }
     public Address Location { get; set; }
-
-    public static string TeachersName = nameof(_teachers);
-    private readonly ICollection<SchoolTeacher> _teachers;
-    public IEnumerable<Guid> TeacherIds => _teachers.Select(x => x.TeacherId);
+    public ICollection<SchoolTeacher> Teachers { get; set; }
 
     protected School(Guid id) : base(id) 
     {
@@ -21,6 +18,6 @@ public class School : EntityBase<Guid>
     {
         Name = name;
         Location = location;
-        _teachers = new List<SchoolTeacher>();
+        Teachers = new List<SchoolTeacher>();
     }
 }

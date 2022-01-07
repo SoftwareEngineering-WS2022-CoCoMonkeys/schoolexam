@@ -10,7 +10,7 @@ public class StudentLegalGuardianConfiguration : IEntityTypeConfiguration<Studen
     {
         builder.ToTable("StudentLegalGuardian");
         builder.HasKey(x => new {x.StudentId, x.LegalGuardianId});
-        builder.HasOne<Student>().WithMany(Student.LegalGuardiansName).HasForeignKey(x => x.StudentId);
-        builder.HasOne<LegalGuardian>().WithMany(LegalGuardian.ChildrenName).HasForeignKey(x => x.LegalGuardianId);
+        builder.HasOne<Student>().WithMany(x => x.LegalGuardians).HasForeignKey(x => x.StudentId);
+        builder.HasOne<LegalGuardian>().WithMany(x => x.Children).HasForeignKey(x => x.LegalGuardianId);
     }
 }

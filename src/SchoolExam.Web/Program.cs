@@ -19,7 +19,6 @@ using SchoolExam.Infrastructure.Repositories;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
 using SchoolExam.Web.Authorization;
-using SchoolExam.Web.Controllers;
 using SchoolExam.Web.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,14 +49,14 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(PolicyNames.CourseTeacherPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
-        policy.AddRequirements(new OwnerRequirement<Course>(course => course.TeacherIds,
-            RouteParameterNames.CourseIdParameterName, Course.TeachersName));
+        policy.AddRequirements(new OwnerRequirement<Course>(course => course.Teachers.Select(x => x.TeacherId),
+            RouteParameterNames.CourseIdParameterName, nameof(Course.Teachers)));
     });
     options.AddPolicy(PolicyNames.CourseStudentPolicyName, policy =>
     {
         policy.RequireRole(Role.Student);
-        policy.AddRequirements(new OwnerRequirement<Course>(course => course.StudentIds,
-            RouteParameterNames.CourseIdParameterName, Course.StudentsName));
+        policy.AddRequirements(new OwnerRequirement<Course>(course => course.Students.Select(x => x.StudentId),
+            RouteParameterNames.CourseIdParameterName, nameof(Course.Students)));
     });
     
     // ExamController authorization policies

@@ -20,12 +20,13 @@ public class CourseRepository : ICourseRepository
 
     public IEnumerable<Course> GetByTeacher(Guid teacherId)
     {
-        // use Contains method on IEnumerable since a course should not have to many teachers
-        return _context.Courses.Where(x => x.TeacherIds.Contains(teacherId)).AsEnumerable();
+        return _context.Courses.Where(x => x.Teachers.Select(x => x.TeacherId).ToHashSet().Contains(teacherId))
+            .AsEnumerable();
     }
 
     public IEnumerable<Course> GetByStudent(Guid studentId)
     {
-        return _context.Courses.Where(x => x.StudentIds.Contains(studentId)).AsEnumerable();
+        return _context.Courses.Where(x => x.Students.Select(x => x.StudentId).ToHashSet().Contains(studentId))
+            .AsEnumerable();
     }
 }

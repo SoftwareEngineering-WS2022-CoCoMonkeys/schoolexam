@@ -5,13 +5,8 @@ namespace SchoolExam.Domain.Entities.PersonAggregate;
 
 public class Student : Person
 {
-    public static string CoursesName => nameof(_courses);
-    private readonly ICollection<CourseStudent> _courses;
-    public IEnumerable<Guid> CourseIds => _courses.Select(x => x.CourseId);
-
-    public static string LegalGuardiansName => nameof(_legalGuardians);
-    private readonly ICollection<StudentLegalGuardian> _legalGuardians;
-    public IEnumerable<Guid> LegalGuardianIds => _legalGuardians.Select(x => x.LegalGuardianId);
+    public ICollection<CourseStudent> Courses { get; set; }
+    public ICollection<StudentLegalGuardian> LegalGuardians { get; set; }
     public Guid SchoolId { get; set; }
 
     protected Student(Guid id) : base(id)
@@ -22,7 +17,7 @@ public class Student : Person
         string emailAddress, Guid schoolId) : base(id, firstName, lastName, dateOfBirth, address, emailAddress)
     {
         SchoolId = schoolId;
-        _courses = new List<CourseStudent>();
-        _legalGuardians = new List<StudentLegalGuardian>();
+        Courses = new List<CourseStudent>();
+        LegalGuardians = new List<StudentLegalGuardian>();
     }
 }

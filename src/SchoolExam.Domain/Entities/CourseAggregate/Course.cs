@@ -10,14 +10,8 @@ public class Course : EntityBase<Guid>
     public string Description { get; set; }
     public int Year { get; set; }
     public Guid SchoolId { get; set; }
-
-    public static string TeachersName => nameof(_teachers);
-    private readonly ICollection<CourseTeacher> _teachers;
-    public IEnumerable<Guid> TeacherIds => _teachers.Select(x => x.TeacherId);
-
-    public static string StudentsName => nameof(_students);
-    private readonly ICollection<CourseStudent> _students;
-    public IEnumerable<Guid> StudentIds => _students.Select(x => x.StudentId);
+    public ICollection<CourseTeacher> Teachers { get; set; }
+    public ICollection<CourseStudent> Students { get; set; }
 
     protected Course(Guid id) : base(id)
     {
@@ -30,7 +24,7 @@ public class Course : EntityBase<Guid>
         Subject = subject;
         Year = year;
         SchoolId = schoolId;
-        _teachers = new List<CourseTeacher>();
-        _students = new List<CourseStudent>();
+        Teachers = new List<CourseTeacher>();
+        Students = new List<CourseStudent>();
     }
 }

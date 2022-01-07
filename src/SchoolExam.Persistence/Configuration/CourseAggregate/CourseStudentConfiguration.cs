@@ -11,7 +11,7 @@ public class CourseStudentConfiguration : IEntityTypeConfiguration<CourseStudent
     {
         builder.ToTable("CourseStudent");
         builder.HasKey(x => new {x.CourseId, x.StudentId});
-        builder.HasOne<Course>().WithMany(Course.StudentsName).HasForeignKey(x => x.CourseId);
-        builder.HasOne<Student>().WithMany(Student.CoursesName).HasForeignKey(x => x.StudentId);
+        builder.HasOne<Course>().WithMany(x => x.Students).HasForeignKey(x => x.CourseId);
+        builder.HasOne<Student>().WithMany(x => x.Courses).HasForeignKey(x => x.StudentId);
     }
 }

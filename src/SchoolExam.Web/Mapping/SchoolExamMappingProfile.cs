@@ -18,7 +18,7 @@ namespace SchoolExam.Web.Mapping
                 .ForMember(dst => dst.Subject, opt => opt.MapFrom(src => src.Subject!.Name));
             CreateMap<Course, CourseReadModelStudent>();
             CreateMap<Course, CourseReadModelTeacher>()
-                .ForMember(dst => dst.StudentCount, opt => opt.MapFrom(src => src.StudentIds.Count()));
+                .ForMember(dst => dst.StudentCount, opt => opt.MapFrom(src => src.Students.Count));
 
             CreateMap<SubmissionPage, UnmatchedSubmissionPageReadModel>()
                 .ForMember(dst => dst.Size, opt => opt.MapFrom(src => src.PdfFile.Size))
