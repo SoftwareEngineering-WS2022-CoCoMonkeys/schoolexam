@@ -32,6 +32,7 @@ public abstract class ApiIntegrationTestBase
                         .AddSingleton<IDbConnectionConfiguration,
                             EntityFrameworkInMemoryDbConnectionConfiguration>();
                     services.AddSingleton<IPasswordHasher, TestPasswordHasher>();
+                    services.AddScoped<ISchoolExamDataContextInitService, TestSchoolExamDataContextInitService>();
                     services.AddAuthentication(options =>
                         {
                             options.DefaultAuthenticateScheme = TestAuthenticationHandler.AuthenticationScheme;
