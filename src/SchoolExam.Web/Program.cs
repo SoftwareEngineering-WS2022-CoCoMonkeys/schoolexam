@@ -38,7 +38,7 @@ var key = Base64UrlEncoder.DecodeBytes("gLGtlGNQw8n7iHxUFjuDmHFcPRDUteRROdqhbhCs
 SymmetricSecurityKey signingKey = new SymmetricSecurityKey(key);
 
 var port = builder.Configuration["PORT"];
-builder.WebHost.UseUrls("http://*:" + port);
+builder.WebHost.UseKestrel().UseUrls("http://*:" + port);
 
 builder.Services.AddAuthentication(x =>
 {

@@ -8,10 +8,10 @@ RUN dotnet restore "SchoolExam.Web/SchoolExam.Web.csproj"
 COPY . /.
 
 WORKDIR "/src/SchoolExam.Web"
-RUN dotnet build "SchoolExam.Web.csproj" -c Debug -o /app/build
+RUN dotnet build "SchoolExam.Web.csproj" -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "SchoolExam.Web.csproj" -c Debug -o /app/publish
+RUN dotnet publish "SchoolExam.Web.csproj" -o /app/publish
 
 FROM base AS final
 WORKDIR /app
