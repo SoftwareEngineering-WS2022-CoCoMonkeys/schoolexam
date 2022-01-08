@@ -37,9 +37,6 @@ builder.Services.AddAutoMapper(config =>
 var key = Base64UrlEncoder.DecodeBytes("gLGtlGNQw8n7iHxUFjuDmHFcPRDUteRROdqhbhCstxEOIiit6kBT6exFo0Lm5uR");
 SymmetricSecurityKey signingKey = new SymmetricSecurityKey(key);
 
-var port = builder.Configuration["PORT"];
-builder.WebHost.UseKestrel().UseUrls("http://*:" + port);
-
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
