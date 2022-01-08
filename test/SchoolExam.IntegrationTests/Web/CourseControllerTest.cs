@@ -62,7 +62,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
         var expectedCourseDto = new CourseReadModelTeacher
         {
             Id = _course.Id.ToString(), Description = _course.Description, Name = _course.Name,
-            Subject = _course.Subject?.Name, Year = _course.Year, StudentCount = 1
+            Subject = _course.Subject?.Name, StudentCount = 1
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
     }
@@ -95,7 +95,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
         var expectedCourseDto = new CourseReadModelStudent
         {
             Id = _course.Id.ToString(), Description = _course.Description, Name = _course.Name,
-            Subject = _course.Subject?.Name, Year = _course.Year
+            Subject = _course.Subject?.Name
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
     }

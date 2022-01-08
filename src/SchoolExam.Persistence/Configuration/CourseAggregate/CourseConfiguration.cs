@@ -13,7 +13,6 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.ToTable("Course");
         builder.HasKey(x => x.Id);
         builder.OwnsSubject(x => x.Subject, false);
-        builder.Property(x => x.Year).HasDefaultValue(DateTime.Now.Year);
         builder.HasMany(x => x.Exams).WithOne(x => x.Course).HasForeignKey(x => x.CourseId);
     }
 }

@@ -18,6 +18,39 @@ public class CourseController : ApiController<CourseController>
         _courseRepository = courseRepository;
     }
 
+    [HttpPost]
+    [Route("Create")]
+    [Authorize(Roles = Role.TeacherName)]
+    public async Task<IActionResult> Create([FromBody] CourseWriteModel courseWriteModel)
+    {
+        await _courseRepository.Create(GetPersonId()!.Value, courseWriteModel.Name, courseWriteModel.Description,
+            courseWriteModel.Subject);
+        return Ok();
+    }
+    
+    [HttpPut]
+    [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/Update")]
+    [Authorize(PolicyNames.CourseTeacherPolicyName)]
+    public async Task<IActionResult> Update(Guid courseId, [FromBody] CourseWriteModel courseWriteModel)
+    {
+        await _courseRepository.Update(courseId, courseWriteModel.Name, courseWriteModel.Description,
+            courseWriteModel.Subject);
+        return Ok();
+    }
+
+    [HttpDelete]
+    [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/Delete")]
+    [Authorize(PolicyNames.CourseTeacherPolicyName)]
+    public async Task<IActionResult> Delete(Guid courseId)
+    {
+        await _courseRepository.Delete(courseId);
+        return Ok();
+    }
+
+    // TODO: add/remove teachers from/to
+    
+    [HttpDelete]
+
     [HttpGet]
     [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/TeacherView")]
     [Authorize(PolicyNames.CourseTeacherPolicyName)]
