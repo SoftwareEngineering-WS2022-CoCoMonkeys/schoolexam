@@ -29,10 +29,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAutoMapper(config =>
-{
-    config.AddProfile<SchoolExamMappingProfile>();
-});
+builder.Services.AddAutoMapper(config => { config.AddProfile<SchoolExamMappingProfile>(); });
 
 var key = Base64UrlEncoder.DecodeBytes("gLGtlGNQw8n7iHxUFjuDmHFcPRDUteRROdqhbhCstxEOIiit6kBT6exFo0Lm5uR");
 SymmetricSecurityKey signingKey = new SymmetricSecurityKey(key);
@@ -69,7 +66,7 @@ builder.Services.AddAuthorization(options =>
         policy.AddRequirements(new OwnerRequirement<Course>(course => course.Students.Select(x => x.StudentId),
             RouteParameterNames.CourseIdParameterName, nameof(Course.Students)));
     });
-    
+
     // ExamController authorization policies
     options.AddPolicy(PolicyNames.ExamCreatorPolicyName, policy =>
     {
@@ -91,13 +88,15 @@ builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Exam>>();
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 
-builder.Configuration.AddEnvironmentVariables(prefix: "SCHOOLEXAM_");
-
+var connectionString = "";
 var databaseUrl = builder.Configuration["DATABASE_URL"];
-var databaseUri = new Uri(databaseUrl);
-var userInfo = databaseUri.UserInfo.Split(':');
-var connectionString =
-    $"host={databaseUri.Host};port={databaseUri.Port};username={userInfo[0]};password={userInfo[1]};database={databaseUri.LocalPath.TrimStart('/')};pooling=true;";
+if (databaseUrl != null)
+{
+    var databaseUri = new Uri(databaseUrl);
+    var userInfo = databaseUri.UserInfo.Split(':');
+    connectionString =
+        $"host={databaseUri.Host};port={databaseUri.Port};username={userInfo[0]};password={userInfo[1]};database={databaseUri.LocalPath.TrimStart('/')};pooling=true;";
+}
 
 builder.Services.AddSingleton<IDbConnectionConfiguration>(new DbConnectionConfiguration(connectionString));
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();

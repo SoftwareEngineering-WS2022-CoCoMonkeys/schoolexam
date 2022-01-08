@@ -41,7 +41,9 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
         _fixture.Customize<Course>(opts => opts.Without(x => x.Students).Without(x => x.Teachers));
         _fixture.Customize<Student>(opts => opts.Without(x => x.Courses).Without(x => x.LegalGuardians));
         _fixture.Customize<Teacher>(opts => opts.Without(x => x.Courses));
-        _fixture.Customize<Exam>(opts => opts.With(x => x.State, ExamState.Planned).Without(x => x.Course));
+        _fixture.Customize<Exam>(opts =>
+            opts.With(x => x.State, ExamState.Planned).Without(x => x.Course).Without(x => x.Booklets)
+                .Without(x => x.Tasks).Without(x => x.GradingTable).Without(x => x.TaskPdfFile));
         _fixture.Customize<TaskPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<ExamBooklet>(opts => opts.Without(x => x.Pages));
         _fixture.Customize<BookletPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
@@ -83,8 +85,7 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
 
     public Exam Create()
     {
-        return _fixture.Build<Exam>().Without(x => x.Booklets).Without(x => x.Tasks).Without(x => x.GradingTable)
-            .Without(x => x.TaskPdfFile).Create();
+        return _fixture.Create<Exam>();
     }
 
     User ITestEntityFactory<User, Guid>.Create()
@@ -96,17 +97,17 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     {
         return _fixture.Create<TaskPdfFile>();
     }
-    
+
     SubmissionPagePdfFile ITestEntityFactory<SubmissionPagePdfFile, Guid>.Create()
     {
         return _fixture.Create<SubmissionPagePdfFile>();
     }
-    
+
     SubmissionPage ITestEntityFactory<SubmissionPage, Guid>.Create()
     {
         return _fixture.Create<SubmissionPage>();
     }
-    
+
     ExamBooklet ITestEntityFactory<ExamBooklet, Guid>.Create()
     {
         return _fixture.Create<ExamBooklet>();
@@ -116,12 +117,12 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     {
         return _fixture.Create<ExamBookletPage>();
     }
-    
+
     Submission ITestEntityFactory<Submission, Guid>.Create()
     {
         return _fixture.Create<Submission>();
     }
-    
+
     BookletPdfFile ITestEntityFactory<BookletPdfFile, Guid>.Create()
     {
         return _fixture.Create<BookletPdfFile>();
