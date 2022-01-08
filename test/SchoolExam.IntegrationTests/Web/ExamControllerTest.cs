@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -29,7 +30,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     private School _school = null!;
     private Course _course = null!;
     private Teacher _teacher = null!;
-    private Exam _exam = null!;
+    private Exam _exam = null!, _otherExam = null!;
     private User _user = null!;
     private TaskPdfFile _taskPdfFile = null!;
     private ExamBooklet _booklet = null!;
@@ -48,9 +49,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _teacher = TestEntityFactory.Create<Teacher, Guid>();
         _teacher.SchoolId = _school.Id;
         var courseTeacher = new CourseTeacher(_course.Id, _teacher.Id);
+        var student = TestEntityFactory.Create<Student, Guid>();
+        student.SchoolId = _school.Id;
+        var courseStudent = new CourseStudent(_course.Id, student.Id);
         _exam = TestEntityFactory.Create<Exam, Guid>();
-        _exam.CreatorId = _teacher.Id;
         _exam.CourseId = _course.Id;
+        _exam.CreatorId = _teacher.Id;
         _exam.State = ExamState.SubmissionReady;
         _taskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
         _taskPdfFile.ExamId = _exam.Id;
@@ -73,17 +77,17 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _unmatchedSubmissionPage.SubmissionId = null;
         _unmatchedSubmissionPage.BookletPageId = null;
         
-        var otherExam = TestEntityFactory.Create<Exam, Guid>();
-        otherExam.CreatorId = _teacher.Id;
-        otherExam.CourseId = _course.Id;
+        _otherExam = TestEntityFactory.Create<Exam, Guid>();
+        _otherExam.CreatorId = _teacher.Id;
+        _otherExam.CourseId = _course.Id;
         var otherTaskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
-        otherTaskPdfFile.ExamId = otherExam.Id;
+        otherTaskPdfFile.ExamId = _otherExam.Id;
         var otherBooklet = TestEntityFactory.Create<ExamBooklet, Guid>();
-        otherBooklet.ExamId = otherExam.Id;
+        otherBooklet.ExamId = _otherExam.Id;
         _otherBookletPage = TestEntityFactory.Create<ExamBookletPage, Guid>();
         _otherBookletPage.BookletId = otherBooklet.Id;
         _otherSubmissionPage = TestEntityFactory.Create<SubmissionPage, Guid>();
-        _otherSubmissionPage.ExamId = otherExam.Id;
+        _otherSubmissionPage.ExamId = _otherExam.Id;
         _otherSubmissionPage.SubmissionId = null;
         _otherSubmissionPage.BookletPageId = null;
 
@@ -92,6 +96,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         context.Add(_course);
         context.Add(_teacher);
         context.Add(courseTeacher);
+        context.Add(student);
+        context.Add(courseStudent);
         context.Add(_exam);
         context.Add(_taskPdfFile);
         context.Add(_user);
@@ -102,11 +108,60 @@ public class ExamControllerTest : ApiIntegrationTestBase
         context.Add(_matchedSubmissionPage);
         context.Add(_unmatchedSubmissionPage);
         
-        context.Add(otherExam);
+        context.Add(_otherExam);
         context.Add(otherBooklet);
         context.Add(_otherBookletPage);
         context.Add(_otherSubmissionPage);
         await context.SaveChangesAsync();
+    }
+    
+    [Test]
+    public async Task ExamController_GetByTeacher_Success()
+    {
+        // add additional exam created by other teacher
+        using (var context = GetSchoolExamDataContext())
+        {
+            var otherCourse = TestEntityFactory.Create<Course, Guid>();
+            otherCourse.SchoolId = _school.Id;
+            var otherTeacher = TestEntityFactory.Create<Teacher, Guid>();
+            otherTeacher.SchoolId = _school.Id;
+            var courseTeacher = new CourseTeacher(otherCourse.Id, otherTeacher.Id);
+            var otherExam = TestEntityFactory.Create<Exam, Guid>();
+            otherExam.CourseId = otherCourse.Id;
+            otherExam.CreatorId = otherTeacher.Id;
+            otherExam.State = ExamState.Planned;
+            context.Add(otherCourse);
+            context.Add(otherTeacher);
+            context.Add(courseTeacher);
+            context.Add(otherExam);
+            await context.SaveChangesAsync();
+        }
+        
+        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
+            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
+            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+
+        var response = await this.Client.GetAsync($"/Exam/ByTeacher/{_teacher.Id}");
+        response.EnsureSuccessStatusCode();
+        
+        var result = await response.Content.ReadAsStringAsync();
+        var exams = JsonConvert.DeserializeObject<IEnumerable<ExamReadModelTeacher>>(result).ToList();
+
+        var expectedExam1 = new ExamReadModelTeacher
+        {
+            Id = _exam.Id, Title = _exam.Title, Date = _exam.Date, State = _exam.State, Subject = _course.Subject!.Name,
+            CorrectionProgress = null, DueDate = _exam.DueDate, ParticipantCount = 1
+        };
+        var expectedExam2 = new ExamReadModelTeacher
+        {
+            Id = _otherExam.Id, Title = _otherExam.Title, Date = _otherExam.Date, State = _otherExam.State,
+            Subject = _course.Subject!.Name, CorrectionProgress = null, DueDate = _otherExam.DueDate,
+            ParticipantCount = 1
+        };
+        
+        exams.Should().HaveCount(2);
+        exams.Should().ContainEquivalentOf(expectedExam1);
+        exams.Should().ContainEquivalentOf(expectedExam2);
     }
     
     [Test]
@@ -430,21 +485,19 @@ public class ExamControllerTest : ApiIntegrationTestBase
                 {{new ByteArrayContent(_booklet.PdfFile.Content), "submissionPdfFormFile", fileName}});
         response.EnsureSuccessStatusCode();
 
-        using (var context = GetSchoolExamDataContext())
-        {
-            var submissionPages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)).ToList();
-            submissionPages.Should().HaveCount(4);
-            submissionPages.Count(x => x.SubmissionId.HasValue).Should().Be(1);
-            submissionPages.Single(x => x.SubmissionId.HasValue).Id.Should().Be(_matchedSubmissionPage.Id);
+        using var context = GetSchoolExamDataContext();
+        var submissionPages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)).ToList();
+        submissionPages.Should().HaveCount(4);
+        submissionPages.Count(x => x.SubmissionId.HasValue).Should().Be(1);
+        submissionPages.Single(x => x.SubmissionId.HasValue).Id.Should().Be(_matchedSubmissionPage.Id);
 
-            var bookletPages = context.ExamBooklets.Where(x => x.ExamId.Equals(_exam.Id)).SelectMany(x => x.Pages);
-            bookletPages.Should().HaveCount(2);
-            bookletPages.Count(x => x.SubmissionPage != null).Should().Be(1);
-            bookletPages.Single(x => x.SubmissionPage != null).Id.Should().Be(_matchedBookletPage.Id);
+        var bookletPages = context.ExamBooklets.Where(x => x.ExamId.Equals(_exam.Id)).SelectMany(x => x.Pages);
+        bookletPages.Should().HaveCount(2);
+        bookletPages.Count(x => x.SubmissionPage != null).Should().Be(1);
+        bookletPages.Single(x => x.SubmissionPage != null).Id.Should().Be(_matchedBookletPage.Id);
             
-            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
-            exam?.State.Should().Be(ExamState.SubmissionReady);
-        }
+        var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+        exam?.State.Should().Be(ExamState.SubmissionReady);
     }
     
     [Test]

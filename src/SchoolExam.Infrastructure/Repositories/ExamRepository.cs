@@ -33,6 +33,17 @@ public class ExamRepository : IExamRepository
         _qrCodeReader = qrCodeReader;
     }
 
+    public IEnumerable<Exam> GetByTeacher(Guid teacherId)
+    {
+        var teacher = _context.Teachers.Single(x => x.Id.Equals(teacherId));
+        return teacher.Courses.Select(x => x.Course).SelectMany(x => x.Exams);
+    }
+
+    public IEnumerable<Exam> GetByStudent(Guid studentId)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task Create(string title, string description, DateTime date, Guid courseId)
     {
         var examId = Guid.NewGuid();

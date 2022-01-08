@@ -18,7 +18,9 @@ public class SchoolExamDataContext : DataContextBase<SchoolExamDbContext>, IScho
     public IQueryable<Exam> Exams => Context.Exams.Include(x => x.GradingTable).Include(x => x.TaskPdfFile)
         .ThenInclude(x => x.Uploader).Include(x => x.Tasks).Include(x => x.Booklets).ThenInclude(x => x.PdfFile)
         .ThenInclude(x => x.Uploader).Include(x => x.Booklets).ThenInclude(x => x.Pages)
-        .ThenInclude(x => x.SubmissionPage);
+        .ThenInclude(x => x.SubmissionPage).Include(x => x.Course)
+        .ThenInclude(x => x.Students).Include(x => x.Booklets).ThenInclude(x => x.Submission)
+        .ThenInclude(x => x.Answers);
 
     public IQueryable<ExamBooklet> ExamBooklets => Context.ExamBooklets;
 
@@ -26,7 +28,11 @@ public class SchoolExamDataContext : DataContextBase<SchoolExamDbContext>, IScho
 
     public IQueryable<Student> Students => Context.Students.Include(x => x.Courses).Include(x => x.LegalGuardians);
 
-    public IQueryable<Teacher> Teachers => Context.Teachers.Include(x => x.Courses).ThenInclude(x => x.Course);
+    public IQueryable<Teacher> Teachers =>
+        Context.Teachers.Include(x => x.Courses).ThenInclude(x => x.Course).ThenInclude(x => x.Exams)
+            .ThenInclude(x => x.Booklets).ThenInclude(x => x.Submission).ThenInclude(x => x.Answers)
+            .Include(x => x.Courses).ThenInclude(x => x.Course).ThenInclude(x => x.Exams).ThenInclude(x => x.Tasks)
+            .Include(x => x.Courses).ThenInclude(x => x.Course).ThenInclude(x => x.Students);
 
     public IQueryable<LegalGuardian> LegalGuardians => Context.LegalGuardians.Include(x => x.Children);
 

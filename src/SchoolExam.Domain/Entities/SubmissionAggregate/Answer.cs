@@ -4,7 +4,7 @@ namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 
 public class Answer : EntityBase<Guid>
 {
-    public double? AchievedPoints { get; set; }
+    public double AchievedPoints { get; set; }
     public Guid ExamTaskId { get; set; }
     public Guid SubmissionId { get; set; }
 
@@ -12,7 +12,7 @@ public class Answer : EntityBase<Guid>
     {
     }
 
-    public Answer(Guid id, int? achievedPoints, Guid examTaskId, Guid submissionId) : base(id)
+    public Answer(Guid id, double achievedPoints, Guid examTaskId, Guid submissionId) : base(id)
     {
         AchievedPoints = achievedPoints;
         ExamTaskId = examTaskId;

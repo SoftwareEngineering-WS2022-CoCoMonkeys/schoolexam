@@ -14,6 +14,6 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.HasKey(x => x.Id);
         builder.OwnsSubject(x => x.Subject, false);
         builder.Property(x => x.Year).HasDefaultValue(DateTime.Now.Year);
-        builder.HasMany<Exam>().WithOne(x => x.Course).HasForeignKey(x => x.CourseId);
+        builder.HasMany(x => x.Exams).WithOne(x => x.Course).HasForeignKey(x => x.CourseId);
     }
 }

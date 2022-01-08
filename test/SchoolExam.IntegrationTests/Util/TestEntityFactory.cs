@@ -38,7 +38,8 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
         _fixture = new Fixture();
 
         _fixture.Customize<School>(opts => opts.Without(x => x.Teachers));
-        _fixture.Customize<Course>(opts => opts.Without(x => x.Students).Without(x => x.Teachers));
+        _fixture.Customize<Course>(opts =>
+            opts.Without(x => x.Students).Without(x => x.Teachers).Without(x => x.Exams));
         _fixture.Customize<Student>(opts => opts.Without(x => x.Courses).Without(x => x.LegalGuardians));
         _fixture.Customize<Teacher>(opts => opts.Without(x => x.Courses));
         _fixture.Customize<Exam>(opts =>

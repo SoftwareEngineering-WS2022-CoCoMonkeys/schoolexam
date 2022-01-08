@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Repositories;
+using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Models.Exam;
 
@@ -15,6 +16,15 @@ public class ExamController : ApiController<ExamController>
         mapper)
     {
         _examRepository = examRepository;
+    }
+
+    [HttpGet]
+    [Route("ByTeacher/{teacherId}")]
+    [Authorize(Roles = Role.TeacherName)]
+    public IEnumerable<ExamReadModelTeacher> GetByTeacher(Guid teacherId)
+    {
+        var exams = _examRepository.GetByTeacher(teacherId);
+        return Mapper.Map<IEnumerable<ExamReadModelTeacher>>(exams);
     }
 
     [HttpPost]
