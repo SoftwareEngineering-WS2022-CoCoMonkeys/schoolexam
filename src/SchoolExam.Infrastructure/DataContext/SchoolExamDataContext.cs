@@ -26,7 +26,7 @@ public class SchoolExamDataContext : DataContextBase<SchoolExamDbContext>, IScho
 
     public IQueryable<Student> Students => Context.Students.Include(x => x.Courses).Include(x => x.LegalGuardians);
 
-    public IQueryable<Teacher> Teachers => Context.Teachers.Include(x => x.Courses);
+    public IQueryable<Teacher> Teachers => Context.Teachers.Include(x => x.Courses).ThenInclude(x => x.Course);
 
     public IQueryable<LegalGuardian> LegalGuardians => Context.LegalGuardians.Include(x => x.Children);
 

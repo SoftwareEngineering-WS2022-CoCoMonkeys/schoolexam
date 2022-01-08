@@ -1,4 +1,5 @@
 using SchoolExam.Domain.Base;
+using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
@@ -12,6 +13,7 @@ public class Exam : EntityBase<Guid>
     public ICollection<ExamBooklet> Booklets { get; set; }
     public DateTime Date { get; set; }
     public Guid CourseId { get; set; }
+    public Course Course { get; set; }
     public Guid CreatorId { get; set; }
     public TaskPdfFile? TaskPdfFile { get; set; }
     public ExamState State { get; set; }

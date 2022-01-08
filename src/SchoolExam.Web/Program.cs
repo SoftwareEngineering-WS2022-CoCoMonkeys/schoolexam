@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.IdentityModel.Tokens;
 using SchoolExam.Application.Authentication;
 using SchoolExam.Application.DataContext;
 using SchoolExam.Application.Pdf;
@@ -33,6 +34,9 @@ builder.Services.AddAutoMapper(config =>
     config.AddProfile<SchoolExamMappingProfile>();
 });
 
+var key = Base64UrlEncoder.DecodeBytes("gLGtlGNQw8n7iHxUFjuDmHFcPRDUteRROdqhbhCstxEOIiit6kBT6exFo0Lm5uR");
+SymmetricSecurityKey signingKey = new SymmetricSecurityKey(key);
+
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -41,6 +45,13 @@ builder.Services.AddAuthentication(x =>
 {
     x.RequireHttpsMetadata = false;
     x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateAudience = false,
+        ValidateIssuer = false,
+        IssuerSigningKey = signingKey,
+        ValidateIssuerSigningKey = true
+    };
 });
 
 builder.Services.AddAuthorization(options =>
@@ -79,7 +90,16 @@ builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Exam>>();
 
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
-builder.Services.AddSingleton<IDbConnectionConfiguration, DbConnectionConfiguration>();
+
+builder.Configuration.AddEnvironmentVariables(prefix: "SCHOOLEXAM_");
+
+var databaseUrl = builder.Configuration["DATABASE_URL"];
+var databaseUri = new Uri(databaseUrl);
+var userInfo = databaseUri.UserInfo.Split(':');
+var connectionString =
+    $"host={databaseUri.Host};port={databaseUri.Port};username={userInfo[0]};password={userInfo[1]};database={databaseUri.LocalPath.TrimStart('/')};pooling=true;";
+
+builder.Services.AddSingleton<IDbConnectionConfiguration>(new DbConnectionConfiguration(connectionString));
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 builder.Services.AddSingleton<IQrCodeGenerator, QRCoderQrCodeGenerator>();
 builder.Services.AddSingleton<Random>();
