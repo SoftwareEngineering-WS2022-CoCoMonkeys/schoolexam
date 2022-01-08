@@ -90,7 +90,16 @@ builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Exam>>();
 
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
-builder.Services.AddSingleton<IDbConnectionConfiguration, DbConnectionConfiguration>();
+
+builder.Configuration.AddEnvironmentVariables(prefix: "SCHOOLEXAM_");
+
+var databaseUrl = builder.Configuration["DATABASE_URL"];
+var databaseUri = new Uri(databaseUrl);
+var userInfo = databaseUri.UserInfo.Split(':');
+var connectionString =
+    $"host={databaseUri.Host};port={databaseUri.Port};username={userInfo[0]};password={userInfo[1]};database={databaseUri.LocalPath.TrimStart('/')};pooling=true;";
+
+builder.Services.AddSingleton<IDbConnectionConfiguration>(new DbConnectionConfiguration(connectionString));
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 builder.Services.AddSingleton<IQrCodeGenerator, QRCoderQrCodeGenerator>();
 builder.Services.AddSingleton<Random>();
