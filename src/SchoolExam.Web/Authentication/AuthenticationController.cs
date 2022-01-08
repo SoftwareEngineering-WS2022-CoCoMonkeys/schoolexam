@@ -27,10 +27,10 @@ public class AuthenticationController : ApiController<AuthenticationController>
     {
         var user = _userRepository.GetByUsername(model.Username);
         if (user == null)
-            return BadRequest();
+            return Forbid();
 
         if (!_passwordHasher.VerifyPassword(model.Password, user.Password))
-            return BadRequest();
+            return Forbid();
 
         var token = _tokenGenerator.Generate(user);
 

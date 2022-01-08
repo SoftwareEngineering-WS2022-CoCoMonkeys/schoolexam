@@ -37,11 +37,11 @@ public class CourseController : ApiController<CourseController>
     }
 
     [HttpGet]
-    [Route("ByTeacher/{teacherId}")]
+    [Route("ByTeacher")]
     [Authorize(Roles = Role.TeacherName)]
-    public IEnumerable<CourseReadModelTeacher> GetByTeacher(Guid teacherId)
+    public IEnumerable<CourseReadModelTeacher> GetByTeacher()
     {
-        var courses = _courseRepository.GetByTeacher(teacherId);
+        var courses = _courseRepository.GetByTeacher(GetPersonId()!.Value);
         return Mapper.Map<IEnumerable<CourseReadModelTeacher>>(courses);
     }
 }

@@ -21,23 +21,24 @@ using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.IntegrationTests.Util;
 using SchoolExam.IntegrationTests.Util.Extensions;
 using SchoolExam.Web.Models.Exam;
-using Guid = System.Guid;
 
 namespace SchoolExam.IntegrationTests.Web;
 
 public class ExamControllerTest : ApiIntegrationTestBase
 {
-    private School _school;
-    private Course _course;
-    private Teacher _teacher;
-    private Exam _exam;
-    private User _user;
-    private TaskPdfFile _taskPdfFile;
-    private ExamBooklet _booklet;
-    private BookletPdfFile _bookletPdfFile;
-    private ExamBookletPage _unmatchedBookletPage, _matchedBookletPage, _otherBookletPage;
-    private Submission _submission;
-    private SubmissionPage _unmatchedSubmissionPage, _matchedSubmissionPage, _otherSubmissionPage;
+    private School _school = null!;
+    private Course _course = null!;
+    private Teacher _teacher = null!;
+    private Exam _exam = null!;
+    private User _user = null!;
+    private TaskPdfFile _taskPdfFile = null!;
+    private ExamBooklet _booklet = null!;
+    private ExamBookletPage _unmatchedBookletPage = null!, _matchedBookletPage = null!, _otherBookletPage = null!;
+    private Submission _submission = null!;
+
+    private SubmissionPage _unmatchedSubmissionPage = null!,
+        _matchedSubmissionPage = null!,
+        _otherSubmissionPage = null!;
 
     protected override async void SetUpData()
     {

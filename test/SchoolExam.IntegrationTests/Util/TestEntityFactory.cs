@@ -41,7 +41,7 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
         _fixture.Customize<Course>(opts => opts.Without(x => x.Students).Without(x => x.Teachers));
         _fixture.Customize<Student>(opts => opts.Without(x => x.Courses).Without(x => x.LegalGuardians));
         _fixture.Customize<Teacher>(opts => opts.Without(x => x.Courses));
-        _fixture.Customize<Exam>(opts => opts.With(x => x.State, ExamState.Planned));
+        _fixture.Customize<Exam>(opts => opts.With(x => x.State, ExamState.Planned).Without(x => x.Course));
         _fixture.Customize<TaskPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<ExamBooklet>(opts => opts.Without(x => x.Pages));
         _fixture.Customize<BookletPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));

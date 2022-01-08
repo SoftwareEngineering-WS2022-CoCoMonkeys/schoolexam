@@ -20,13 +20,14 @@ public class CourseRepository : ICourseRepository
 
     public IEnumerable<Course> GetByTeacher(Guid teacherId)
     {
-        return _context.Courses.Where(x => x.Teachers.Select(x => x.TeacherId).ToHashSet().Contains(teacherId))
-            .AsEnumerable();
+        var teacher = _context.Teachers.Single(x => x.Id.Equals(teacherId));
+        return teacher.Courses.Select(x => x.Course);
     }
 
     public IEnumerable<Course> GetByStudent(Guid studentId)
     {
-        return _context.Courses.Where(x => x.Students.Select(x => x.StudentId).ToHashSet().Contains(studentId))
-            .AsEnumerable();
+        // return _context.Courses.Where(x => x.Students.Select( => x.StudentId).ToHashSet().Contains(studentId))
+        //     .AsEnumerable();
+        throw new NotImplementedException();
     }
 }
