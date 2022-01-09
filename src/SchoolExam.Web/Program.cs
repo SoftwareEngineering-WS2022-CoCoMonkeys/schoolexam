@@ -125,7 +125,8 @@ using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>(
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// swagger also added for production to make development easier
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
