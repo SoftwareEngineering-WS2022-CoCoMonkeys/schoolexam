@@ -1,6 +1,7 @@
 using SchoolExam.Domain.Base;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
 
@@ -27,7 +28,7 @@ public class Exam : EntityBase<Guid>
     {
         Title = title;
         Description = description;
-        Date = date;
+        Date = date.SetKindUtc();
         // due date of exam correction is 14 days after exam date
         DueDate = date.AddDays(14);
         CourseId = courseId;
