@@ -1,4 +1,5 @@
 using AutoMapper;
+using SchoolExam.Application.Repositories;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
@@ -32,5 +33,7 @@ public class SchoolExamMappingProfile : Profile
             .ForMember(dst => dst.CorrectionProgress, opt => opt.MapFrom(src => src.GetCorrectionProgress()))
             .ForMember(dst => dst.Subject, opt => opt.PreCondition(src => src.Course.Subject != null))
             .ForMember(dst => dst.Subject, opt => opt.MapFrom(src => src.Course.Subject!.Name));
+
+        CreateMap<ExamTaskModel, ExamTaskInfo>();
     }
 }

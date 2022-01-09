@@ -10,7 +10,7 @@ public class ExamPosition : IComparable<ExamPosition>
         if (page <= 0)
             throw new ArgumentException();
         Page = page;
-        if (y < 0 || y > 100)
+        if (y < 0)
             throw new ArgumentException();
         Y = y;
     }

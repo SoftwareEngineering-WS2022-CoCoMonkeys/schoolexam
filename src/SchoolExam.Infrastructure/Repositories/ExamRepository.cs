@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using SchoolExam.Application.DataContext;
 using SchoolExam.Application.Pdf;
@@ -13,6 +14,8 @@ namespace SchoolExam.Infrastructure.Repositories;
 
 public class ExamRepository : IExamRepository
 {
+    private static string _guidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+    
     private readonly ILogger<ExamRepository> _logger;
     private readonly ISchoolExamDataContext _context;
 
@@ -93,15 +96,76 @@ public class ExamRepository : IExamRepository
         }
 
         var taskPdfFile =
-            new TaskPdfFile(Guid.NewGuid(), $"{examId.ToString()}.pdf", content.LongLength, DateTime.Now, userId, content, examId);
+            new TaskPdfFile(Guid.NewGuid(), $"{examId.ToString()}.pdf", content.LongLength, DateTime.Now, userId,
+                content, examId);
         // exam is ready to be built after having a task PDF file
         exam.State = ExamState.BuildReady;
         _context.Update(exam);
         _context.Add(taskPdfFile);
         await _context.SaveChangesAsync();
     }
-    
-    // TODO: clear exam tasks when cleaning, rebuilding
+
+    public async Task FindTasks(Guid examId, Guid userId, params ExamTaskInfo[] tasks)
+    {
+        var exam = EnsureExamExists(examId);
+        if (exam.TaskPdfFile == null)
+        {
+            throw new InvalidOperationException("Exam does not have a task PDF.");
+        }
+
+        // reset existing exam tasks
+        var currentExamTasks = exam.Tasks;
+        foreach (var task in currentExamTasks)
+        {
+            _context.Remove(task);
+        }
+
+        var pdf = exam.TaskPdfFile!.Content;
+        var links = _pdfService.GetUriLinkAnnotations(pdf);
+        var tasksDict = tasks.ToDictionary(x => x.Id, x => x);
+        var linkCandidates = links
+            .Where(x => Regex.IsMatch(x.Uri, $"^task-{_guidRegex}$"));
+
+        var matchedLinks = new List<PdfUriLinkAnnotationInfo>();
+        var outlineElements = new List<PdfOutlineInfo>();
+        var matchedTaskIds = new HashSet<Guid>();
+        foreach (var link in linkCandidates)
+        {
+            var taskIdString = Regex.Match(link.Uri, $"{_guidRegex}$").Value;
+            var taskId = Guid.Parse(taskIdString);
+            if (tasksDict.ContainsKey(taskId))
+            {
+                if (matchedTaskIds.Contains(taskId))
+                {
+                    throw new InvalidOperationException($"Task with id {taskId} was found in PDF more than once.");
+                }
+                matchedTaskIds.Add(taskId);
+                var task = tasksDict[taskId];
+                matchedLinks.Add(link);
+                var outlineElement = new PdfOutlineInfo(task.Title, link.Page, link.Y);
+                outlineElements.Add(outlineElement);
+                var examTask = new ExamTask(Guid.NewGuid(), task.Title, task.MaxPoints, 1,
+                    new ExamPosition(link.Page, link.Y));
+                _context.Add(examTask);
+            }
+        }
+
+        if (matchedTaskIds.Count != tasks.Length)
+        {
+            var unmatchedTask = tasks.First(x => !matchedTaskIds.Contains(x.Id));
+            throw new InvalidOperationException($"Task with id {unmatchedTask.Id} could not be found in PDF.");
+        }
+
+        var pdfWithoutTaskLinks = _pdfService.RemoveUriLinkAnnotations(pdf, matchedLinks.ToArray());
+        var pdfWithOutline = _pdfService.SetTopLevelOutline(pdfWithoutTaskLinks, outlineElements.ToArray());
+        _context.Remove(exam.TaskPdfFile);
+        var newTaskPdfFile = new TaskPdfFile(Guid.NewGuid(), $"{examId}.pdf", pdfWithOutline.LongLength, DateTime.Now, userId,
+            pdfWithOutline, examId);
+        _context.Add(newTaskPdfFile);
+        _context.Update(exam);
+        
+        await _context.SaveChangesAsync();
+    }
 
     public async Task Build(Guid examId, int count, Guid userId)
     {
@@ -337,7 +401,7 @@ public class ExamRepository : IExamRepository
 
         _context.Update(submissionPage);
         await _context.SaveChangesAsync();
-        
+
         await MergeCompleteSubmissions(examId, new[] {submission.Id}, userId);
         await CheckCompletenessOfExamSubmissions(examId);
     }

@@ -63,6 +63,8 @@ public class ExamController : ApiController<ExamController>
         var pdf = Convert.FromBase64String(uploadTaskPdfModel.TaskPdf);
 
         await _examRepository.SetTaskPdfFile(examId, GetUserId()!.Value, pdf);
+        var tasks = Mapper.Map<IEnumerable<ExamTaskInfo>>(uploadTaskPdfModel.Tasks).ToArray();
+        await _examRepository.FindTasks(examId, GetUserId()!.Value, tasks);
 
         return Ok();
     }
@@ -133,7 +135,7 @@ public class ExamController : ApiController<ExamController>
     [HttpPost]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/MatchPages")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> MatchManually(Guid examId, ManualMatchesModel manualMatchesModel)
+    public async Task<IActionResult> MatchManually(Guid examId, [FromBody] ManualMatchesModel manualMatchesModel)
     {
         foreach (var manualMatchModel in manualMatchesModel.Matches)
         {

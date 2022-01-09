@@ -11,6 +11,7 @@ public interface IExamRepository
     Task Update(Guid examId, string title, string description, DateTime date);
     Task Delete(Guid examId);
     Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content);
+    Task FindTasks(Guid examId, Guid userId, params ExamTaskInfo[] tasks);
     Task Build(Guid examId, int count, Guid userId);
     Task Clean(Guid examId);
     Task Match(Guid examId, byte[] pdf, Guid userId);

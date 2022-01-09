@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -256,8 +257,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
     public async Task ExamController_UploadTaskPdf_ExamCreator_Success()
     {
         await ResetExam();
-        
-        var content = Encoding.UTF8.GetBytes("This is a test exam.");
+
+        var content = TestEntityFactory.Create<TaskPdfFile, Guid>().Content;
 
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
@@ -282,7 +283,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         {
             taskPdfFile!.Id.Should().NotBeEmpty();
             taskPdfFile.Should().BeEquivalentTo(expectedTaskPdfFile,
-                opts => opts.Excluding(x => x.Id).Excluding(x => x.UploadedAt));
+                opts => opts.Excluding(x => x.Id).Excluding(x => x.UploadedAt).Excluding(x => x.Size)
+                    .Excluding(x => x.Content));
         }
     }
     
