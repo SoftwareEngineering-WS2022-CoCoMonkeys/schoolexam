@@ -57,13 +57,11 @@ public class ExamController : ApiController<ExamController>
     [HttpPost]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/UploadTaskPdf")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> UploadTaskPdf(Guid examId, IFormFile taskPdfFormFile)
+    public async Task<IActionResult> UploadTaskPdf(Guid examId, [FromBody] UploadTaskPdfModel uploadTaskPdfModel)
     {
-        await using var memoryStream = new MemoryStream();
-        await taskPdfFormFile.CopyToAsync(memoryStream);
+        var pdf = Convert.FromBase64String(uploadTaskPdfModel.TaskPdf);
 
-        await _examRepository.SetTaskPdfFile(examId, taskPdfFormFile.FileName, GetUserId()!.Value,
-            memoryStream.ToArray());
+        await _examRepository.SetTaskPdfFile(examId, GetUserId()!.Value, pdf);
 
         return Ok();
     }

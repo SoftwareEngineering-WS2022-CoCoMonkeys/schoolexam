@@ -257,15 +257,16 @@ public class ExamControllerTest : ApiIntegrationTestBase
     {
         await ResetExam();
         
-        var fileName = "test-exam.pdf";
         var content = Encoding.UTF8.GetBytes("This is a test exam.");
 
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/UploadTaskPdf",
-            new MultipartFormDataContent {{new ByteArrayContent(content), "taskPdfFormFile", fileName}});
+        var uploadTaskPdfModel = new UploadTaskPdfModel
+            {TaskPdf = Convert.ToBase64String(content), Tasks = new ExamTaskModel[] { }};
+
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/UploadTaskPdf", uploadTaskPdfModel);
         response.EnsureSuccessStatusCode();
 
         using var context = GetSchoolExamDataContext();
@@ -274,7 +275,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var taskPdfFile = exam?.TaskPdfFile;
 
         var expectedTaskPdfFile =
-            new TaskPdfFile(Guid.Empty, fileName, content.Length, DateTime.Now, _user.Id, content, _exam.Id);
+            new TaskPdfFile(Guid.Empty, $"{_exam.Id}.pdf", content.Length, DateTime.Now, _user.Id, content, _exam.Id);
 
         taskPdfFile.Should().NotBeNull();
         using (new AssertionScope())
@@ -288,15 +289,16 @@ public class ExamControllerTest : ApiIntegrationTestBase
     [Test]
     public async Task ExamController_UploadTaskPdf_ExamBuiltPreviously_ThrowsException()
     {
-        var fileName = "test-exam.pdf";
         var pdfContent = Encoding.UTF8.GetBytes("This is a test exam.");
 
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+        
+        var uploadTaskPdfModel = new UploadTaskPdfModel
+            {TaskPdf = Convert.ToBase64String(pdfContent), Tasks = new ExamTaskModel[] { }};
 
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/UploadTaskPdf",
-            new MultipartFormDataContent {{new ByteArrayContent(pdfContent), "taskPdfFormFile", fileName}});
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/UploadTaskPdf", uploadTaskPdfModel);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         
         var content = await response.Content.ReadAsStringAsync();

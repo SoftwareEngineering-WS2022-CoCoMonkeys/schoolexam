@@ -76,7 +76,7 @@ public class ExamRepository : IExamRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task SetTaskPdfFile(Guid examId, string name, Guid userId, byte[] content)
+    public async Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content)
     {
         var exam = EnsureExamExists(examId);
 
@@ -93,13 +93,15 @@ public class ExamRepository : IExamRepository
         }
 
         var taskPdfFile =
-            new TaskPdfFile(Guid.NewGuid(), name, content.LongLength, DateTime.Now, userId, content, examId);
+            new TaskPdfFile(Guid.NewGuid(), $"{examId.ToString()}.pdf", content.LongLength, DateTime.Now, userId, content, examId);
         // exam is ready to be built after having a task PDF file
         exam.State = ExamState.BuildReady;
         _context.Update(exam);
         _context.Add(taskPdfFile);
         await _context.SaveChangesAsync();
     }
+    
+    // TODO: clear exam tasks when cleaning, rebuilding
 
     public async Task Build(Guid examId, int count, Guid userId)
     {
