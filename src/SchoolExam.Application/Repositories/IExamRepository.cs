@@ -14,6 +14,7 @@ public interface IExamRepository
     Task FindTasks(Guid examId, Guid userId, params ExamTaskInfo[] tasks);
     Task Build(Guid examId, int count, Guid userId);
     Task Clean(Guid examId);
+    byte[] GetConcatenatedBookletPdfFile(Guid examId);
     Task Match(Guid examId, byte[] pdf, Guid userId);
     IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId);
     IEnumerable<ExamBookletPage> GetUnmatchedBookletPages(Guid examId);

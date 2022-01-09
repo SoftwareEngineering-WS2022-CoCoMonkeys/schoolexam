@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -75,8 +76,8 @@ public class ExamController : ApiController<ExamController>
     public async Task<IActionResult> Build(Guid examId, [FromBody] BuildExamModel buildExamModel)
     {
         await _examRepository.Build(examId, buildExamModel.Count, GetUserId()!.Value);
-
-        return Ok();
+        var result = _examRepository.GetConcatenatedBookletPdfFile(examId);
+        return File(result, MediaTypeNames.Application.Pdf);
     }
 
     [HttpPost]
@@ -96,8 +97,8 @@ public class ExamController : ApiController<ExamController>
     {
         await _examRepository.Clean(examId);
         await _examRepository.Build(examId, buildExamModel.Count, GetUserId()!.Value);
-
-        return Ok();
+        var result = _examRepository.GetConcatenatedBookletPdfFile(examId);
+        return File(result, MediaTypeNames.Application.Pdf);
     }
 
     [HttpPost]

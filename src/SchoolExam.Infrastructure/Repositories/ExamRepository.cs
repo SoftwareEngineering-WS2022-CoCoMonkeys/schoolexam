@@ -15,6 +15,7 @@ namespace SchoolExam.Infrastructure.Repositories;
 public class ExamRepository : IExamRepository
 {
     private static string _guidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+    private static string _pageQrCodeUri = "http://pageQrCode";
     
     private readonly ILogger<ExamRepository> _logger;
     private readonly ISchoolExamDataContext _context;
@@ -142,10 +143,10 @@ public class ExamRepository : IExamRepository
                 matchedTaskIds.Add(taskId);
                 var task = tasksDict[taskId];
                 matchedLinks.Add(link);
-                var outlineElement = new PdfOutlineInfo(task.Title, link.Page, link.Y);
+                var outlineElement = new PdfOutlineInfo(task.Title, link.Page, link.Top);
                 outlineElements.Add(outlineElement);
                 var examTask = new ExamTask(Guid.NewGuid(), task.Title, task.MaxPoints, 1,
-                    new ExamPosition(link.Page, link.Y));
+                    new ExamPosition(link.Page, link.Top));
                 _context.Add(examTask);
             }
         }
@@ -185,10 +186,13 @@ public class ExamRepository : IExamRepository
             throw new InvalidOperationException("Exam does not have a task PDF file.");
         }
 
-        var course = _context.Courses.Single(x => x.Id.Equals(exam.CourseId));
-
         var content = exam.TaskPdfFile.Content;
-        var pageCount = _pdfService.GetNumberOfPages(content);
+        var annotations = _pdfService.GetUriLinkAnnotations(content);
+        var qrCodeAnnotations = annotations.Where(x => Regex.IsMatch(x.Uri, _pageQrCodeUri)).ToArray();
+        var qrCodeAnnotationsDict = qrCodeAnnotations.ToDictionary(x => x.Page, x => x);
+        var contentWithoutAnnotations = _pdfService.RemoveUriLinkAnnotations(content, qrCodeAnnotations);
+
+        var pageCount = _pdfService.GetNumberOfPages(contentWithoutAnnotations);
         // generate exam booklets
         for (int i = 0; i < count; i++)
         {
@@ -196,14 +200,13 @@ public class ExamRepository : IExamRepository
                 .ToArray();
             var qrCodes = qrCodeData.Select(x => _qrCodeGenerator.GeneratePngQrCode(x, 2)).ToArray();
             var pdfImageInfos = Enumerable.Range(1, pageCount)
-                .Select(x => new PdfImageRenderInfo(x, 10.0f, 10.0f, 42.0f, qrCodes[x - 1])).ToArray();
-            var bookletContent = _pdfService.RenderImages(content, pdfImageInfos);
-
-            var footerText = $"{course.Name} - {exam.Date:d} - {i + 1}";
-            var pdfTextInfos = Enumerable.Range(1, pageCount)
                 .Select(x =>
-                    new PdfTextRenderInfo(footerText, x, 62.0f, 10.0f, 523.0f, 42.0f)).ToArray();
-            bookletContent = _pdfService.RenderTexts(bookletContent, pdfTextInfos);
+                {
+                    var qrCodeAnnotation = qrCodeAnnotationsDict.ContainsKey(x) ? qrCodeAnnotationsDict[x] : null;
+                    return new PdfImageRenderInfo(x, qrCodeAnnotation?.Left ?? 10.0f, qrCodeAnnotation?.Bottom ?? 10.0f,
+                        qrCodeAnnotation?.Width ?? 42.0f, qrCodes[x - 1]);
+                }).ToArray();
+            var bookletContent = _pdfService.RenderImages(contentWithoutAnnotations, pdfImageInfos);
 
             var bookletId = Guid.NewGuid();
             var bookletPdfFile = new BookletPdfFile(Guid.NewGuid(), $"{i + 1}.pdf", bookletContent.LongLength,
@@ -251,6 +254,14 @@ public class ExamRepository : IExamRepository
         _context.Update(exam);
 
         await _context.SaveChangesAsync();
+    }
+
+    public byte[] GetConcatenatedBookletPdfFile(Guid examId)
+    {
+        var exam = EnsureExamExists(examId);
+        var pdfs = exam.Booklets.OrderBy(x => x.SequenceNumber).Select(x => x.PdfFile.Content).ToArray();
+        var result = _pdfService.Merge(pdfs);
+        return result;
     }
 
     public async Task Match(Guid examId, byte[] pdf, Guid userId)

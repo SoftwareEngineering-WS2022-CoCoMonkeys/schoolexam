@@ -134,7 +134,11 @@ public class iText7PdfService : IPdfService
             foreach (var annotation in annotations)
             {
                 var rectangle = annotation.GetRectangle();
-                var top = rectangle.GetAsNumber(3);
+                var top = rectangle.GetAsNumber(3).FloatValue();
+                var left = rectangle.GetAsNumber(2).FloatValue();
+                var right = rectangle.GetAsNumber(0).FloatValue();
+                var bottom = rectangle.GetAsNumber(1).FloatValue();
+                var width = right - left;
                 if (annotation is PdfLinkAnnotation linkAnnotation)
                 {
                     var action = linkAnnotation.GetAction();
@@ -142,7 +146,7 @@ public class iText7PdfService : IPdfService
                     if (actionType.Equals(PdfName.URI))
                     {
                         var uri = action.GetAsString(PdfName.URI);
-                        result.Add(new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, top.FloatValue()));
+                        result.Add(new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, left, top, bottom, width));
                     }
                 }
             }
@@ -170,7 +174,11 @@ public class iText7PdfService : IPdfService
             foreach (var annotation in annotations)
             {
                 var rectangle = annotation.GetRectangle();
-                var top = rectangle.GetAsNumber(3);
+                var top = rectangle.GetAsNumber(3).FloatValue();
+                var left = rectangle.GetAsNumber(2).FloatValue();
+                var right = rectangle.GetAsNumber(0).FloatValue();
+                var bottom = rectangle.GetAsNumber(1).FloatValue();
+                var width = right - left;
                 if (annotation is PdfLinkAnnotation linkAnnotation)
                 {
                     var action = linkAnnotation.GetAction();
@@ -179,7 +187,7 @@ public class iText7PdfService : IPdfService
                     {
                         var uri = action.GetAsString(PdfName.URI);
                         var parsedAnnotation =
-                            new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, top.FloatValue());
+                            new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, left, top, bottom, width);
                         if (annotationsToRemoveSet.Contains(parsedAnnotation))
                         {
                             page.RemoveAnnotation(annotation);
