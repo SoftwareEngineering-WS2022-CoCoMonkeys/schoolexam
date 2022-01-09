@@ -1,13 +1,12 @@
-using SchoolExam.Domain.Base;
+using SchoolExam.Application.Specifications;
 
 namespace SchoolExam.Application.DataContext;
 
 public interface IDataContext : IDisposable
 {
     Task<int> SaveChangesAsync();
-    TEntity? Find<TEntity, TIdentity>(TIdentity id) where TEntity : class, IEntity<TIdentity>;
-    TEntity? Find<TEntity, TIdentity>(TIdentity id, params string[] includes)
-        where TEntity : class, IEntity<TIdentity>;
+    IEnumerable<TEntity> List<TEntity>(ISpecification<TEntity> spec) where TEntity : class;
+    TEntity? Find<TEntity>(ISpecification<TEntity> spec) where TEntity : class;
     void Add<TEntity>(TEntity entity) where TEntity : class;
     void Update<TEntity>(TEntity entity) where TEntity : class;
     void Remove<TEntity>(TEntity entity) where TEntity : class;

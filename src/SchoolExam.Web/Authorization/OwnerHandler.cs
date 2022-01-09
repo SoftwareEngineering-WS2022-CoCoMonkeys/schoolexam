@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using SchoolExam.Application.DataContext;
+using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Base;
 using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Web.Extensions;
@@ -24,7 +25,10 @@ public class OwnerHandler<TEntity> : AuthorizationHandler<OwnerRequirement<TEnti
             var resourceParameter = httpContext.GetRouteData().Values[requirement.ParameterName];
             if (resourceParameter is string resourceId)
             {
-                var entity = _dataContext.Find<TEntity, Guid>(Guid.Parse(resourceId), requirement.Includes.ToArray());
+                var entity =
+                    _dataContext.Find(
+                        new EntityByIdWithIncludeStringsSpecification<TEntity, Guid>(Guid.Parse(resourceId),
+                            requirement.Includes.ToArray()));
                 if (entity != null)
                 {
                     var ownerIds = requirement.GetOwnerIds(entity).Select(x => x.ToString()).ToHashSet();

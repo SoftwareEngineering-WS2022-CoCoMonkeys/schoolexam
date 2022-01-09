@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SchoolExam.Application.DataContext;
+using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Base;
 
 namespace SchoolExam.Persistence.Base;
@@ -12,27 +13,30 @@ public abstract class DataContextBase<TContext> : IDataContext where TContext : 
     {
         Context = context;
     }
-        
+
     public async Task<int> SaveChangesAsync()
     {
         return await Context.SaveChangesAsync();
     }
 
-    public TEntity? Find<TEntity, TIdentity>(TIdentity id) where TEntity : class, IEntity<TIdentity>
+    public IEnumerable<TEntity> List<TEntity>(ISpecification<TEntity> spec) where TEntity : class
     {
-        return Context.Find<TEntity>(id);
+        var queryable = GetQueryableFromSpec(spec);
+
+        return queryable.Where(spec.Criteria).AsEnumerable();
     }
 
-    public TEntity? Find<TEntity, TIdentity>(TIdentity id, params string[] includes) where TEntity : class, IEntity<TIdentity>
+    public TEntity? Find<TEntity>(ISpecification<TEntity> spec) where TEntity : class
     {
-        var set = Context.Set<TEntity>();
-        IQueryable<TEntity> query = set;
+        var queryable = GetQueryableFromSpec(spec);
+        return queryable.SingleOrDefault(spec.Criteria);
+    }
 
-        foreach (var include in includes)
-        {
-            query = query.Include(include);
-        }
-
+    public TEntity? Find<TEntity, TIdentity>(TIdentity id, params string[] includes)
+        where TEntity : class, IEntity<TIdentity>
+    {
+        var queryable = Context.Set<TEntity>().AsQueryable();
+        IQueryable<TEntity> query = includes.Aggregate(queryable, (current, include) => current.Include(include));
         return query.SingleOrDefault(x => x.Id.Equals(id));
     }
 
@@ -54,5 +58,16 @@ public abstract class DataContextBase<TContext> : IDataContext where TContext : 
     public void Dispose()
     {
         Context.Dispose();
+    }
+
+    private IQueryable<TEntity> GetQueryableFromSpec<TEntity>(ISpecification<TEntity> spec) where TEntity : class
+    {
+        var queryable = Context.Set<TEntity>().AsQueryable();
+        var queryableResultWithIncludes =
+            spec.Includes.Aggregate(queryable, (current, include) => current.Include(include));
+        var queryableResultWithIncludeStrings = spec.IncludeStrings.Aggregate(queryableResultWithIncludes,
+            (current, include) => current.Include(include));
+
+        return queryableResultWithIncludeStrings;
     }
 }

@@ -47,7 +47,7 @@ public class CourseController : ApiController<CourseController>
         return Ok();
     }
 
-    // TODO: add/remove teachers from/to
+    // TODO: add/remove teachers from/to course
 
     [HttpGet]
     [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/TeacherView")]
@@ -61,10 +61,10 @@ public class CourseController : ApiController<CourseController>
     [HttpGet]
     [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/StudentView")]
     [Authorize(PolicyNames.CourseStudentPolicyName)]
-    public CourseReadModelTeacher? GetByIdStudentView(Guid courseId)
+    public CourseReadModelStudent? GetByIdStudentView(Guid courseId)
     {
         var course = _courseRepository.GetById(courseId);
-        return Mapper.Map<CourseReadModelTeacher>(course);
+        return Mapper.Map<CourseReadModelStudent>(course);
     }
 
     [HttpGet]
