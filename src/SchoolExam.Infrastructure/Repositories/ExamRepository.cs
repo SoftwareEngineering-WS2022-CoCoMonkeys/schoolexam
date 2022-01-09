@@ -47,7 +47,7 @@ public class ExamRepository : IExamRepository
     public async Task Create(string title, string description, DateTime date, Guid courseId, Guid teacherId)
     {
         var examId = Guid.NewGuid();
-        var exam = new Exam(examId, title, description, date, courseId, teacherId);
+        var exam = new Exam(examId, title, description, date, teacherId, courseId);
 
         _context.Add(exam);
         await _context.SaveChangesAsync();

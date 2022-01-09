@@ -19,11 +19,11 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpGet]
-    [Route("ByTeacher/{teacherId}")]
+    [Route("ByTeacher")]
     [Authorize(Roles = Role.TeacherName)]
-    public IEnumerable<ExamReadModelTeacher> GetByTeacher(Guid teacherId)
+    public IEnumerable<ExamReadModelTeacher> GetByTeacher()
     {
-        var exams = _examRepository.GetByTeacher(teacherId);
+        var exams = _examRepository.GetByTeacher(GetPersonId()!.Value);
         return Mapper.Map<IEnumerable<ExamReadModelTeacher>>(exams);
     }
 
@@ -32,7 +32,8 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.CourseTeacherPolicyName)]
     public async Task<IActionResult> Create(Guid courseId, [FromBody] ExamWriteModel examWriteModel)
     {
-        await _examRepository.Create(examWriteModel.Title, examWriteModel.Description, examWriteModel.Date, courseId);
+        await _examRepository.Create(examWriteModel.Title, examWriteModel.Description, examWriteModel.Date, courseId,
+            GetPersonId()!.Value);
         return Ok();
     }
 

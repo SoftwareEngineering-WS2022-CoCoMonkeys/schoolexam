@@ -141,7 +141,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var response = await this.Client.GetAsync($"/Exam/ByTeacher/{_teacher.Id}");
+        var response = await this.Client.GetAsync($"/Exam/ByTeacher/");
         response.EnsureSuccessStatusCode();
         
         var result = await response.Content.ReadAsStringAsync();
