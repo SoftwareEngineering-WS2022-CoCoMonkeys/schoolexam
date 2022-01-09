@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolExam.Domain.Entities.ExamAggregate;
+using SchoolExam.Extensions;
 
 namespace SchoolExam.Persistence.Configuration.ExamAggregate;
 
@@ -14,5 +15,8 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
         builder.HasMany(x => x.Tasks);
         builder.HasMany(x => x.Booklets);
         builder.HasOne(x => x.TaskPdfFile).WithOne().HasForeignKey<TaskPdfFile>(x => x.ExamId);
+        builder.HasData(new Exam(SeedIds.ProjektmanagementExamId, "Projektmanagement",
+            "Mündliche Leistungsfeststellung", new DateTime(2022, 4, 1).SetKindUtc(), SeedIds.BriggiteSchweinebauerId,
+            SeedIds.SozialwissenschaftenCourseId));
     }
 }

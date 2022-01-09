@@ -12,7 +12,16 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
     {
         builder.ToTable("Course");
         builder.HasKey(x => x.Id);
-        builder.OwnsSubject(x => x.Subject, false);
+        builder.OwnsSubject(x => x.Subject, false, new
+        {
+            CourseId = SeedIds.SozialwissenschaftenCourseId,
+            Name = "Sozialwissenschaften"
+        });
         builder.HasMany(x => x.Exams).WithOne(x => x.Course).HasForeignKey(x => x.CourseId);
+        builder.HasData(new
+        {
+            Id = SeedIds.SozialwissenschaftenCourseId, Name = "Sozialwissenschaften 2022",
+            Description = "Projektmanagement, etc.", SchoolId = SeedIds.GymnasiumDiedorfId
+        });
     }
 }

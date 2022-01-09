@@ -23,7 +23,7 @@ public class Exam : EntityBase<Guid>
     {
     }
 
-    public Exam(Guid id, string title, string description, DateTime date, Guid courseId) : this(id)
+    public Exam(Guid id, string title, string description, DateTime date, Guid creatorId, Guid courseId) : this(id)
     {
         Title = title;
         Description = description;
@@ -31,6 +31,7 @@ public class Exam : EntityBase<Guid>
         // due date of exam correction is 14 days after exam date
         DueDate = date.AddDays(14);
         CourseId = courseId;
+        CreatorId = creatorId;
         Tasks = new List<ExamTask>();
         Booklets = new List<ExamBooklet>();
         State = ExamState.Planned;

@@ -7,7 +7,7 @@ public interface IExamRepository
 {
     IEnumerable<Exam> GetByTeacher(Guid teacherId);
     IEnumerable<Exam> GetByStudent(Guid studentId);
-    Task Create(string title, string description, DateTime date, Guid courseId);
+    Task Create(string title, string description, DateTime date, Guid courseId, Guid teacherId);
     Task Update(Guid examId, string title, string description, DateTime date);
     Task Delete(Guid examId);
     Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content);
