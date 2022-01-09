@@ -48,8 +48,6 @@ public class CourseController : ApiController<CourseController>
     }
 
     // TODO: add/remove teachers from/to
-    
-    [HttpDelete]
 
     [HttpGet]
     [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/TeacherView")]
