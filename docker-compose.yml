@@ -7,16 +7,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "55011:80"
-      - "55012:443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      #- ASPNETCORE_URLS=https://+:443;http://+:80
-      #- ASPNETCORE_HTTPS_PORT=55012
-      #- ASPNETCORE_Kestrel__Certificates__Default__Password=password
-      #- ASPNETCORE_Kestrel__Certificates__Default__Path=/https/dev_cert.pfx
       - DATABASE_URL=postgres://postgres:postgres@postgres-develop:5432/school_exam
-    #volumes:
-      #- ./conf.d/https/:/https/
     depends_on:
       - postgres
         
