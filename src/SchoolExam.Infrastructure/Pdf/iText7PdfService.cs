@@ -1,6 +1,8 @@
 using iText.IO.Image;
 using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Annot;
 using iText.Kernel.Pdf.Canvas.Parser;
+using iText.Kernel.Pdf.Navigation;
 using iText.Kernel.Utils;
 using iText.Layout;
 using iText.Layout.Element;
@@ -117,6 +119,113 @@ public class iText7PdfService : IPdfService
         return images;
     }
 
+    public IEnumerable<PdfUriLinkAnnotationInfo> GetUriLinkAnnotations(byte[] pdf)
+    {
+        using var memoryStream = new MemoryStream(pdf);
+        var pdfReader = new PdfReader(memoryStream);
+        var pdfDocument = new PdfDocument(pdfReader);
+
+        var result = new List<PdfUriLinkAnnotationInfo>();
+        var count = pdfDocument.GetNumberOfPages();
+        for (int pageNumber = 1; pageNumber <= count; pageNumber++)
+        {
+            var page = pdfDocument.GetPage(count);
+            var annotations = page.GetAnnotations();
+            foreach (var annotation in annotations)
+            {
+                var rectangle = annotation.GetRectangle();
+                var top = rectangle.GetAsNumber(3);
+                if (annotation is PdfLinkAnnotation linkAnnotation)
+                {
+                    var action = linkAnnotation.GetAction();
+                    var actionType = action.Get(PdfName.S);
+                    if (actionType.Equals(PdfName.URI))
+                    {
+                        var uri = action.GetAsString(PdfName.URI);
+                        result.Add(new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, top.FloatValue()));
+                    }
+                }
+            }
+        }
+        pdfDocument.Close();
+
+        return result;
+    }
+
+    public byte[] RemoveUriLinkAnnotations(byte[] pdf, params PdfUriLinkAnnotationInfo[] annotationsToRemove)
+    {
+        using var readStream = new MemoryStream(pdf);
+        using var writeStream = new MemoryStream();
+        var pdfReader = new PdfReader(readStream);
+        var pdfWriter = new PdfWriter(writeStream);
+        var pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+
+        var annotationsToRemoveSet = annotationsToRemove.ToHashSet();
+        
+        var count = pdfDocument.GetNumberOfPages();
+        for (int pageNumber = 1; pageNumber <= count; pageNumber++)
+        {
+            var page = pdfDocument.GetPage(count);
+            var annotations = page.GetAnnotations();
+            foreach (var annotation in annotations)
+            {
+                var rectangle = annotation.GetRectangle();
+                var top = rectangle.GetAsNumber(3);
+                if (annotation is PdfLinkAnnotation linkAnnotation)
+                {
+                    var action = linkAnnotation.GetAction();
+                    var actionType = action.Get(PdfName.S);
+                    if (actionType.Equals(PdfName.URI))
+                    {
+                        var uri = action.GetAsString(PdfName.URI);
+                        var parsedAnnotation =
+                            new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, top.FloatValue());
+                        if (annotationsToRemoveSet.Contains(parsedAnnotation))
+                        {
+                            page.RemoveAnnotation(annotation);
+                        }
+                    }
+                }
+            }
+        }
+        
+        pdfDocument.Close();
+
+        var result = writeStream.ToArray();
+
+        return result;
+    }
+
+    public byte[] SetTopLevelOutline(byte[] pdf, params PdfOutlineInfo[] outlineElements)
+    {
+        using var readStream = new MemoryStream(pdf);
+        using var writeStream = new MemoryStream();
+        var pdfReader = new PdfReader(readStream);
+        var pdfWriter = new PdfWriter(writeStream);
+        var pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+        
+        var outline = pdfDocument.GetOutlines(false);
+        // remove current outline elements
+        var children = outline.GetAllChildren();
+        foreach (var child in children)
+        {
+            child.RemoveOutline();
+        }
+
+        foreach (var outlineElement in outlineElements)
+        {
+            var newOutline = outline.AddOutline(outlineElement.Title);
+            var page = pdfDocument.GetPage(outlineElement.DestinationPage);
+            newOutline.AddDestination(PdfExplicitDestination.CreateFitH(page, outlineElement.DestinationY));
+        }
+        
+        pdfDocument.Close();
+
+        var result = writeStream.ToArray();
+
+        return result;
+    }
+
     public IList<byte[]> Split(byte[] pdf)
     {
         using var readStream = new MemoryStream(pdf);
@@ -209,6 +318,23 @@ public class iText7PdfService : IPdfService
         var result = PdfDate.Decode(modificationDateString);
 
         pdfDocument.Close();
+        return result;
+    }
+
+    public byte[] Protect(byte[] pdf, byte[] userPassword, byte[] ownerPassword)
+    {
+        using var readStream = new MemoryStream(pdf);
+        using var writeStream = new MemoryStream();
+        var pdfReader = new PdfReader(readStream);
+        var writerProps = new WriterProperties().SetStandardEncryption(userPassword, ownerPassword,
+            EncryptionConstants.ALLOW_MODIFY_CONTENTS,
+            EncryptionConstants.ENCRYPTION_AES_256 | EncryptionConstants.DO_NOT_ENCRYPT_METADATA);
+        var pdfWriter = new PdfWriter(writeStream, writerProps);
+        var pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+        pdfDocument.Close();
+
+        var result = writeStream.ToArray();
+
         return result;
     }
 }
