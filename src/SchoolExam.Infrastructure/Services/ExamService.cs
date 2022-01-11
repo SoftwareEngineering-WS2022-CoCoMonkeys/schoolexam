@@ -19,7 +19,7 @@ public class ExamService : IExamService
 {
     private static string _guidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
     private static string _pageQrCodeUri = "http://pageQrCode";
-    
+
     private readonly ILogger<ExamService> _logger;
     private readonly ISchoolExamRepository _context;
 
@@ -148,6 +148,7 @@ public class ExamService : IExamService
                 {
                     throw new InvalidOperationException($"Task with id {taskId} was found in PDF more than once.");
                 }
+
                 matchedTaskIds.Add(taskId);
                 var task = tasksDict[taskId];
                 matchedLinks.Add(link);
@@ -170,7 +171,7 @@ public class ExamService : IExamService
             DateTime.Now, userId, pdfWithoutTaskLinks, examId);
         _context.Add(newTaskPdfFile);
         _context.Update(exam);
-        
+
         await _context.SaveChangesAsync();
     }
 
@@ -286,33 +287,44 @@ public class ExamService : IExamService
         var pages = _pdfService.Split(pdf);
 
         var submissions = _context.List<Submission>().ToDictionary(x => x.BookletId, x => x);
+        var students = _context.List(new StudentByExamSpecification(examId)).ToDictionary(x => x.QrCode, x => x);
         var updatedSubmissionIds = new List<Guid>();
         for (int page = 1; page <= pages.Count; page++)
         {
             var pagePdf = pages[page - 1];
 
+            // extract QR codes from submission page
+            var images = _pdfService.ParseImages(pagePdf).ToList();
+            var qrCodes = images.SelectMany(x => _qrCodeReader.ReadQrCodes(x.Data, x.RotationMatrix)).ToList();
+            // find student identifier QR code
+            var matchedStudentQrCode = qrCodes.SingleOrDefault(qrCode => students.ContainsKey(qrCode.Data))?.Data;
+            var studentQrCode = matchedStudentQrCode != null
+                ? new SchoolExam.Domain.ValueObjects.QrCode(matchedStudentQrCode)
+                : null;
+            // find student with identifier QR code
+            var student = matchedStudentQrCode != null ? students[matchedStudentQrCode] : null;
+
             var submissionPageId = Guid.NewGuid();
             var submissionPagePdf = new SubmissionPagePdfFile(Guid.NewGuid(), $"{page}.pdf", pagePdf.LongLength,
                 DateTime.Now, userId, pagePdf, submissionPageId);
 
-            var images = _pdfService.ParseImages(pagePdf).ToList();
-            var qrCodes = images.SelectMany(x => _qrCodeReader.ReadQrCodes(x.Data, x.RotationMatrix)).ToList();
-
+            // find page identifier QR code
             var bookletPages = exam.Booklets.SelectMany(x => x.Pages);
-            var matchedQrCode =
+            // find page with identifier QR code
+            var matchedPageQrCode =
                 qrCodes.SingleOrDefault(qrCode => bookletPages.Any(x => x.QrCode.Data.Equals(qrCode.Data)));
-            if (matchedQrCode != null)
+            if (matchedPageQrCode != null)
             {
                 // rotate PDF of submission page according to added QR code on page
-                submissionPagePdf.Content = _pdfService.Rotate(submissionPagePdf.Content, -matchedQrCode.Degrees);
+                submissionPagePdf.Content = _pdfService.Rotate(submissionPagePdf.Content, -matchedPageQrCode.Degrees);
 
-                var matchedPage = bookletPages.Single(x => x.QrCode.Data.Equals(matchedQrCode.Data));
+                var matchedPage = bookletPages.Single(x => x.QrCode.Data.Equals(matchedPageQrCode.Data));
 
                 // get existing submission for booklet
                 if (!submissions.ContainsKey(matchedPage.BookletId))
                 {
                     // create new submission if there has not been added one yet
-                    var newSubmission = new Submission(Guid.NewGuid(), null, matchedPage.BookletId);
+                    var newSubmission = new Submission(Guid.NewGuid(), student?.Id, matchedPage.BookletId);
                     submissions.Add(newSubmission.BookletId, newSubmission);
                     _context.Add(newSubmission);
                 }
@@ -320,11 +332,13 @@ public class ExamService : IExamService
                 var submission = submissions[matchedPage.BookletId];
                 updatedSubmissionIds.Add(submission.Id);
 
+                AssignStudentToSubmission(student?.Id, submission);
+
                 // check if page has already been matched previously
                 if (matchedPage.SubmissionPage == null)
                 {
                     var submissionPage = new SubmissionPage(submissionPageId, examId, submissionPagePdf, submission.Id,
-                        matchedPage.Id);
+                        matchedPage.Id, studentQrCode);
                     submission.Pages.Add(submissionPage);
                     _context.Add(submissionPage);
                 }
@@ -336,6 +350,7 @@ public class ExamService : IExamService
                     var previouslyMatchedPage = submission.Pages.Single(x => x.BookletPageId.Equals(matchedPage.Id));
                     _context.Remove(previouslyMatchedPage.PdfFile);
                     previouslyMatchedPage.PdfFile = submissionPagePdf;
+                    previouslyMatchedPage.StudentQrCode ??= studentQrCode;
                 }
             }
             else
@@ -344,7 +359,8 @@ public class ExamService : IExamService
                     $"Page {page} of PDF document could not be matched to an existing exam booklet page.");
 
                 // persist unmatched submission pages such that they can be matched manually afterwards
-                var submissionPage = new SubmissionPage(submissionPageId, examId, submissionPagePdf, null, null);
+                var submissionPage = new SubmissionPage(submissionPageId, examId, submissionPagePdf, null, null,
+                    studentQrCode);
                 _context.Add(submissionPage);
             }
 
@@ -416,6 +432,11 @@ public class ExamService : IExamService
         var submission = _context.Find(new SubmissionByBookletSpecification(bookletId)) ??
                          new Submission(Guid.NewGuid(), null, bookletId);
 
+        var student = submissionPage.StudentQrCode != null
+            ? _context.Find(new StudentByQrCodeSpecification(submissionPage.StudentQrCode.Data))
+            : null;
+        AssignStudentToSubmission(student?.Id, submission);
+
         submissionPage.SubmissionId = submission.Id;
         submissionPage.BookletPageId = bookletPageId;
 
@@ -425,7 +446,7 @@ public class ExamService : IExamService
         await MergeCompleteSubmissions(examId, new[] {submission.Id}, userId);
         await CheckCompletenessOfExamSubmissions(examId);
     }
-    
+
     private Exam EnsureExamExists(EntityByIdSpecification<Exam, Guid> spec)
     {
         var exam = _context.Find(spec);
@@ -450,7 +471,7 @@ public class ExamService : IExamService
             .Where(x => x.HasCompleteSubmission)
             .Where(x => updatedSubmissionsDict.ContainsKey(x.Id)).ToList();
         var bookletPagesDict = booklets.SelectMany(x => x.Pages).ToDictionary(x => x.Id, x => x.Page);
-        
+
         // prepare outline to be added to all complete submission PDFs
         var outlineElements = exam.Tasks.Select(x => new PdfOutlineInfo(x.Title, x.Position.Page, (float) x.Position.Y))
             .ToArray();
@@ -462,7 +483,7 @@ public class ExamService : IExamService
             {
                 _context.Remove(submission.PdfFile);
             }
-
+            
             // merge submission pages of booklet ordered page numbers
             var pages = submission.Pages.OrderBy(x => bookletPagesDict[x.BookletPageId!.Value])
                 .Select(x => x.PdfFile.Content).ToArray();
@@ -485,5 +506,19 @@ public class ExamService : IExamService
 
         _context.Update(exam);
         await _context.SaveChangesAsync();
+    }
+
+    private void AssignStudentToSubmission(Guid? studentId, Submission submission)
+    {
+        // check if submission has already been assigned to another student
+        if (submission.StudentId.HasValue && studentId.HasValue && !studentId.Equals(submission.StudentId))
+        {
+            throw new InvalidOperationException(
+                $"Submission cannot be assigned to student with identifier {studentId} because it was previously assigned to student with identifier {submission.StudentId.Value}");
+        }
+
+        // assign student to submission
+        submission.StudentId ??= studentId;
+        _context.Update(submission);
     }
 }

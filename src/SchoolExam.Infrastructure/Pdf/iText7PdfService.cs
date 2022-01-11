@@ -212,22 +212,19 @@ public class iText7PdfService : IPdfService
         var pdfWriter = new PdfWriter(writeStream);
         var pdfDocument = new PdfDocument(pdfReader, pdfWriter);
         
-        var outline = pdfDocument.GetOutlines(false);
         // remove current outline elements
-        var children = outline.GetAllChildren();
-        foreach (var child in children)
-        {
-            child.RemoveOutline();
-        }
+        pdfDocument.GetOutlines(true).RemoveOutline();
 
         var orderedOutlineElements =
             outlineElements.OrderBy(x => x.DestinationPage).ThenByDescending(x => x.DestinationY);
 
+        var outline = pdfDocument.GetOutlines(true);
+        
         foreach (var outlineElement in orderedOutlineElements)
         {
-            var newOutline = outline.AddOutline(outlineElement.Title);
+            var newOutlineElement = outline.AddOutline(outlineElement.Title);
             var page = pdfDocument.GetPage(outlineElement.DestinationPage);
-            newOutline.AddDestination(PdfExplicitDestination.CreateFitH(page, outlineElement.DestinationY));
+            newOutlineElement.AddDestination(PdfExplicitDestination.CreateFitH(page, outlineElement.DestinationY));
         }
         
         pdfDocument.Close();
