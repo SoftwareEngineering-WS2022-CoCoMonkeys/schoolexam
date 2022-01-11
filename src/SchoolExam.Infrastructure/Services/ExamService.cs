@@ -40,6 +40,12 @@ public class ExamService : IExamService
         _qrCodeReader = qrCodeReader;
     }
 
+    public Exam? GetById(Guid examId)
+    {
+        var result = _context.Find<Exam, Guid>(examId);
+        return result;
+    }
+
     public IEnumerable<Exam> GetByTeacher(Guid teacherId)
     {
         var result = _context.List(new ExamByTeacherSpecification(teacherId));

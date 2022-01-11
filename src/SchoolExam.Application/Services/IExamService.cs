@@ -5,6 +5,7 @@ namespace SchoolExam.Application.Services;
 
 public interface IExamService
 {
+    Exam? GetById(Guid examId);
     IEnumerable<Exam> GetByTeacher(Guid teacherId);
     IEnumerable<Exam> GetByStudent(Guid studentId);
     Task Create(string title, string description, DateTime date, Guid courseId, Guid teacherId);

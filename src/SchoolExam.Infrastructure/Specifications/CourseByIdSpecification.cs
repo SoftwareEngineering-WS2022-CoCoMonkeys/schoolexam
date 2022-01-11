@@ -8,5 +8,6 @@ public class CourseByIdSpecification : EntityByIdSpecification<Course, Guid>
     public CourseByIdSpecification(Guid id) : base(id)
     {
         AddInclude(x => x.Students);
+        AddInclude(x => x.Teachers);
     }
 }

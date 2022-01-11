@@ -20,6 +20,7 @@ using SchoolExam.Infrastructure.Services;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
 using SchoolExam.Web.Authorization;
+using SchoolExam.Web.Extensions;
 using SchoolExam.Web.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,22 +58,19 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(PolicyNames.CourseTeacherPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
-        policy.AddRequirements(new OwnerRequirement<Course>(course => course.Teachers.Select(x => x.TeacherId),
-            RouteParameterNames.CourseIdParameterName, nameof(Course.Teachers)));
+        policy.AddRequirement<CourseTeacherAuthorizationRequirement>();
     });
     options.AddPolicy(PolicyNames.CourseStudentPolicyName, policy =>
     {
         policy.RequireRole(Role.Student);
-        policy.AddRequirements(new OwnerRequirement<Course>(course => course.Students.Select(x => x.StudentId),
-            RouteParameterNames.CourseIdParameterName, nameof(Course.Students)));
+        policy.AddRequirement<CourseStudentAuthorizationRequirement>();
     });
 
     // ExamController authorization policies
     options.AddPolicy(PolicyNames.ExamCreatorPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
-        policy.AddRequirements(new OwnerRequirement<Exam>(exam => exam.CreatorId,
-            RouteParameterNames.ExamIdParameterName));
+        policy.AddRequirement<ExamCreatorAuthorizationRequirement>();
     });
 });
 
@@ -87,8 +85,9 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartBodyLengthLimit = 52428800;
 });
 
-builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Course>>();
-builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Exam>>();
+builder.Services.AddScoped<IAuthorizationHandler, CourseTeacherAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, CourseStudentAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ExamCreatorAuthorizationHandler>();
 
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
