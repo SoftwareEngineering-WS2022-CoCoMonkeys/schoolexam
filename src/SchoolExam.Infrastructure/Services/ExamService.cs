@@ -300,13 +300,13 @@ public class ExamService : IExamService
 
             var bookletPages = exam.Booklets.SelectMany(x => x.Pages);
             var matchedQrCode =
-                qrCodes.SingleOrDefault(qrCode => bookletPages.Any(x => x.QrCodeData.Equals(qrCode.Data)));
+                qrCodes.SingleOrDefault(qrCode => bookletPages.Any(x => x.QrCode.Data.Equals(qrCode.Data)));
             if (matchedQrCode != null)
             {
                 // rotate PDF of submission page according to added QR code on page
                 submissionPagePdf.Content = _pdfService.Rotate(submissionPagePdf.Content, -matchedQrCode.Degrees);
 
-                var matchedPage = bookletPages.Single(x => x.QrCodeData.Equals(matchedQrCode.Data));
+                var matchedPage = bookletPages.Single(x => x.QrCode.Data.Equals(matchedQrCode.Data));
 
                 // get existing submission for booklet
                 if (!submissions.ContainsKey(matchedPage.BookletId))

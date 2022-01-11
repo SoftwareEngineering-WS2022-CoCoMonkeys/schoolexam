@@ -8,6 +8,7 @@ public class Student : Person
     public ICollection<CourseStudent> Courses { get; set; }
     public ICollection<StudentLegalGuardian> LegalGuardians { get; set; }
     public Guid SchoolId { get; set; }
+    
 
     protected Student(Guid id) : base(id)
     {

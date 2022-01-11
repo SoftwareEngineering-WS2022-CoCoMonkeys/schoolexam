@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolExam.Domain.Entities.ExamAggregate;
+using SchoolExam.Persistence.Extensions;
 
 namespace SchoolExam.Persistence.Configuration.ExamAggregate;
 
@@ -10,7 +11,6 @@ public class BookletPageConfiguration : IEntityTypeConfiguration<BookletPage>
     {
         builder.ToTable("BookletPage");
         builder.HasKey(x => x.Id);
-        builder.HasIndex(x => x.QrCodeData).IsUnique();
-        builder.Property(x => x.QrCodeData).HasMaxLength(32).IsFixedLength();
+        builder.OwnsQrCode(x => x.QrCode);
     }
 }
