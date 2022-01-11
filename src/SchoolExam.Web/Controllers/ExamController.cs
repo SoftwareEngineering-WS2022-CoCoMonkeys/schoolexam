@@ -102,14 +102,13 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpPost]
-    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Match")]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/SubmitAndMatch")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> Match(Guid examId, IFormFile submissionPdfFormFile)
+    public async Task<IActionResult> SubmitAndMatch(Guid examId, [FromBody] SubmitAndMatchModel submitAndMatchModel)
     {
-        await using var memoryStream = new MemoryStream();
-        await submissionPdfFormFile.CopyToAsync(memoryStream);
+        var pdf = Convert.FromBase64String(submitAndMatchModel.Pdf);
 
-        await _examService.Match(examId, memoryStream.ToArray(), GetUserId()!.Value);
+        await _examService.Match(examId, pdf, GetUserId()!.Value);
 
         return Ok();
     }
@@ -146,4 +145,15 @@ public class ExamController : ApiController<ExamController>
 
         return Ok();
     }
+
+    [HttpGet]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Submissions")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public IEnumerable<SubmissionReadModel> GetSubmissions(Guid examId)
+    {
+        var submissions = _examService.GetSubmissions(examId);
+        var result = Mapper.Map<IEnumerable<SubmissionReadModel>>(submissions);
+
+        return result;
+    } 
 }

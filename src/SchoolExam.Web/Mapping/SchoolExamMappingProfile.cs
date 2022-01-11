@@ -35,5 +35,11 @@ public class SchoolExamMappingProfile : Profile
             .ForMember(dst => dst.Subject, opt => opt.MapFrom(src => src.Course.Subject!.Name));
 
         CreateMap<ExamTaskModel, ExamTaskInfo>();
+
+        CreateMap<Submission, SubmissionReadModel>()
+            .ForMember(x => x.IsMatched, opt => opt.MapFrom(src => src.Student != null))
+            .ForMember(x => x.Student,
+                opt => opt.MapFrom(
+                    src => src.Student != null ? $"{src.Student.FirstName} {src.Student.LastName}" : null));
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -341,14 +340,13 @@ public class ExamControllerTest : ApiIntegrationTestBase
             submissionPdf = pdfService.Merge(pdfs ?? Array.Empty<byte[]>());
         }
 
-        var fileName = "test-submission.pdf";
-
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
-            new MultipartFormDataContent {{new ByteArrayContent(submissionPdf), "submissionPdfFormFile", fileName}});
+        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf)};
+
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
         response.EnsureSuccessStatusCode();
 
         using (var context = GetSchoolExamDataContext())
@@ -393,15 +391,14 @@ public class ExamControllerTest : ApiIntegrationTestBase
             var pdfs = booklets?.Select(x => x.PdfFile.Content).ToArray();
             submissionPdf = pdfService.Merge(pdfs?.Concat(pdfs).ToArray() ?? Array.Empty<byte[]>());
         }
-
-        var fileName = "test-submission.pdf";
-
+        
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+        
+        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf)};
 
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
-            new MultipartFormDataContent {{new ByteArrayContent(submissionPdf), "submissionPdfFormFile", fileName}});
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
         
         response.EnsureSuccessStatusCode();
 
@@ -490,12 +487,10 @@ public class ExamControllerTest : ApiIntegrationTestBase
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+        
+        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(_booklet.PdfFile.Content)};
 
-        var fileName = "test-submission.pdf";
-
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
-            new MultipartFormDataContent
-                {{new ByteArrayContent(_booklet.PdfFile.Content), "submissionPdfFormFile", fileName}});
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
         response.EnsureSuccessStatusCode();
 
         using var context = GetSchoolExamDataContext();
@@ -525,9 +520,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var submissionPdf = TestEntityFactory.Create<SubmissionPagePdfFile, Guid>();
 
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
-            new MultipartFormDataContent
-                {{new ByteArrayContent(submissionPdf.Content), "submissionPdfFormFile", $"{submissionPdf.Name}.pdf"}});
+        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf.Content)};
+
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         
         var content = await response.Content.ReadAsStringAsync();

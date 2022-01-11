@@ -424,6 +424,15 @@ public class ExamService : IExamService
         await CheckCompletenessOfExamSubmissions(examId);
     }
 
+    public IEnumerable<Submission> GetSubmissions(Guid examId)
+    {
+        EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+
+        var booklets = _context.List(new BookletWithSubmissionWithStudentByExamSpecification(examId));
+        var result = booklets.Select(x => x.Submission!);
+        return result;
+    }
+
     private Exam EnsureExamExists(EntityByIdSpecification<Exam, Guid> spec)
     {
         var exam = _context.Find(spec);
@@ -441,13 +450,17 @@ public class ExamService : IExamService
         var updatedSubmissions =
             _context.List(new SubmissionWithPdfFileAndPagesWithPdfFileByIdsSpecification(updatedSubmissionIdsSet));
         var updatedSubmissionsDict = updatedSubmissions.ToDictionary(x => x.BookletId, x => x);
-        var exam = _context.Find(new ExamWithBookletsWithPagesWithSubmissionPageByIdSpecification(examId))!;
+        var exam = _context.Find(new ExamWithTasksAndBookletsWithPagesWithSubmissionPageByIdSpecification(examId))!;
 
         // get updated booklets with a complete submission
         var booklets = exam.Booklets
             .Where(x => x.HasCompleteSubmission)
             .Where(x => updatedSubmissionsDict.ContainsKey(x.Id)).ToList();
         var bookletPagesDict = booklets.SelectMany(x => x.Pages).ToDictionary(x => x.Id, x => x.Page);
+        
+        // prepare outline to be added to all complete submission PDFs
+        var outlineElements = exam.Tasks.Select(x => new PdfOutlineInfo(x.Title, x.Position.Page, (float) x.Position.Y))
+            .ToArray();
 
         foreach (var booklet in booklets)
         {
@@ -457,12 +470,14 @@ public class ExamService : IExamService
                 _context.Remove(submission.PdfFile);
             }
 
+            // merge submission pages of booklet ordered page numbers
             var pages = submission.Pages.OrderBy(x => bookletPagesDict[x.BookletPageId!.Value])
                 .Select(x => x.PdfFile.Content).ToArray();
             var submissionPdf = _pdfService.Merge(pages);
+            var submissionPdfWithOutline = _pdfService.SetTopLevelOutline(submissionPdf, outlineElements);
 
             var submissionPdfFile = new SubmissionPdfFile(Guid.NewGuid(), $"submission_{submission.Id}.pdf",
-                submissionPdf.LongLength, DateTime.Now, userId, submissionPdf, submission.Id);
+                submissionPdfWithOutline.LongLength, DateTime.Now, userId, submissionPdfWithOutline, submission.Id);
             _context.Add(submissionPdfFile);
         }
 
