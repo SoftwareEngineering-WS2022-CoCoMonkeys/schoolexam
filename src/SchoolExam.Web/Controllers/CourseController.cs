@@ -1,7 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SchoolExam.Application.Repositories;
+using SchoolExam.Application.Services;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Models.Course;
@@ -10,12 +10,12 @@ namespace SchoolExam.Web.Controllers;
 
 public class CourseController : ApiController<CourseController>
 {
-    private readonly ICourseRepository _courseRepository;
+    private readonly ICourseService _courseService;
     
-    public CourseController(ILogger<CourseController> logger, IMapper mapper, ICourseRepository courseRepository) :
+    public CourseController(ILogger<CourseController> logger, IMapper mapper, ICourseService courseService) :
         base(logger, mapper)
     {
-        _courseRepository = courseRepository;
+        _courseService = courseService;
     }
 
     [HttpPost]
@@ -23,7 +23,7 @@ public class CourseController : ApiController<CourseController>
     [Authorize(Roles = Role.TeacherName)]
     public async Task<IActionResult> Create([FromBody] CourseWriteModel courseWriteModel)
     {
-        await _courseRepository.Create(GetPersonId()!.Value, courseWriteModel.Name, courseWriteModel.Description,
+        await _courseService.Create(GetPersonId()!.Value, courseWriteModel.Name, courseWriteModel.Description,
             courseWriteModel.Subject);
         return Ok();
     }
@@ -33,7 +33,7 @@ public class CourseController : ApiController<CourseController>
     [Authorize(PolicyNames.CourseTeacherPolicyName)]
     public async Task<IActionResult> Update(Guid courseId, [FromBody] CourseWriteModel courseWriteModel)
     {
-        await _courseRepository.Update(courseId, courseWriteModel.Name, courseWriteModel.Description,
+        await _courseService.Update(courseId, courseWriteModel.Name, courseWriteModel.Description,
             courseWriteModel.Subject);
         return Ok();
     }
@@ -43,7 +43,7 @@ public class CourseController : ApiController<CourseController>
     [Authorize(PolicyNames.CourseTeacherPolicyName)]
     public async Task<IActionResult> Delete(Guid courseId)
     {
-        await _courseRepository.Delete(courseId);
+        await _courseService.Delete(courseId);
         return Ok();
     }
 
@@ -54,7 +54,7 @@ public class CourseController : ApiController<CourseController>
     [Authorize(PolicyNames.CourseTeacherPolicyName)]
     public CourseReadModelTeacher? GetByIdTeacherView(Guid courseId)
     {
-        var course = _courseRepository.GetById(courseId);
+        var course = _courseService.GetById(courseId);
         return Mapper.Map<CourseReadModelTeacher>(course);
     }
     
@@ -63,7 +63,7 @@ public class CourseController : ApiController<CourseController>
     [Authorize(PolicyNames.CourseStudentPolicyName)]
     public CourseReadModelStudent? GetByIdStudentView(Guid courseId)
     {
-        var course = _courseRepository.GetById(courseId);
+        var course = _courseService.GetById(courseId);
         return Mapper.Map<CourseReadModelStudent>(course);
     }
 
@@ -72,7 +72,7 @@ public class CourseController : ApiController<CourseController>
     [Authorize(Roles = Role.TeacherName)]
     public IEnumerable<CourseReadModelTeacher> GetByTeacher()
     {
-        var courses = _courseRepository.GetByTeacher(GetPersonId()!.Value);
+        var courses = _courseService.GetByTeacher(GetPersonId()!.Value);
         return Mapper.Map<IEnumerable<CourseReadModelTeacher>>(courses);
     }
 }

@@ -1,8 +1,8 @@
 using SchoolExam.Domain.Entities.CourseAggregate;
 
-namespace SchoolExam.Application.Repositories;
+namespace SchoolExam.Application.Services;
 
-public interface ICourseRepository
+public interface ICourseService
 {
     Course? GetById(Guid courseId);
     Task Create(Guid teacherId, string name, string description, string subject);

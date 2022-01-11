@@ -1,8 +1,8 @@
 using SchoolExam.Application.Specifications;
 
-namespace SchoolExam.Application.DataContext;
+namespace SchoolExam.Application.Repository;
 
-public interface IDataContext : IDisposable
+public interface IRepository : IDisposable
 {
     Task<int> SaveChangesAsync();
     IEnumerable<TEntity> List<TEntity>(ISpecification<TEntity> spec) where TEntity : class;

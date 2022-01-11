@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
-using SchoolExam.Application.DataContext;
+using SchoolExam.Application.Repository;
 using SchoolExam.Persistence.DataContext;
 
-namespace SchoolExam.Infrastructure.DataContext;
+namespace SchoolExam.Infrastructure.Repository;
 
-public class SchoolExamDataContextInitService : ISchoolExamDataContextInitService
+public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
 {
     private readonly SchoolExamDbContext _context;
     
-    public SchoolExamDataContextInitService(SchoolExamDbContext context)
+    public SchoolExamRepositoryInitService(SchoolExamDbContext context)
     {
         _context = context;
     }

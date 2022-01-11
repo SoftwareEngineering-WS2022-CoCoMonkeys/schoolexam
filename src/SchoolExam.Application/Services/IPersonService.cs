@@ -1,8 +1,8 @@
 using SchoolExam.Domain.Entities.PersonAggregate;
 
-namespace SchoolExam.Application.Repositories;
+namespace SchoolExam.Application.Services;
 
-public interface IPersonRepository
+public interface IPersonService
 {
     Person GetById(Guid id);
 }

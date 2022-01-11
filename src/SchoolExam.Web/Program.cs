@@ -3,20 +3,20 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using SchoolExam.Application.Authentication;
-using SchoolExam.Application.DataContext;
 using SchoolExam.Application.Pdf;
 using SchoolExam.Application.QrCode;
 using SchoolExam.Application.RandomGenerator;
-using SchoolExam.Application.Repositories;
+using SchoolExam.Application.Repository;
+using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Authentication;
-using SchoolExam.Infrastructure.DataContext;
 using SchoolExam.Infrastructure.Pdf;
 using SchoolExam.Infrastructure.QrCode;
 using SchoolExam.Infrastructure.RandomGenerator;
-using SchoolExam.Infrastructure.Repositories;
+using SchoolExam.Infrastructure.Repository;
+using SchoolExam.Infrastructure.Services;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
 using SchoolExam.Web.Authorization;
@@ -110,17 +110,17 @@ builder.Services.AddSingleton<Random>();
 builder.Services.AddSingleton<IRandomGenerator, RandomGenerator>();
 builder.Services.AddSingleton<IPdfService, iText7PdfService>();
 builder.Services.AddSingleton<IQrCodeReader, ZXingNetQrCodeReader>();
-builder.Services.AddTransient<ISchoolExamDataContext, SchoolExamDataContext>();
-builder.Services.AddTransient<ICourseRepository, CourseRepository>();
-builder.Services.AddTransient<IExamRepository, ExamRepository>();
-builder.Services.AddTransient<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ISchoolExamDataContextInitService, SchoolExamDataContextInitService>();
+builder.Services.AddTransient<ISchoolExamRepository, SchoolExamRepository>();
+builder.Services.AddTransient<ICourseService, CourseService>();
+builder.Services.AddTransient<IExamService, ExamService>();
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddScoped<ISchoolExamRepositoryInitService, SchoolExamRepositoryInitService>();
 
 var app = builder.Build();
 
 using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
 {
-    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamDataContextInitService>();
+    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamRepositoryInitService>();
     await initService!.Init();
 }
 

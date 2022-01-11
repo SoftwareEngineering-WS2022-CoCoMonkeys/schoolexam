@@ -1,8 +1,8 @@
 using SchoolExam.Domain.Entities.UserAggregate;
 
-namespace SchoolExam.Application.Repositories;
+namespace SchoolExam.Application.Services;
 
-public interface IUserRepository
+public interface IUserService
 {
     User? GetByUsername(string username);
 }

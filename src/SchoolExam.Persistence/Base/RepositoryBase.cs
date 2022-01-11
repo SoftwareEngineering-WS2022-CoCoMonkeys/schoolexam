@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using SchoolExam.Application.DataContext;
+using SchoolExam.Application.Repository;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Base;
 
 namespace SchoolExam.Persistence.Base;
 
-public abstract class DataContextBase<TContext> : IDataContext where TContext : DbContextBase
+public abstract class RepositoryBase<TContext> : IRepository where TContext : DbContextBase
 {
     protected TContext Context { get; }
 
-    public DataContextBase(TContext context)
+    public RepositoryBase(TContext context)
     {
         Context = context;
     }

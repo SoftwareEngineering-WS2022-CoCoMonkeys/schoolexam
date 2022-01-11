@@ -1,10 +1,10 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
-using SchoolExam.Application.DataContext;
 using SchoolExam.Application.Pdf;
 using SchoolExam.Application.QrCode;
 using SchoolExam.Application.RandomGenerator;
-using SchoolExam.Application.Repositories;
+using SchoolExam.Application.Repository;
+using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
@@ -13,22 +13,22 @@ using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
 
-namespace SchoolExam.Infrastructure.Repositories;
+namespace SchoolExam.Infrastructure.Services;
 
-public class ExamRepository : IExamRepository
+public class ExamService : IExamService
 {
     private static string _guidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
     private static string _pageQrCodeUri = "http://pageQrCode";
     
-    private readonly ILogger<ExamRepository> _logger;
-    private readonly ISchoolExamDataContext _context;
+    private readonly ILogger<ExamService> _logger;
+    private readonly ISchoolExamRepository _context;
 
     private readonly IRandomGenerator _randomGenerator;
     private readonly IQrCodeGenerator _qrCodeGenerator;
     private readonly IPdfService _pdfService;
     private readonly IQrCodeReader _qrCodeReader;
 
-    public ExamRepository(ILogger<ExamRepository> logger, ISchoolExamDataContext context,
+    public ExamService(ILogger<ExamService> logger, ISchoolExamRepository context,
         IRandomGenerator randomGenerator, IQrCodeGenerator qrCodeGenerator, IPdfService pdfService,
         IQrCodeReader qrCodeReader)
     {

@@ -1,5 +1,5 @@
 using AutoMapper;
-using SchoolExam.Application.Repositories;
+using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;

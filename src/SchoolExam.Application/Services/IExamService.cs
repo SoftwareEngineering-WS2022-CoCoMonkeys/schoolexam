@@ -1,9 +1,9 @@
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 
-namespace SchoolExam.Application.Repositories;
+namespace SchoolExam.Application.Services;
 
-public interface IExamRepository
+public interface IExamService
 {
     IEnumerable<Exam> GetByTeacher(Guid teacherId);
     IEnumerable<Exam> GetByStudent(Guid studentId);

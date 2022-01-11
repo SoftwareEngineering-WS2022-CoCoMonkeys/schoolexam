@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
-using SchoolExam.Application.DataContext;
+using SchoolExam.Application.Repository;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Base;
 using SchoolExam.Infrastructure.Authentication;
@@ -10,11 +10,11 @@ namespace SchoolExam.Web.Authorization;
 public class OwnerHandler<TEntity> : AuthorizationHandler<OwnerRequirement<TEntity>>
     where TEntity : class, IEntity<Guid>
 {
-    private readonly ISchoolExamDataContext _dataContext;
+    private readonly ISchoolExamRepository _repository;
 
-    public OwnerHandler(ISchoolExamDataContext dataContext)
+    public OwnerHandler(ISchoolExamRepository repository)
     {
-        _dataContext = dataContext;
+        _repository = repository;
     }
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
@@ -26,7 +26,7 @@ public class OwnerHandler<TEntity> : AuthorizationHandler<OwnerRequirement<TEnti
             if (resourceParameter is string resourceId)
             {
                 var entity =
-                    _dataContext.Find(
+                    _repository.Find(
                         new EntityByIdWithIncludeStringsSpecification<TEntity, Guid>(Guid.Parse(resourceId),
                             requirement.Includes.ToArray()));
                 if (entity != null)

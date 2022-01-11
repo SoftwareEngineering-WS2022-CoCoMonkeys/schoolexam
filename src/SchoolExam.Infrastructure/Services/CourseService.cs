@@ -1,18 +1,18 @@
-using SchoolExam.Application.DataContext;
-using SchoolExam.Application.Repositories;
+using SchoolExam.Application.Repository;
+using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
 
-namespace SchoolExam.Infrastructure.Repositories;
+namespace SchoolExam.Infrastructure.Services;
 
-public class CourseRepository : ICourseRepository
+public class CourseService : ICourseService
 {
-    private readonly ISchoolExamDataContext _context;
+    private readonly ISchoolExamRepository _context;
 
-    public CourseRepository(ISchoolExamDataContext context)
+    public CourseService(ISchoolExamRepository context)
     {
         _context = context;
     }

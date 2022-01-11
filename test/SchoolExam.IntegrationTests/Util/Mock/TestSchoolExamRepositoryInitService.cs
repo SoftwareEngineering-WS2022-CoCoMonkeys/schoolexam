@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
-using SchoolExam.Application.DataContext;
+using SchoolExam.Application.Repository;
 
 namespace SchoolExam.IntegrationTests.Util.Mock;
 
-public class TestSchoolExamDataContextInitService : ISchoolExamDataContextInitService
+public class TestSchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
 {
     public Task Init()
     {

@@ -1,4 +1,4 @@
-namespace SchoolExam.Application.Repositories;
+namespace SchoolExam.Application.Services;
 
 public class ExamTaskInfo
 {
