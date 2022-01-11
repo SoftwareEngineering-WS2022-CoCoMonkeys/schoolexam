@@ -1,4 +1,5 @@
 using SchoolExam.Domain.Base;
+using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 
 namespace SchoolExam.Domain.Entities.SubmissionAggregate;
@@ -7,6 +8,7 @@ public class Submission : EntityBase<Guid>
 {
     public double AchievedPoints => Answers.Sum(x => x.AchievedPoints);
     public Guid BookletId { get; set; }
+    public ExamBooklet Booklet { get; set; }
     public Guid? StudentId { get; set; }
     public Student? Student { get; set; }
     public ICollection<Answer> Answers { get; set; }

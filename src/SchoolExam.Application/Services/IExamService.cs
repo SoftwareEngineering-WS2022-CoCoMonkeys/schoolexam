@@ -20,5 +20,4 @@ public interface IExamService
     IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId);
     IEnumerable<ExamBookletPage> GetUnmatchedBookletPages(Guid examId);
     Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId, Guid userId);
-    IEnumerable<Submission> GetSubmissions(Guid examId);
 }

@@ -72,6 +72,11 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(Role.Teacher);
         policy.AddRequirement<ExamCreatorAuthorizationRequirement>();
     });
+    options.AddPolicy(PolicyNames.SubmissionExamCreatorPolicyName, policy =>
+    {
+        policy.RequireRole(Role.Teacher);
+        policy.AddRequirement<SubmissionExamCreatorAuthorizationRequirement>();
+    });
 });
 
 builder.Services.AddCors(options =>
@@ -88,6 +93,7 @@ builder.Services.Configure<FormOptions>(options =>
 builder.Services.AddScoped<IAuthorizationHandler, CourseTeacherAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, CourseStudentAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ExamCreatorAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SubmissionExamCreatorAuthorizationHandler>();
 
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
@@ -112,6 +118,7 @@ builder.Services.AddSingleton<IQrCodeReader, ZXingNetQrCodeReader>();
 builder.Services.AddTransient<ISchoolExamRepository, SchoolExamRepository>();
 builder.Services.AddTransient<ICourseService, CourseService>();
 builder.Services.AddTransient<IExamService, ExamService>();
+builder.Services.AddTransient<ISubmissionService, SubmissionService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddScoped<ISchoolExamRepositoryInitService, SchoolExamRepositoryInitService>();
 

@@ -6,6 +6,7 @@ namespace SchoolExam.Domain.Entities.ExamAggregate;
 public class ExamBooklet : EntityBase<Guid>
 {
     public Guid ExamId { get; set; }
+    public Exam Exam { get; set; }
     public int SequenceNumber { get; set; }
     public BookletPdfFile PdfFile { get; set; }
     public ICollection<ExamBookletPage> Pages { get; set; }

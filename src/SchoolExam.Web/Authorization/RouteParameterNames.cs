@@ -4,4 +4,5 @@ public static class RouteParameterNames
 {
     public const string CourseIdParameterName = "courseId";
     public const string ExamIdParameterName = "examId";
+    public const string SubmissionIdParameterName = "submissionId";
 }

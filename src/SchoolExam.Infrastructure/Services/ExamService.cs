@@ -154,6 +154,7 @@ public class ExamService : IExamService
                 var examTask = new ExamTask(Guid.NewGuid(), task.Title, task.MaxPoints, 1,
                     new ExamPosition(link.Page, link.Top));
                 _context.Add(examTask);
+                exam.Tasks.Add(examTask);
             }
         }
 
@@ -423,16 +424,7 @@ public class ExamService : IExamService
         await MergeCompleteSubmissions(examId, new[] {submission.Id}, userId);
         await CheckCompletenessOfExamSubmissions(examId);
     }
-
-    public IEnumerable<Submission> GetSubmissions(Guid examId)
-    {
-        EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
-
-        var booklets = _context.List(new BookletWithSubmissionWithStudentByExamSpecification(examId));
-        var result = booklets.Select(x => x.Submission!);
-        return result;
-    }
-
+    
     private Exam EnsureExamExists(EntityByIdSpecification<Exam, Guid> spec)
     {
         var exam = _context.Find(spec);

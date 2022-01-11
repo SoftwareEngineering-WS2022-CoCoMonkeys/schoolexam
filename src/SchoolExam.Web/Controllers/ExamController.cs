@@ -145,15 +145,4 @@ public class ExamController : ApiController<ExamController>
 
         return Ok();
     }
-
-    [HttpGet]
-    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Submissions")]
-    [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public IEnumerable<SubmissionReadModel> GetSubmissions(Guid examId)
-    {
-        var submissions = _examService.GetSubmissions(examId);
-        var result = Mapper.Map<IEnumerable<SubmissionReadModel>>(submissions);
-
-        return result;
-    } 
 }
