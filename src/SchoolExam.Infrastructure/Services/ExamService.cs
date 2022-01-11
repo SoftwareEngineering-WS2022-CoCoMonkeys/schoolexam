@@ -274,7 +274,8 @@ public class ExamService : IExamService
 
     public async Task Match(Guid examId, byte[] pdf, Guid userId)
     {
-        var exam = EnsureExamExists(new ExamWithBookletsWithPagesByIdSpecification(examId));
+        var exam = EnsureExamExists(
+            new ExamWithBookletsWithPagesWithSubmissionPageWithPdfFileByIdSpecification(examId));
 
         if (exam.State != ExamState.SubmissionReady && exam.State != ExamState.InCorrection &&
             exam.State != ExamState.Corrected)

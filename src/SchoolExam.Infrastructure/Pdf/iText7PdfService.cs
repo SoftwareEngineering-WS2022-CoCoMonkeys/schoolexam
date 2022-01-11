@@ -220,7 +220,10 @@ public class iText7PdfService : IPdfService
             child.RemoveOutline();
         }
 
-        foreach (var outlineElement in outlineElements)
+        var orderedOutlineElements =
+            outlineElements.OrderBy(x => x.DestinationPage).ThenByDescending(x => x.DestinationY);
+
+        foreach (var outlineElement in orderedOutlineElements)
         {
             var newOutline = outline.AddOutline(outlineElement.Title);
             var page = pdfDocument.GetPage(outlineElement.DestinationPage);
