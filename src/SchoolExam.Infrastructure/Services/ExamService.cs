@@ -204,7 +204,7 @@ public class ExamService : IExamService
         {
             var qrCodeData = Enumerable.Range(0, pageCount).Select(_ => _randomGenerator.GenerateHexString(32))
                 .ToArray();
-            var qrCodes = qrCodeData.Select(x => _qrCodeGenerator.GeneratePngQrCode(x, 2)).ToArray();
+            var qrCodes = qrCodeData.Select(x => _qrCodeGenerator.GeneratePngQrCode(x)).ToArray();
             var pdfImageInfos = Enumerable.Range(1, pageCount)
                 .Select(x =>
                 {

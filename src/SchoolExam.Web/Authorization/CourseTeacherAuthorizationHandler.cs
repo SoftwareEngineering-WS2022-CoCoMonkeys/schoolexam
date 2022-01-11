@@ -11,7 +11,7 @@ public class CourseTeacherAuthorizationHandler : EntityAuthorizationHandler<Cour
         _courseService = courseService;
     }
     
-    protected override bool IsAuthorized(Guid personId, Guid entityId)
+    protected override bool IsAuthorized(Guid personId, string role, Guid entityId)
     {
         var course = _courseService.GetById(entityId);
         if (course != null)

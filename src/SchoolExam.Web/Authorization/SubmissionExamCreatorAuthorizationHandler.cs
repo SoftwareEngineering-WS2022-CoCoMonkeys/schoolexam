@@ -13,7 +13,7 @@ public class
         _submissionService = submissionService;
     }
 
-    protected override bool IsAuthorized(Guid personId, Guid entityId)
+    protected override bool IsAuthorized(Guid personId, string role, Guid entityId)
     {
         var submission = _submissionService.GetById(entityId);
         if (submission != null)

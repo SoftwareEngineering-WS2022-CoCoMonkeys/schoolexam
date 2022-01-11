@@ -5,13 +5,13 @@ namespace SchoolExam.Web.Authorization;
 public class CourseStudentAuthorizationHandler : EntityAuthorizationHandler<CourseStudentAuthorizationRequirement>
 {
     private readonly ICourseService _courseService;
-    
+
     public CourseStudentAuthorizationHandler(ICourseService courseService)
     {
         _courseService = courseService;
     }
-    
-    protected override bool IsAuthorized(Guid personId, Guid entityId)
+
+    protected override bool IsAuthorized(Guid personId, string role, Guid entityId)
     {
         var course = _courseService.GetById(entityId);
         if (course != null)

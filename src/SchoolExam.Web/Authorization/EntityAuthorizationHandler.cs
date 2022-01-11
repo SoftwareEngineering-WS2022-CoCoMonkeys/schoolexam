@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Web.Extensions;
@@ -15,8 +16,15 @@ public abstract class EntityAuthorizationHandler<TRequirement> : AuthorizationHa
             if (resourceParameter is string entityIdString)
             {
                 var entityId = Guid.Parse(entityIdString);
-                var personId = Guid.Parse(context.User.GetClaim(CustomClaimTypes.PersonId)!);
-                if (IsAuthorized(personId, entityId))
+                var personIdString = httpContext.User.GetClaim(CustomClaimTypes.PersonId);
+                if (personIdString == null)
+                {
+                    return Task.CompletedTask;
+                }
+
+                var personId = Guid.Parse(personIdString);
+                var role = httpContext.User.GetClaim(ClaimTypes.Role)!;
+                if (IsAuthorized(personId, role, entityId))
                 {
                     context.Succeed(requirement);
                 }
@@ -26,5 +34,5 @@ public abstract class EntityAuthorizationHandler<TRequirement> : AuthorizationHa
         return Task.CompletedTask;
     }
 
-    protected abstract bool IsAuthorized(Guid personId, Guid entityId);
+    protected abstract bool IsAuthorized(Guid personId, string role, Guid entityId);
 }

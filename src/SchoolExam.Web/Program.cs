@@ -8,8 +8,6 @@ using SchoolExam.Application.QrCode;
 using SchoolExam.Application.RandomGenerator;
 using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
-using SchoolExam.Domain.Entities.CourseAggregate;
-using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Infrastructure.Pdf;
@@ -72,10 +70,18 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(Role.Teacher);
         policy.AddRequirement<ExamCreatorAuthorizationRequirement>();
     });
+    
+    // SubmissionController authorization policies
     options.AddPolicy(PolicyNames.SubmissionExamCreatorPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
         policy.AddRequirement<SubmissionExamCreatorAuthorizationRequirement>();
+    });
+    
+    // StudentController
+    options.AddPolicy(PolicyNames.StudentOrTeachesStudentPolicyName, policy =>
+    {
+        policy.AddRequirement<StudentOrTeachesStudentAuthorizationRequirement>();
     });
 });
 
@@ -94,6 +100,7 @@ builder.Services.AddScoped<IAuthorizationHandler, CourseTeacherAuthorizationHand
 builder.Services.AddScoped<IAuthorizationHandler, CourseStudentAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ExamCreatorAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, SubmissionExamCreatorAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, StudentOrTeachesStudentAuthorizationHandler>();
 
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
@@ -117,6 +124,7 @@ builder.Services.AddSingleton<IPdfService, iText7PdfService>();
 builder.Services.AddSingleton<IQrCodeReader, ZXingNetQrCodeReader>();
 builder.Services.AddTransient<ISchoolExamRepository, SchoolExamRepository>();
 builder.Services.AddTransient<ICourseService, CourseService>();
+builder.Services.AddTransient<IStudentService, StudentService>();
 builder.Services.AddTransient<IExamService, ExamService>();
 builder.Services.AddTransient<ISubmissionService, SubmissionService>();
 builder.Services.AddTransient<IUserService, UserService>();

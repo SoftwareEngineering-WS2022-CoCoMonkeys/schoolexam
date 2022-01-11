@@ -11,7 +11,7 @@ public class ExamCreatorAuthorizationHandler : EntityAuthorizationHandler<ExamCr
         _examService = examService;
     }
     
-    protected override bool IsAuthorized(Guid personId, Guid entityId)
+    protected override bool IsAuthorized(Guid personId, string role, Guid entityId)
     {
         var exam = _examService.GetById(entityId);
         if (exam != null)
