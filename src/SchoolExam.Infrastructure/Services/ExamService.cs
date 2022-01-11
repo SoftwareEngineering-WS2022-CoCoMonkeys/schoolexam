@@ -137,7 +137,6 @@ public class ExamService : IExamService
             .Where(x => Regex.IsMatch(x.Uri, $"^task-{_guidRegex}$"));
 
         var matchedLinks = new List<PdfUriLinkAnnotationInfo>();
-        var outlineElements = new List<PdfOutlineInfo>();
         var matchedTaskIds = new HashSet<Guid>();
         foreach (var link in linkCandidates)
         {
@@ -152,8 +151,6 @@ public class ExamService : IExamService
                 matchedTaskIds.Add(taskId);
                 var task = tasksDict[taskId];
                 matchedLinks.Add(link);
-                var outlineElement = new PdfOutlineInfo(task.Title, link.Page, link.Top);
-                outlineElements.Add(outlineElement);
                 var examTask = new ExamTask(Guid.NewGuid(), task.Title, task.MaxPoints, 1,
                     new ExamPosition(link.Page, link.Top));
                 _context.Add(examTask);
@@ -167,10 +164,9 @@ public class ExamService : IExamService
         }
 
         var pdfWithoutTaskLinks = _pdfService.RemoveUriLinkAnnotations(pdf, matchedLinks.ToArray());
-        var pdfWithOutline = _pdfService.SetTopLevelOutline(pdfWithoutTaskLinks, outlineElements.ToArray());
         _context.Remove(exam.TaskPdfFile);
-        var newTaskPdfFile = new TaskPdfFile(Guid.NewGuid(), $"{examId}.pdf", pdfWithOutline.LongLength, DateTime.Now, userId,
-            pdfWithOutline, examId);
+        var newTaskPdfFile = new TaskPdfFile(Guid.NewGuid(), $"{examId}.pdf", pdfWithoutTaskLinks.LongLength,
+            DateTime.Now, userId, pdfWithoutTaskLinks, examId);
         _context.Add(newTaskPdfFile);
         _context.Update(exam);
         
@@ -211,7 +207,9 @@ public class ExamService : IExamService
             var pdfImageInfos = Enumerable.Range(1, pageCount)
                 .Select(x =>
                 {
+                    // check if a QR code placeholder has been detected
                     var qrCodeAnnotation = qrCodeAnnotationsDict.ContainsKey(x) ? qrCodeAnnotationsDict[x] : null;
+                    // add QR code add position of QR code placeholder or use default position otherwise
                     return new PdfImageRenderInfo(x, qrCodeAnnotation?.Left ?? 10.0f, qrCodeAnnotation?.Bottom ?? 10.0f,
                         qrCodeAnnotation?.Width ?? 42.0f, qrCodes[x - 1]);
                 }).ToArray();
