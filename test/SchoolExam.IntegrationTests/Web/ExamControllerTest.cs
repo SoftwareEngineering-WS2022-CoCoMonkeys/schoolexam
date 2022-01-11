@@ -805,6 +805,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         {
             _matchedSubmissionPage.BookletPageId = null;
             _matchedSubmissionPage.SubmissionId = null;
+            _matchedBookletPage.SubmissionPage = null;
             context.Update(_matchedSubmissionPage);
             context.Remove(_submission);
             await context.SaveChangesAsync();
