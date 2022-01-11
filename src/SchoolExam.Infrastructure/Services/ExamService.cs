@@ -286,7 +286,8 @@ public class ExamService : IExamService
 
         var pages = _pdfService.Split(pdf);
 
-        var submissions = _context.List<Submission>().ToDictionary(x => x.BookletId, x => x);
+        var submissions = _context.List<Submission, SubmissionWithPagesSpecification>()
+            .ToDictionary(x => x.BookletId, x => x);
         var students = _context.List(new StudentByExamSpecification(examId)).ToDictionary(x => x.QrCode, x => x);
         var updatedSubmissionIds = new List<Guid>();
         for (int page = 1; page <= pages.Count; page++)
@@ -519,6 +520,5 @@ public class ExamService : IExamService
 
         // assign student to submission
         submission.StudentId ??= studentId;
-        _context.Update(submission);
     }
 }
