@@ -129,14 +129,14 @@ public class iText7PdfService : IPdfService
         var count = pdfDocument.GetNumberOfPages();
         for (int pageNumber = 1; pageNumber <= count; pageNumber++)
         {
-            var page = pdfDocument.GetPage(count);
+            var page = pdfDocument.GetPage(pageNumber);
             var annotations = page.GetAnnotations();
             foreach (var annotation in annotations)
             {
                 var rectangle = annotation.GetRectangle();
                 var top = rectangle.GetAsNumber(3).FloatValue();
-                var left = rectangle.GetAsNumber(2).FloatValue();
-                var right = rectangle.GetAsNumber(0).FloatValue();
+                var left = rectangle.GetAsNumber(0).FloatValue();
+                var right = rectangle.GetAsNumber(2).FloatValue();
                 var bottom = rectangle.GetAsNumber(1).FloatValue();
                 var width = right - left;
                 if (annotation is PdfLinkAnnotation linkAnnotation)
@@ -169,14 +169,14 @@ public class iText7PdfService : IPdfService
         var count = pdfDocument.GetNumberOfPages();
         for (int pageNumber = 1; pageNumber <= count; pageNumber++)
         {
-            var page = pdfDocument.GetPage(count);
+            var page = pdfDocument.GetPage(pageNumber);
             var annotations = page.GetAnnotations();
             foreach (var annotation in annotations)
             {
                 var rectangle = annotation.GetRectangle();
                 var top = rectangle.GetAsNumber(3).FloatValue();
-                var left = rectangle.GetAsNumber(2).FloatValue();
-                var right = rectangle.GetAsNumber(0).FloatValue();
+                var left = rectangle.GetAsNumber(0).FloatValue();
+                var right = rectangle.GetAsNumber(2).FloatValue();
                 var bottom = rectangle.GetAsNumber(1).FloatValue();
                 var width = right - left;
                 if (annotation is PdfLinkAnnotation linkAnnotation)
