@@ -13,7 +13,7 @@ public class SubmissionPageConfiguration : IEntityTypeConfiguration<SubmissionPa
         builder.HasKey(x => x.Id);
         builder.HasOne(x => x.PdfFile).WithOne().HasForeignKey<SubmissionPagePdfFile>(x => x.SubmissionPageId);
         builder.HasOne<Exam>().WithMany().HasForeignKey(x => x.ExamId);
-        builder.HasOne<ExamBookletPage>().WithOne(x => x.SubmissionPage)
+        builder.HasOne<BookletPage>().WithOne(x => x.SubmissionPage)
             .HasForeignKey<SubmissionPage>(x => x.BookletPageId);
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SchoolExam.Persistence.DataContext;
@@ -11,9 +12,10 @@ using SchoolExam.Persistence.DataContext;
 namespace SchoolExam.Persistence.Migrations
 {
     [DbContext(typeof(SchoolExamDbContext))]
-    partial class SchoolExamDataContextModelSnapshot : ModelSnapshot
+    [Migration("20220111175553_RemoveBookletSubmissionOneToManyRelationship")]
+    partial class RemoveBookletSubmissionOneToManyRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -133,53 +135,6 @@ namespace SchoolExam.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Booklet", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ExamId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("SequenceNumber")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExamId");
-
-                    b.ToTable("Booklet", (string)null);
-                });
-
-            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.BookletPage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BookletId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Page")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("QrCodeData")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character(32)")
-                        .IsFixedLength();
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookletId");
-
-                    b.HasIndex("QrCodeData")
-                        .IsUnique();
-
-                    b.ToTable("BookletPage", (string)null);
-                });
-
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Exam", b =>
                 {
                     b.Property<Guid>("Id")
@@ -234,6 +189,53 @@ namespace SchoolExam.Persistence.Migrations
                             State = 0,
                             Title = "Projektmanagement"
                         });
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamBooklet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SequenceNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId");
+
+                    b.ToTable("ExamBooklet", (string)null);
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamBookletPage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BookletId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Page")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("QrCodeData")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character(32)")
+                        .IsFixedLength();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookletId");
+
+                    b.HasIndex("QrCodeData")
+                        .IsUnique();
+
+                    b.ToTable("ExamBookletPage", (string)null);
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamTask", b =>
@@ -636,26 +638,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("Course");
                 });
 
-            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Booklet", b =>
-                {
-                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", "Exam")
-                        .WithMany("Booklets")
-                        .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Exam");
-                });
-
-            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.BookletPage", b =>
-                {
-                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Booklet", null)
-                        .WithMany("Pages")
-                        .HasForeignKey("BookletId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Exam", b =>
                 {
                     b.HasOne("SchoolExam.Domain.Entities.CourseAggregate.Course", "Course")
@@ -677,6 +659,26 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("Course");
 
                     b.Navigation("GradingTable");
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamBooklet", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", "Exam")
+                        .WithMany("Booklets")
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamBookletPage", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.ExamBooklet", null)
+                        .WithMany("Pages")
+                        .HasForeignKey("BookletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamTask", b =>
@@ -957,7 +959,7 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.Submission", b =>
                 {
-                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Booklet", "Booklet")
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.ExamBooklet", "Booklet")
                         .WithOne("Submission")
                         .HasForeignKey("SchoolExam.Domain.Entities.SubmissionAggregate.Submission", "BookletId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -974,7 +976,7 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.SubmissionPage", b =>
                 {
-                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.BookletPage", null)
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.ExamBookletPage", null)
                         .WithOne("SubmissionPage")
                         .HasForeignKey("SchoolExam.Domain.Entities.SubmissionAggregate.SubmissionPage", "BookletPageId");
 
@@ -1026,7 +1028,7 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.BookletPdfFile", b =>
                 {
-                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Booklet", null)
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.ExamBooklet", null)
                         .WithOne("PdfFile")
                         .HasForeignKey("SchoolExam.Domain.Entities.ExamAggregate.BookletPdfFile", "BookletId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1069,7 +1071,16 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("Teachers");
                 });
 
-            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Booklet", b =>
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Exam", b =>
+                {
+                    b.Navigation("Booklets");
+
+                    b.Navigation("TaskPdfFile");
+
+                    b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamBooklet", b =>
                 {
                     b.Navigation("Pages");
 
@@ -1079,18 +1090,9 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("Submission");
                 });
 
-            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.BookletPage", b =>
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamBookletPage", b =>
                 {
                     b.Navigation("SubmissionPage");
-                });
-
-            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Exam", b =>
-                {
-                    b.Navigation("Booklets");
-
-                    b.Navigation("TaskPdfFile");
-
-                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.School", b =>

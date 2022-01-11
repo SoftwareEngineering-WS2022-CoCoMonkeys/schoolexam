@@ -8,6 +8,6 @@ public class ExamWithBookletsWithPagesByIdSpecification : EntityByIdSpecificatio
     public ExamWithBookletsWithPagesByIdSpecification(Guid id) : base(id)
     {
         AddInclude(x => x.Booklets);
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.Pages)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Pages)}");
     }
 }

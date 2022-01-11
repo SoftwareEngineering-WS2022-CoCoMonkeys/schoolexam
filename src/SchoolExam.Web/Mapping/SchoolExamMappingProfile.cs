@@ -26,7 +26,7 @@ public class SchoolExamMappingProfile : Profile
             .ForMember(dst => dst.FileId, opt => opt.MapFrom(src => src.PdfFile.Id))
             .ForMember(dst => dst.UploadedAt, opt => opt.MapFrom(src => src.PdfFile.UploadedAt))
             .ForMember(dst => dst.UploadedBy, opt => opt.MapFrom(src => src.PdfFile.Uploader.Username));
-        CreateMap<ExamBookletPage, UnmatchedBookletPageReadModel>();
+        CreateMap<BookletPage, UnmatchedBookletPageReadModel>();
 
         CreateMap<Exam, ExamReadModelTeacher>()
             .ForMember(dst => dst.ParticipantCount, opt => opt.MapFrom(src => src.Course.Students.Count))

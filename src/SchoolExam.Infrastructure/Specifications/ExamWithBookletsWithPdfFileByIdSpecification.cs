@@ -8,6 +8,6 @@ public class ExamWithBookletsWithPdfFileByIdSpecification : EntityByIdSpecificat
     public ExamWithBookletsWithPdfFileByIdSpecification(Guid id) : base(id)
     {
         AddInclude(x => x.Booklets);
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.PdfFile)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.PdfFile)}");
     }
 }

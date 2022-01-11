@@ -9,7 +9,7 @@ public class ExamWithTasksAndBookletsWithPagesWithSubmissionPageByIdSpecificatio
     {
         AddInclude(x => x.Tasks);
         AddInclude(x => x.Booklets);
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.Pages)}");
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.Pages)}.{nameof(ExamBookletPage.SubmissionPage)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Pages)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Pages)}.{nameof(BookletPage.SubmissionPage)}");
     }
 }

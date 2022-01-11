@@ -219,11 +219,11 @@ public class ExamService : IExamService
             var bookletId = Guid.NewGuid();
             var bookletPdfFile = new BookletPdfFile(Guid.NewGuid(), $"{i + 1}.pdf", bookletContent.LongLength,
                 DateTime.Now, userId, bookletContent, bookletId);
-            var booklet = new ExamBooklet(bookletId, examId, i + 1, bookletPdfFile);
+            var booklet = new Booklet(bookletId, examId, i + 1, bookletPdfFile);
 
             for (int page = 1; page <= pageCount; page++)
             {
-                var bookletPage = new ExamBookletPage(Guid.NewGuid(), page, bookletId, qrCodeData[page - 1]);
+                var bookletPage = new BookletPage(Guid.NewGuid(), page, bookletId, qrCodeData[page - 1]);
                 _context.Add(bookletPage);
             }
 
@@ -368,7 +368,7 @@ public class ExamService : IExamService
         return result;
     }
 
-    public IEnumerable<ExamBookletPage> GetUnmatchedBookletPages(Guid examId)
+    public IEnumerable<BookletPage> GetUnmatchedBookletPages(Guid examId)
     {
         var exam = EnsureExamExists(new ExamWithBookletsWithPagesWithSubmissionPageByIdSpecification(examId));
         var bookletPages = exam.Booklets.SelectMany(x => x.Pages);
@@ -380,13 +380,13 @@ public class ExamService : IExamService
     public async Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId, Guid userId)
     {
         EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
-        var bookletPage = _context.Find<ExamBookletPage, Guid>(bookletPageId);
+        var bookletPage = _context.Find<BookletPage, Guid>(bookletPageId);
         if (bookletPage == null)
         {
             throw new ArgumentException("Booklet page does not exist.");
         }
 
-        var bookletExamId = _context.Find<ExamBooklet, Guid>(bookletPage.BookletId)!.ExamId;
+        var bookletExamId = _context.Find<Booklet, Guid>(bookletPage.BookletId)!.ExamId;
         if (!examId.Equals(bookletExamId))
         {
             throw new InvalidOperationException("Booklet page is not part of the exam.");

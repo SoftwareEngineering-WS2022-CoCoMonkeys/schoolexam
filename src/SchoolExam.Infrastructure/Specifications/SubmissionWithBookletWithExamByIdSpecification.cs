@@ -9,6 +9,6 @@ public class SubmissionWithBookletWithExamByIdSpecification : EntityByIdSpecific
     public SubmissionWithBookletWithExamByIdSpecification(Guid id) : base(id)
     {
         AddInclude(x => x.Booklet);
-        AddInclude($"{nameof(Submission.Booklet)}.{nameof(ExamBooklet.Exam)}");
+        AddInclude($"{nameof(Submission.Booklet)}.{nameof(Booklet.Exam)}");
     }
 }

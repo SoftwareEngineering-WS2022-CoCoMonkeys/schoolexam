@@ -11,7 +11,7 @@ public class Exam : EntityBase<Guid>
     public string Description { get; set; }
     public GradingTable? GradingTable { get; set; }
     public ICollection<ExamTask> Tasks { get; set; }
-    public ICollection<ExamBooklet> Booklets { get; set; }
+    public ICollection<Booklet> Booklets { get; set; }
     public DateTime Date { get; set; }
     public DateTime DueDate { get; set; }
     public Guid CourseId { get; set; }
@@ -34,7 +34,7 @@ public class Exam : EntityBase<Guid>
         CourseId = courseId;
         CreatorId = creatorId;
         Tasks = new List<ExamTask>();
-        Booklets = new List<ExamBooklet>();
+        Booklets = new List<Booklet>();
         State = ExamState.Planned;
     }
 

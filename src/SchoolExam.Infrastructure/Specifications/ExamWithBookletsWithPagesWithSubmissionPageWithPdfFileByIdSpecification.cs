@@ -9,9 +9,9 @@ public class ExamWithBookletsWithPagesWithSubmissionPageWithPdfFileByIdSpecifica
     public ExamWithBookletsWithPagesWithSubmissionPageWithPdfFileByIdSpecification(Guid id) : base(id)
     {
         AddInclude(x => x.Booklets);
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.Pages)}");
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.Pages)}.{nameof(ExamBookletPage.SubmissionPage)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Pages)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Pages)}.{nameof(BookletPage.SubmissionPage)}");
         AddInclude(
-            $"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.Pages)}.{nameof(ExamBookletPage.SubmissionPage)}.{nameof(SubmissionPage.PdfFile)}");
+            $"{nameof(Exam.Booklets)}.{nameof(Booklet.Pages)}.{nameof(BookletPage.SubmissionPage)}.{nameof(SubmissionPage.PdfFile)}");
     }
 }

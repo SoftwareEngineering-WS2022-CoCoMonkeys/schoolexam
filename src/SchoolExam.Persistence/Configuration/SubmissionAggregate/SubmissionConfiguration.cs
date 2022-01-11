@@ -12,7 +12,7 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         builder.ToTable("Submission");
         builder.HasKey(x => x.Id);
         builder.HasOne(x => x.Student).WithMany().HasForeignKey(x => x.StudentId);
-        builder.HasOne(x => x.Booklet).WithMany().HasForeignKey(x => x.BookletId);
+        builder.HasOne(x => x.Booklet).WithOne(x => x.Submission).HasForeignKey<Submission>(x => x.BookletId);
         builder.HasMany(x => x.Answers);
         builder.HasMany(x => x.Pages).WithOne().HasForeignKey(x => x.SubmissionId);
         builder.HasOne(x => x.PdfFile).WithOne().HasForeignKey<SubmissionPdfFile>(x => x.SubmissionId);

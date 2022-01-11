@@ -9,7 +9,7 @@ public class ExamWithBookletsWithPagesAndPdfFileByIdSpecification : EntityByIdSp
     public ExamWithBookletsWithPagesAndPdfFileByIdSpecification(Guid id) : base(id)
     {
         AddInclude(x => x.Booklets);
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.Pages)}");
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.PdfFile)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Pages)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.PdfFile)}");
     }
 }

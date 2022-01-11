@@ -8,7 +8,7 @@ public class Submission : EntityBase<Guid>
 {
     public double AchievedPoints => Answers.Sum(x => x.AchievedPoints);
     public Guid BookletId { get; set; }
-    public ExamBooklet Booklet { get; set; }
+    public Booklet Booklet { get; set; }
     public Guid? StudentId { get; set; }
     public Student? Student { get; set; }
     public ICollection<Answer> Answers { get; set; }

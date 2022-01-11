@@ -36,8 +36,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
     private Exam _exam = null!, _otherExam = null!;
     private User _user = null!;
     private TaskPdfFile _taskPdfFile = null!;
-    private ExamBooklet _booklet = null!;
-    private ExamBookletPage _unmatchedBookletPage = null!, _matchedBookletPage = null!, _otherBookletPage = null!;
+    private Booklet _booklet = null!;
+    private BookletPage _unmatchedBookletPage = null!, _matchedBookletPage = null!, _otherBookletPage = null!;
     private Submission _submission = null!;
 
     private SubmissionPage _unmatchedSubmissionPage = null!,
@@ -63,11 +63,11 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _taskPdfFile.ExamId = _exam.Id;
         _user = TestEntityFactory.Create<User, Guid>();
         _user.PersonId = _teacher.Id;
-        _booklet = TestEntityFactory.Create<ExamBooklet, Guid>();
+        _booklet = TestEntityFactory.Create<Booklet, Guid>();
         _booklet.ExamId = _exam.Id;
-        _matchedBookletPage = TestEntityFactory.Create<ExamBookletPage, Guid>();
+        _matchedBookletPage = TestEntityFactory.Create<BookletPage, Guid>();
         _matchedBookletPage.BookletId = _booklet.Id;
-        _unmatchedBookletPage = TestEntityFactory.Create<ExamBookletPage, Guid>();
+        _unmatchedBookletPage = TestEntityFactory.Create<BookletPage, Guid>();
         _unmatchedBookletPage.BookletId = _booklet.Id;
         _submission = TestEntityFactory.Create<Submission, Guid>();
         _submission.BookletId = _booklet.Id;
@@ -85,9 +85,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _otherExam.CourseId = _course.Id;
         var otherTaskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
         otherTaskPdfFile.ExamId = _otherExam.Id;
-        var otherBooklet = TestEntityFactory.Create<ExamBooklet, Guid>();
+        var otherBooklet = TestEntityFactory.Create<Booklet, Guid>();
         otherBooklet.ExamId = _otherExam.Id;
-        _otherBookletPage = TestEntityFactory.Create<ExamBookletPage, Guid>();
+        _otherBookletPage = TestEntityFactory.Create<BookletPage, Guid>();
         _otherBookletPage.BookletId = otherBooklet.Id;
         _otherSubmissionPage = TestEntityFactory.Create<SubmissionPage, Guid>();
         _otherSubmissionPage.ExamId = _otherExam.Id;
@@ -499,7 +499,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         submissionPages.Count(x => x.SubmissionId.HasValue).Should().Be(1);
         submissionPages.Single(x => x.SubmissionId.HasValue).Id.Should().Be(_matchedSubmissionPage.Id);
 
-        var bookletPages = context.List(new ExamBookletWithPagesByExamSpecification(_exam.Id)).SelectMany(x => x.Pages)
+        var bookletPages = context.List(new BookletWithPagesByExamSpecification(_exam.Id)).SelectMany(x => x.Pages)
             .ToList();
         bookletPages.Should().HaveCount(2);
         bookletPages.Count(x => x.SubmissionPage != null).Should().Be(1);
@@ -841,7 +841,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     private async Task ResetExam()
     {
         using var context = GetSchoolExamDataContext();
-        foreach (var booklet in context.List<ExamBooklet>())
+        foreach (var booklet in context.List<Booklet>())
         {
             context.Remove(booklet);
         }

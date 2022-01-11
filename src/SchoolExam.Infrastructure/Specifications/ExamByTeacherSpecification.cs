@@ -12,8 +12,8 @@ public class ExamByTeacherSpecification : EntitySpecification<Exam>
         AddInclude(x => x.Course);
         AddInclude($"{nameof(Exam.Course)}.{nameof(Course.Students)}");
         AddInclude(x => x.Booklets);
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.Submission)}");
-        AddInclude($"{nameof(Exam.Booklets)}.{nameof(ExamBooklet.Submission)}.{nameof(Submission.Answers)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Submission)}");
+        AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Submission)}.{nameof(Submission.Answers)}");
         AddInclude(x => x.Tasks);
     }
 }

@@ -1,18 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolExam.Domain.Entities.ExamAggregate;
-using SchoolExam.Domain.Entities.SubmissionAggregate;
 
 namespace SchoolExam.Persistence.Configuration.ExamAggregate;
 
-public class ExamBookletConfiguration : IEntityTypeConfiguration<ExamBooklet>
+public class BookletConfiguration : IEntityTypeConfiguration<Booklet>
 {
-    public void Configure(EntityTypeBuilder<ExamBooklet> builder)
+    public void Configure(EntityTypeBuilder<Booklet> builder)
     {
-        builder.ToTable("ExamBooklet");
+        builder.ToTable("Booklet");
         builder.HasKey(x => x.Id);
         builder.HasMany(x => x.Pages).WithOne().HasForeignKey(x => x.BookletId);
         builder.HasOne(x => x.PdfFile).WithOne().HasForeignKey<BookletPdfFile>(x => x.BookletId);
-        builder.HasOne(x => x.Submission).WithOne().HasForeignKey<Submission>(x => x.BookletId);
     }
 }
