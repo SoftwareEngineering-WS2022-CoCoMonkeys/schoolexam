@@ -15,8 +15,8 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<Course, CourseReadModelBase>()
             .Include<Course, CourseReadModelStudent>()
             .Include<Course, CourseReadModelTeacher>()
-            .ForMember(dst => dst.Subject, opt => opt.PreCondition(src => src.Subject != null))
-            .ForMember(dst => dst.Subject, opt => opt.MapFrom(src => src.Subject!.Name));
+            .ForMember(dst => dst.Topic, opt => opt.PreCondition(src => src.Topic != null))
+            .ForMember(dst => dst.Topic, opt => opt.MapFrom(src => src.Topic!.Name));
         CreateMap<Course, CourseReadModelStudent>();
         CreateMap<Course, CourseReadModelTeacher>()
             .ForMember(dst => dst.StudentCount, opt => opt.MapFrom(src => src.Students.Count));
@@ -29,10 +29,10 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<BookletPage, UnmatchedBookletPageReadModel>();
 
         CreateMap<Exam, ExamReadModelTeacher>()
-            .ForMember(dst => dst.ParticipantCount, opt => opt.MapFrom(src => src.Course.Students.Count))
+            .ForMember(dst => dst.ParticipantCount,
+                opt => opt.MapFrom(src => src.Participants.Sum(x => x.Students.Count)))
             .ForMember(dst => dst.CorrectionProgress, opt => opt.MapFrom(src => src.GetCorrectionProgress()))
-            .ForMember(dst => dst.Subject, opt => opt.PreCondition(src => src.Course.Subject != null))
-            .ForMember(dst => dst.Subject, opt => opt.MapFrom(src => src.Course.Subject!.Name));
+            .ForMember(dst => dst.Topic, opt => opt.MapFrom(src => src.Topic.Name));
 
         CreateMap<ExamTaskModel, ExamTaskInfo>();
 

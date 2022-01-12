@@ -40,6 +40,9 @@ public class SchoolExamDbContext : DbContextBase
         modelBuilder.ApplyConfiguration(new CourseStudentConfiguration());
 
         modelBuilder.ApplyConfiguration(new ExamConfiguration());
+        modelBuilder.ApplyConfiguration(new ExamParticipantConfiguration());
+        modelBuilder.ApplyConfiguration(new ExamStudentConfiguration());
+        modelBuilder.ApplyConfiguration(new ExamCourseConfiguration());
         modelBuilder.ApplyConfiguration(new TaskPdfFileConfiguration());
         modelBuilder.ApplyConfiguration(new GradingTableConfiguration());
         modelBuilder.ApplyConfiguration(new ExamTaskConfiguration());

@@ -6,7 +6,7 @@ namespace SchoolExam.Domain.Entities.CourseAggregate;
 
 public class Course : EntityBase<Guid>
 {
-    public Subject? Subject { get; set; }
+    public Topic? Topic { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
     public Guid SchoolId { get; set; }
@@ -18,11 +18,11 @@ public class Course : EntityBase<Guid>
     {
     }
 
-    public Course(Guid id, string name, string description, Subject subject, Guid schoolId) : this(id)
+    public Course(Guid id, string name, string description, Topic topic, Guid schoolId) : this(id)
     {
         Name = name;
         Description = description;
-        Subject = subject;
+        Topic = topic;
         SchoolId = schoolId;
         Teachers = new List<CourseTeacher>();
         Students = new List<CourseStudent>();

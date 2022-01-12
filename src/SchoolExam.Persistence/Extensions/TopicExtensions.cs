@@ -5,15 +5,15 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Persistence.Extensions;
 
-public static class SubjectExtensions
+public static class TopicExtensions
 {
-    public static EntityTypeBuilder<TEntity> OwnsSubject<TEntity>(this EntityTypeBuilder<TEntity> builder,
-        Expression<Func<TEntity, Subject?>> navigationExpression, bool isRequired, params object[] data)
+    public static EntityTypeBuilder<TEntity> OwnsTopic<TEntity>(this EntityTypeBuilder<TEntity> builder,
+        Expression<Func<TEntity, Topic?>> navigationExpression, bool isRequired, params object[] data)
         where TEntity : class
     {
         return builder.OwnsOne(navigationExpression, x =>
         {
-            x.Property(s => s.Name).HasColumnName("Subject").IsRequired(isRequired);
+            x.Property(s => s.Name).HasColumnName("Topic").IsRequired(isRequired);
             x.HasData(data);
         });
     }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -56,7 +55,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         student.SchoolId = _school.Id;
         var courseStudent = new CourseStudent(_course.Id, student.Id);
         _exam = TestEntityFactory.Create<Exam, Guid>();
-        _exam.CourseId = _course.Id;
+        var examCourse = new ExamCourse(_exam.Id, _course.Id);
         _exam.CreatorId = _teacher.Id;
         _exam.State = ExamState.SubmissionReady;
         _taskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
@@ -82,7 +81,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         
         _otherExam = TestEntityFactory.Create<Exam, Guid>();
         _otherExam.CreatorId = _teacher.Id;
-        _otherExam.CourseId = _course.Id;
+        var otherExamCourse = new ExamCourse(_otherExam.Id, _course.Id);
         var otherTaskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
         otherTaskPdfFile.ExamId = _otherExam.Id;
         var otherBooklet = TestEntityFactory.Create<Booklet, Guid>();
@@ -102,6 +101,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         repository.Add(student);
         repository.Add(courseStudent);
         repository.Add(_exam);
+        repository.Add(examCourse);
         repository.Add(_taskPdfFile);
         repository.Add(_user);
         repository.Add(_booklet);
@@ -112,6 +112,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         repository.Add(_unmatchedSubmissionPage);
         
         repository.Add(_otherExam);
+        repository.Add(otherExamCourse);
         repository.Add(otherBooklet);
         repository.Add(_otherBookletPage);
         repository.Add(_otherSubmissionPage);
@@ -130,13 +131,14 @@ public class ExamControllerTest : ApiIntegrationTestBase
             otherTeacher.SchoolId = _school.Id;
             var courseTeacher = new CourseTeacher(otherCourse.Id, otherTeacher.Id);
             var otherExam = TestEntityFactory.Create<Exam, Guid>();
-            otherExam.CourseId = otherCourse.Id;
+            var otherExamCourse = new ExamCourse(otherExam.Id, otherCourse.Id);
             otherExam.CreatorId = otherTeacher.Id;
             otherExam.State = ExamState.Planned;
             repository.Add(otherCourse);
             repository.Add(otherTeacher);
             repository.Add(courseTeacher);
             repository.Add(otherExam);
+            repository.Add(otherExamCourse);
             await repository.SaveChangesAsync();
         }
         
@@ -152,13 +154,13 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var expectedExam1 = new ExamReadModelTeacher
         {
-            Id = _exam.Id, Title = _exam.Title, Date = _exam.Date, State = _exam.State, Subject = _course.Subject!.Name,
+            Id = _exam.Id, Title = _exam.Title, Date = _exam.Date, State = _exam.State, Topic = _exam.Topic.Name,
             CorrectionProgress = null, DueDate = _exam.DueDate, ParticipantCount = 1
         };
         var expectedExam2 = new ExamReadModelTeacher
         {
             Id = _otherExam.Id, Title = _otherExam.Title, Date = _otherExam.Date, State = _otherExam.State,
-            Subject = _course.Subject!.Name, CorrectionProgress = null, DueDate = _otherExam.DueDate,
+            Topic = _otherExam.Topic.Name, CorrectionProgress = null, DueDate = _otherExam.DueDate,
             ParticipantCount = 1
         };
         
@@ -177,13 +179,13 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var newExam = TestEntityFactory.Create<Exam, Guid>();
 
         var examWriteModel = new ExamWriteModel
-            {Title = newExam.Title, Description = newExam.Description, Date = newExam.Date};
+            {Title = newExam.Title, Description = newExam.Description, Date = newExam.Date, Topic = newExam.Topic.Name};
 
-        var response = await this.Client.PostAsJsonAsync($"/Exam/Create/{_course.Id}", examWriteModel);
+        var response = await this.Client.PostAsJsonAsync($"/Exam/Create", examWriteModel);
         response.EnsureSuccessStatusCode();
 
         using var repository = GetSchoolExamRepository();
-        var exams = repository.List(new ExamByCourseSpecification(_course.Id)).ToList();
+        var exams = repository.List(new ExamByTeacherSpecification(_teacher.Id)).ToList();
         exams.Should().HaveCount(3);
 
         exams.Should().ContainEquivalentOf(newExam,
@@ -201,7 +203,10 @@ public class ExamControllerTest : ApiIntegrationTestBase
         updatedExam.Id = _exam.Id;
 
         var examWriteModel = new ExamWriteModel
-            {Title = updatedExam.Title, Description = updatedExam.Description, Date = updatedExam.Date};
+        {
+            Title = updatedExam.Title, Description = updatedExam.Description, Date = updatedExam.Date,
+            Topic = updatedExam.Topic.Name
+        };
 
         var response = await this.Client.PutAsJsonAsync($"/Exam/{_exam.Id}/Update", examWriteModel);
         response.EnsureSuccessStatusCode();

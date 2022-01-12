@@ -8,7 +8,7 @@ public interface IExamService
     Exam? GetById(Guid examId);
     IEnumerable<Exam> GetByTeacher(Guid teacherId);
     IEnumerable<Exam> GetByStudent(Guid studentId);
-    Task Create(string title, string description, DateTime date, Guid courseId, Guid teacherId);
+    Task Create(string title, string description, DateTime date, Guid teacherId, string topic);
     Task Update(Guid examId, string title, string description, DateTime date);
     Task Delete(Guid examId);
     Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content);

@@ -24,7 +24,7 @@ public class CourseController : ApiController<CourseController>
     public async Task<IActionResult> Create([FromBody] CourseWriteModel courseWriteModel)
     {
         await _courseService.Create(GetPersonId()!.Value, courseWriteModel.Name, courseWriteModel.Description,
-            courseWriteModel.Subject);
+            courseWriteModel.Topic);
         return Ok();
     }
     
@@ -34,7 +34,7 @@ public class CourseController : ApiController<CourseController>
     public async Task<IActionResult> Update(Guid courseId, [FromBody] CourseWriteModel courseWriteModel)
     {
         await _courseService.Update(courseId, courseWriteModel.Name, courseWriteModel.Description,
-            courseWriteModel.Subject);
+            courseWriteModel.Topic);
         return Ok();
     }
 

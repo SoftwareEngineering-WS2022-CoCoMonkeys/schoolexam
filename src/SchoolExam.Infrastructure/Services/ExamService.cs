@@ -57,10 +57,10 @@ public class ExamService : IExamService
         throw new NotImplementedException();
     }
 
-    public async Task Create(string title, string description, DateTime date, Guid courseId, Guid teacherId)
+    public async Task Create(string title, string description, DateTime date, Guid teacherId, string topic)
     {
         var examId = Guid.NewGuid();
-        var exam = new Exam(examId, title, description, date, teacherId, courseId);
+        var exam = new Exam(examId, title, description, date, teacherId, new Topic(topic));
 
         _repository.Add(exam);
         await _repository.SaveChangesAsync();

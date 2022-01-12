@@ -9,7 +9,7 @@ public class ExamReadModelTeacher
     public string Title { get; set; }
     public DateTime DueDate { get; set; }
     public DateTime Date { get; set; }
-    public string Subject { get; set; }
+    public string Topic { get; set; }
     public int ParticipantCount { get; set; }
     public double? CorrectionProgress { get; set; }
 }

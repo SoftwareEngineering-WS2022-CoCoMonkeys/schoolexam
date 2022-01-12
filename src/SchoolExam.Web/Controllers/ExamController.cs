@@ -29,12 +29,12 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpPost]
-    [Route($"Create/{{{RouteParameterNames.CourseIdParameterName}}}")]
-    [Authorize(PolicyNames.CourseTeacherPolicyName)]
-    public async Task<IActionResult> Create(Guid courseId, [FromBody] ExamWriteModel examWriteModel)
+    [Route($"Create")]
+    [Authorize(Roles = Role.TeacherName)]
+    public async Task<IActionResult> Create([FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Create(examWriteModel.Title, examWriteModel.Description, examWriteModel.Date, courseId,
-            GetPersonId()!.Value);
+        await _examService.Create(examWriteModel.Title, examWriteModel.Description, examWriteModel.Date,
+            GetPersonId()!.Value, examWriteModel.Topic);
         return Ok();
     }
 
