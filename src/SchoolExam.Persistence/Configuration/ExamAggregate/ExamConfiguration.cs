@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Extensions;
 using SchoolExam.Persistence.Extensions;
 
 namespace SchoolExam.Persistence.Configuration.ExamAggregate;
@@ -21,8 +22,8 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
             Id = SeedIds.ProjektmanagementExamId,
             Title = "",
             Description = "",
-            Date = new DateTime(2022, 4, 1),
-            DueDate = new DateTime(2022, 4, 1).AddDays(14),
+            Date = new DateTime(2022, 4, 1).SetKindUtc(),
+            DueDate = new DateTime(2022, 4, 1).AddDays(14).SetKindUtc(),
             CreatorId = SeedIds.BriggiteSchweinebauerId,
             State = ExamState.Planned
         });

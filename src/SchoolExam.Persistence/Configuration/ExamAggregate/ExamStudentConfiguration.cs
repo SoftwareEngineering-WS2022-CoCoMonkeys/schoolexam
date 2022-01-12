@@ -8,6 +8,7 @@ public class ExamStudentConfiguration : IEntityTypeConfiguration<ExamStudent>
 {
     public void Configure(EntityTypeBuilder<ExamStudent> builder)
     {
+        builder.ToTable("ExamStudent");
         builder.HasOne(x => x.Student).WithMany().HasForeignKey(x => x.ParticipantId);
     }
 }

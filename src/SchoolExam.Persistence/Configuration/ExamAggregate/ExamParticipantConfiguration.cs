@@ -8,8 +8,6 @@ public class ExamParticipantConfiguration : IEntityTypeConfiguration<ExamPartici
 {
     public void Configure(EntityTypeBuilder<ExamParticipant> builder)
     {
-        builder.ToTable("ExamParticipant");
         builder.HasKey(x => new {x.ExamId, x.ParticipantId});
-        builder.HasDiscriminator();
     }
 }

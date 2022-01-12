@@ -2,6 +2,7 @@ using AutoMapper;
 using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
+using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Web.Models.Course;
 using SchoolExam.Web.Models.Exam;
@@ -29,12 +30,25 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<BookletPage, UnmatchedBookletPageReadModel>();
 
         CreateMap<Exam, ExamReadModelTeacher>()
-            .ForMember(dst => dst.ParticipantCount,
-                opt => opt.MapFrom(src => src.Participants.Sum(x => x.Students.Count)))
-            .ForMember(dst => dst.CorrectionProgress, opt => opt.MapFrom(src => src.GetCorrectionProgress()))
+            .ForMember(dst => dst.Status, opt => opt.MapFrom(src => src.State))
+            .ForMember(dst => dst.Quota, opt => opt.MapFrom(src => src.GetCorrectionProgress()))
             .ForMember(dst => dst.Topic, opt => opt.MapFrom(src => src.Topic.Name));
+        CreateMap<ExamTask, ExamTaskReadModel>();
+        CreateMap<ExamParticipant, ExamParticipantReadModel>()
+            .Include<ExamCourse, ExamCourseReadModel>()
+            .Include<ExamStudent, ExamStudentReadModel>();
+        CreateMap<ExamCourse, ExamCourseReadModel>()
+            .ForMember(dst => dst.Id, opt => opt.MapFrom(src => src.ParticipantId))
+            .ForMember(dst => dst.DisplayName, opt => opt.MapFrom(src => src.Course.Name))
+            .ForMember(dst => dst.Children, opt => opt.MapFrom(src => src.Course.Students.Select(x => x.Student)));
+        CreateMap<Student, ExamStudentReadModel>()
+            .ForMember(dst => dst.DisplayName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"));
+        CreateMap<ExamStudent, ExamStudentReadModel>()
+            .ForMember(dst => dst.Id, opt => opt.MapFrom(src => src.ParticipantId))
+            .ForMember(dst => dst.DisplayName,
+                opt => opt.MapFrom(src => $"{src.Student.FirstName} {src.Student.LastName}"));
 
-        CreateMap<ExamTaskModel, ExamTaskInfo>();
+        CreateMap<ExamTaskWriteModel, ExamTaskInfo>();
 
         CreateMap<Submission, SubmissionReadModel>()
             .ForMember(x => x.IsMatched, opt => opt.MapFrom(src => src.Student != null))

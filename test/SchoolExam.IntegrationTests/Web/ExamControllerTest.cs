@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using SchoolExam.Application.Pdf;
@@ -24,6 +26,7 @@ using SchoolExam.IntegrationTests.Util;
 using SchoolExam.IntegrationTests.Util.Extensions;
 using SchoolExam.IntegrationTests.Util.Specifications;
 using SchoolExam.Web.Models.Exam;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace SchoolExam.IntegrationTests.Web;
 
@@ -32,6 +35,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     private School _school = null!;
     private Course _course = null!;
     private Teacher _teacher = null!;
+    private Student _student = null!;
     private Exam _exam = null!, _otherExam = null!;
     private User _user = null!;
     private TaskPdfFile _taskPdfFile = null!;
@@ -51,9 +55,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _teacher = TestEntityFactory.Create<Teacher, Guid>();
         _teacher.SchoolId = _school.Id;
         var courseTeacher = new CourseTeacher(_course.Id, _teacher.Id);
-        var student = TestEntityFactory.Create<Student, Guid>();
-        student.SchoolId = _school.Id;
-        var courseStudent = new CourseStudent(_course.Id, student.Id);
+        _student = TestEntityFactory.Create<Student, Guid>();
+        _student.SchoolId = _school.Id;
+        var courseStudent = new CourseStudent(_course.Id, _student.Id);
         _exam = TestEntityFactory.Create<Exam, Guid>();
         var examCourse = new ExamCourse(_exam.Id, _course.Id);
         _exam.CreatorId = _teacher.Id;
@@ -78,7 +82,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _unmatchedSubmissionPage.ExamId = _exam.Id;
         _unmatchedSubmissionPage.SubmissionId = null;
         _unmatchedSubmissionPage.BookletPageId = null;
-        
+
         _otherExam = TestEntityFactory.Create<Exam, Guid>();
         _otherExam.CreatorId = _teacher.Id;
         var otherExamCourse = new ExamCourse(_otherExam.Id, _course.Id);
@@ -98,7 +102,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         repository.Add(_course);
         repository.Add(_teacher);
         repository.Add(courseTeacher);
-        repository.Add(student);
+        repository.Add(_student);
         repository.Add(courseStudent);
         repository.Add(_exam);
         repository.Add(examCourse);
@@ -110,7 +114,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         repository.Add(_submission);
         repository.Add(_matchedSubmissionPage);
         repository.Add(_unmatchedSubmissionPage);
-        
+
         repository.Add(_otherExam);
         repository.Add(otherExamCourse);
         repository.Add(otherBooklet);
@@ -118,7 +122,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         repository.Add(_otherSubmissionPage);
         await repository.SaveChangesAsync();
     }
-    
+
     [Test]
     public async Task ExamController_GetByTeacher_Success()
     {
@@ -141,7 +145,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             repository.Add(otherExamCourse);
             await repository.SaveChangesAsync();
         }
-        
+
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
@@ -150,25 +154,48 @@ public class ExamControllerTest : ApiIntegrationTestBase
         response.EnsureSuccessStatusCode();
         
         var result = await response.Content.ReadAsStringAsync();
-        var exams = JsonConvert.DeserializeObject<IEnumerable<ExamReadModelTeacher>>(result).ToList();
+        // make sure that custom JSON converter is used for deserialization
+        var options = GetRequiredService<IOptions<JsonOptions>>();
+        var exams = JsonSerializer
+            .Deserialize<IEnumerable<ExamReadModelTeacher>>(result, options.Value.JsonSerializerOptions);
 
         var expectedExam1 = new ExamReadModelTeacher
         {
-            Id = _exam.Id, Title = _exam.Title, Date = _exam.Date, State = _exam.State, Topic = _exam.Topic.Name,
-            CorrectionProgress = null, DueDate = _exam.DueDate, ParticipantCount = 1
+            Id = _exam.Id, Title = _exam.Title, Date = _exam.Date, Status = _exam.State, Topic = _exam.Topic.Name,
+            Quota = null, DueDate = _exam.DueDate, Tasks = new List<ExamTaskReadModel>(), Participants =
+                new List<ExamParticipantReadModel>
+                {
+                    new ExamCourseReadModel
+                    {
+                        Id = _course.Id, DisplayName = _course.Name, Children = new List<ExamStudentReadModel>
+                        {
+                            new() {Id = _student.Id, DisplayName = $"{_student.FirstName} {_student.LastName}"}
+                        }
+                    }
+                }
         };
         var expectedExam2 = new ExamReadModelTeacher
         {
-            Id = _otherExam.Id, Title = _otherExam.Title, Date = _otherExam.Date, State = _otherExam.State,
-            Topic = _otherExam.Topic.Name, CorrectionProgress = null, DueDate = _otherExam.DueDate,
-            ParticipantCount = 1
+            Id = _otherExam.Id, Title = _otherExam.Title, Date = _otherExam.Date, Status = _otherExam.State,
+            Topic = _otherExam.Topic.Name, Quota = null, DueDate = _otherExam.DueDate,
+            Tasks = new List<ExamTaskReadModel>(),
+            Participants = new List<ExamParticipantReadModel>
+            {
+                new ExamCourseReadModel
+                {
+                    Id = _course.Id, DisplayName = _course.Name, Children = new List<ExamStudentReadModel>
+                    {
+                        new() {Id = _student.Id, DisplayName = $"{_student.FirstName} {_student.LastName}"}
+                    }
+                }
+            }
         };
-        
+
         exams.Should().HaveCount(2);
-        exams.Should().ContainEquivalentOf(expectedExam1);
+        exams.Should().ContainEquivalentOf(expectedExam1, x => x.Excluding(x => x.Participants));
         exams.Should().ContainEquivalentOf(expectedExam2);
     }
-    
+
     [Test]
     public async Task ExamController_Create_CourseTeacher_Success()
     {
@@ -191,7 +218,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         exams.Should().ContainEquivalentOf(newExam,
             opts => opts.Including(x => x.Title).Including(x => x.Description).Including(x => x.Date));
     }
-    
+
     [Test]
     public async Task ExamController_Update_CourseTeacher_Success()
     {
@@ -219,12 +246,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
             opts => opts.Including(x => x.Id).Including(x => x.Title).Including(x => x.Description)
                 .Including(x => x.Date));
     }
-    
+
     [Test]
     public async Task ExamController_Delete_ExamCreator_Success()
     {
         await ResetExam();
-        
+
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
@@ -240,7 +267,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             opts => opts.Including(x => x.Id).Including(x => x.Title).Including(x => x.Description)
                 .Including(x => x.Date));
     }
-    
+
     [Test]
     public async Task ExamController_Delete_ExamBuiltPreviously_ThrowsException()
     {
@@ -250,7 +277,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.DeleteAsync($"/Exam/{_exam.Id}/Delete");
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("An exam that already has been built must not be deleted.");
@@ -272,7 +299,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
         var uploadTaskPdfModel = new UploadTaskPdfModel
-            {TaskPdf = Convert.ToBase64String(content), Tasks = new ExamTaskModel[] { }};
+            {TaskPdf = Convert.ToBase64String(content), Tasks = new ExamTaskWriteModel[] { }};
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/UploadTaskPdf", uploadTaskPdfModel);
         response.EnsureSuccessStatusCode();
@@ -294,7 +321,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
                     .Excluding(x => x.Content));
         }
     }
-    
+
     [Test]
     public async Task ExamController_UploadTaskPdf_ExamBuiltPreviously_ThrowsException()
     {
@@ -303,13 +330,13 @@ public class ExamControllerTest : ApiIntegrationTestBase
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-        
+
         var uploadTaskPdfModel = new UploadTaskPdfModel
-            {TaskPdf = Convert.ToBase64String(pdfContent), Tasks = new ExamTaskModel[] { }};
+            {TaskPdf = Convert.ToBase64String(pdfContent), Tasks = new ExamTaskWriteModel[] { }};
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/UploadTaskPdf", uploadTaskPdfModel);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("The task PDF file of an exam that already has been built cannot be changed.");
@@ -320,7 +347,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     {
         await ResetExam();
         int count = 2;
-        
+
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
@@ -339,7 +366,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             booklets.Should().HaveCount(2);
             var pages = booklets?.SelectMany(x => x.Pages);
             pages.Should().HaveCount(4);
-            
+
             var pdfService = GetRequiredService<IPdfService>();
             var pdfs = booklets?.Select(x => x.PdfFile.Content).ToArray();
             submissionPdf = pdfService.Merge(pdfs ?? Array.Empty<byte[]>());
@@ -366,13 +393,13 @@ public class ExamControllerTest : ApiIntegrationTestBase
             submissions.Select(x => x.PdfFile != null).Should().AllBeEquivalentTo(true);
         }
     }
-    
+
     [Test]
     public async Task ExamController_BuildAndMatch_ConcatSameSubmissionPdfTwice_Success()
     {
         await ResetExam();
         int count = 2;
-        
+
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
@@ -391,20 +418,20 @@ public class ExamControllerTest : ApiIntegrationTestBase
             booklets.Should().HaveCount(2);
             var pages = booklets?.SelectMany(x => x.Pages);
             pages.Should().HaveCount(4);
-            
+
             var pdfService = GetRequiredService<IPdfService>();
             var pdfs = booklets?.Select(x => x.PdfFile.Content).ToArray();
             submissionPdf = pdfService.Merge(pdfs?.Concat(pdfs).ToArray() ?? Array.Empty<byte[]>());
         }
-        
+
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-        
+
         var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf)};
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
-        
+
         response.EnsureSuccessStatusCode();
 
         using (var repository = GetSchoolExamRepository())
@@ -425,7 +452,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     {
         await ResetExam();
         int count = 0;
-        
+
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
@@ -434,17 +461,17 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/Build", buildExamModel);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(nameof(ArgumentException));
         content.Should().Contain("At least one exam booklet must be built.");
     }
-    
+
     [Test]
     public async Task ExamController_Build_ExamBuiltPreviously_ThrowsException()
     {
         int count = 2;
-        
+
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
@@ -453,12 +480,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/Build", buildExamModel);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("Exam has already been built.");
     }
-    
+
     [Test]
     public async Task ExamController_Build_TaskPdfFileMissing_ThrowsException()
     {
@@ -469,9 +496,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             repository.Remove(exam.TaskPdfFile!);
             await repository.SaveChangesAsync();
         }
-        
+
         int count = 2;
-        
+
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
@@ -480,19 +507,19 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/Build", buildExamModel);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("Exam does not have a task PDF file.");
     }
-    
+
     [Test]
     public async Task ExamController_Match_AutomaticMatchingFails_Success()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-        
+
         var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(_booklet.PdfFile.Content)};
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
@@ -513,7 +540,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var exam = repository.Find<Exam, Guid>(_exam.Id);
         exam?.State.Should().Be(ExamState.SubmissionReady);
     }
-    
+
     [Test]
     public async Task ExamController_Match_ExamNotBuiltPreviously_ThrowsException()
     {
@@ -529,12 +556,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("Exam is not ready to match submissions.");
     }
-    
+
     [Test]
     public async Task ExamController_Clean_ExamCreator_Success()
     {
@@ -549,6 +576,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             {
                 repository.Remove(submissionPage);
             }
+
             await repository.SaveChangesAsync();
         }
 
@@ -558,7 +586,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Clean", null);
         response.EnsureSuccessStatusCode();
-        
+
         using (var repository = GetSchoolExamRepository())
         {
             var exam = repository.Find(new ExamWithBookletsByIdSpecification(_exam.Id));
@@ -567,7 +595,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             booklets.Should().HaveCount(0);
         }
     }
-    
+
     [Test]
     public async Task ExamController_Clean_ExamNotBuiltPreviously_ThrowsException()
     {
@@ -579,12 +607,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Clean", null);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("The exam has not been built yet.");
     }
-    
+
     [Test]
     public async Task ExamController_Clean_ExamWithSubmissionPages_ThrowsException()
     {
@@ -594,12 +622,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Clean", null);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("An exam with existing submission pages must not be cleaned.");
     }
-    
+
     [Test]
     public async Task ExamController_GetUnmatchedPages_ExamCreator_Success()
     {
@@ -609,7 +637,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.GetAsync($"/Exam/{_exam.Id}/UnmatchedPages");
         response.EnsureSuccessStatusCode();
-        
+
         var result = await response.Content.ReadAsStringAsync();
         var pagesResult = JsonConvert.DeserializeObject<UnmatchedPagesReadModel>(result);
 
@@ -618,7 +646,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         pagesResult.UnmatchedSubmissionPages.Should().HaveCount(1);
         pagesResult.UnmatchedSubmissionPages.Should().ContainSingle(x => x.Id.Equals(_unmatchedSubmissionPage.Id));
     }
-    
+
     [Test]
     public async Task ExamController_GetUnmatchedPages_ExamDoesNotExist_ThrowsException()
     {
@@ -634,7 +662,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         content.Should().Contain(nameof(ArgumentException));
         content.Should().Contain("Exam does not exist.");
     }
-    
+
     [Test]
     public async Task ExamController_MatchManually_ExamCreator_Success()
     {
@@ -662,7 +690,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var bookletPages = exam?.Booklets.SelectMany(x => x.Pages);
         bookletPages?.Select(x => x.SubmissionPage != null).Should().AllBeEquivalentTo(true);
     }
-    
+
     [Test]
     public async Task ExamController_MatchManually_BookletPageAlreadyMatched_ThrowsException()
     {
@@ -685,7 +713,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("The booklet page and/or the submission page have already been matched.");
     }
-    
+
     [Test]
     public async Task ExamController_MatchManually_SubmissionPageAlreadyMatched_ThrowsException()
     {
@@ -708,7 +736,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("The booklet page and/or the submission page have already been matched.");
     }
-    
+
     [Test]
     public async Task ExamController_MatchManually_BookletPageDoesNotExist_ThrowsException()
     {
@@ -732,7 +760,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         content.Should().Contain(nameof(ArgumentException));
         content.Should().Contain("Booklet page does not exist.");
     }
-    
+
     [Test]
     public async Task ExamController_MatchManually_SubmissionPageDoesNotExist_ThrowsException()
     {
@@ -756,14 +784,14 @@ public class ExamControllerTest : ApiIntegrationTestBase
         content.Should().Contain(nameof(ArgumentException));
         content.Should().Contain("Submission page does not exist.");
     }
-    
+
     [Test]
     public async Task ExamController_MatchManually_BookletPageFromOtherExam_ThrowsException()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-        
+
         var manualMatchesModel = new ManualMatchesModel
         {
             Matches = new[]
@@ -779,14 +807,14 @@ public class ExamControllerTest : ApiIntegrationTestBase
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("Booklet page is not part of the exam.");
     }
-    
+
     [Test]
     public async Task ExamController_MatchManually_SubmissionPageFromOtherExam_ThrowsException()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-        
+
         var manualMatchesModel = new ManualMatchesModel
         {
             Matches = new[]
@@ -802,7 +830,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         content.Should().Contain(nameof(InvalidOperationException));
         content.Should().Contain("Submission page is not part of the exam.");
     }
-    
+
     [Test]
     public async Task ExamController_MatchManually_NoSubmissionCreatedPreviously_Success()
     {
@@ -815,11 +843,11 @@ public class ExamControllerTest : ApiIntegrationTestBase
             repository.Remove(_submission);
             await repository.SaveChangesAsync();
         }
-        
+
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-        
+
         var manualMatchesModel = new ManualMatchesModel
         {
             Matches = new[]
@@ -855,7 +883,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         {
             repository.Remove(submissionPage);
         }
-        
+
         foreach (var submission in repository.List<Submission>())
         {
             repository.Remove(submission);
@@ -864,7 +892,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var exam = repository.Find<Exam, Guid>(_exam.Id)!;
         exam.State = ExamState.BuildReady;
         repository.Update(exam);
-        
+
         await repository.SaveChangesAsync();
     }
 }
