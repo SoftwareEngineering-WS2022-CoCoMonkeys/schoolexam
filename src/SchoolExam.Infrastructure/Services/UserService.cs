@@ -7,15 +7,15 @@ namespace SchoolExam.Infrastructure.Services;
 
 public class UserService : IUserService
 {
-    private readonly ISchoolExamRepository _context;
+    private readonly ISchoolExamRepository _repository;
 
-    public UserService(ISchoolExamRepository context)
+    public UserService(ISchoolExamRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
 
     public User? GetByUsername(string username)
     {
-        return _context.Find(new UserByUserIdSpecification(username));
+        return _repository.Find(new UserByUserIdSpecification(username));
     }
 }

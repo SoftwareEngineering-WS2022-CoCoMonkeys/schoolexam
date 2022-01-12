@@ -4,7 +4,7 @@ using SchoolExam.Domain.Base;
 
 namespace SchoolExam.Infrastructure.Extensions;
 
-public static class DataContextExtensions
+public static class RepositoryExtensions
 {
     public static TEntity? Find<TEntity, TIdentity>(this IRepository repository, TIdentity id)
         where TEntity : class, IEntity<TIdentity>

@@ -21,19 +21,19 @@ public class ExamService : IExamService
     private static string _pageQrCodeUri = "http://pageQrCode";
 
     private readonly ILogger<ExamService> _logger;
-    private readonly ISchoolExamRepository _context;
+    private readonly ISchoolExamRepository _repository;
 
     private readonly IRandomGenerator _randomGenerator;
     private readonly IQrCodeGenerator _qrCodeGenerator;
     private readonly IPdfService _pdfService;
     private readonly IQrCodeReader _qrCodeReader;
 
-    public ExamService(ILogger<ExamService> logger, ISchoolExamRepository context,
+    public ExamService(ILogger<ExamService> logger, ISchoolExamRepository repository,
         IRandomGenerator randomGenerator, IQrCodeGenerator qrCodeGenerator, IPdfService pdfService,
         IQrCodeReader qrCodeReader)
     {
         _logger = logger;
-        _context = context;
+        _repository = repository;
         _randomGenerator = randomGenerator;
         _qrCodeGenerator = qrCodeGenerator;
         _pdfService = pdfService;
@@ -42,13 +42,13 @@ public class ExamService : IExamService
 
     public Exam? GetById(Guid examId)
     {
-        var result = _context.Find<Exam, Guid>(examId);
+        var result = _repository.Find<Exam, Guid>(examId);
         return result;
     }
 
     public IEnumerable<Exam> GetByTeacher(Guid teacherId)
     {
-        var result = _context.List(new ExamByTeacherSpecification(teacherId));
+        var result = _repository.List(new ExamByTeacherSpecification(teacherId));
         return result;
     }
 
@@ -62,8 +62,8 @@ public class ExamService : IExamService
         var examId = Guid.NewGuid();
         var exam = new Exam(examId, title, description, date, teacherId, courseId);
 
-        _context.Add(exam);
-        await _context.SaveChangesAsync();
+        _repository.Add(exam);
+        await _repository.SaveChangesAsync();
     }
 
     public async Task Update(Guid examId, string title, string description, DateTime date)
@@ -73,8 +73,8 @@ public class ExamService : IExamService
         exam.Description = description;
         exam.Date = date;
 
-        _context.Update(exam);
-        await _context.SaveChangesAsync();
+        _repository.Update(exam);
+        await _repository.SaveChangesAsync();
     }
 
     public async Task Delete(Guid examId)
@@ -85,8 +85,8 @@ public class ExamService : IExamService
             throw new InvalidOperationException("An exam that already has been built must not be deleted.");
         }
 
-        _context.Remove(exam);
-        await _context.SaveChangesAsync();
+        _repository.Remove(exam);
+        await _repository.SaveChangesAsync();
     }
 
     public async Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content)
@@ -102,7 +102,7 @@ public class ExamService : IExamService
         // remove previously existing task PDF file
         if (exam.TaskPdfFile != null)
         {
-            _context.Remove(exam.TaskPdfFile);
+            _repository.Remove(exam.TaskPdfFile);
         }
 
         var taskPdfFile =
@@ -110,9 +110,9 @@ public class ExamService : IExamService
                 content, examId);
         // exam is ready to be built after having a task PDF file
         exam.State = ExamState.BuildReady;
-        _context.Update(exam);
-        _context.Add(taskPdfFile);
-        await _context.SaveChangesAsync();
+        _repository.Update(exam);
+        _repository.Add(taskPdfFile);
+        await _repository.SaveChangesAsync();
     }
 
     public async Task FindTasks(Guid examId, Guid userId, params ExamTaskInfo[] tasks)
@@ -127,7 +127,7 @@ public class ExamService : IExamService
         var currentExamTasks = exam.Tasks;
         foreach (var task in currentExamTasks)
         {
-            _context.Remove(task);
+            _repository.Remove(task);
         }
 
         var pdf = exam.TaskPdfFile!.Content;
@@ -154,7 +154,7 @@ public class ExamService : IExamService
                 matchedLinks.Add(link);
                 var examTask = new ExamTask(Guid.NewGuid(), task.Title, task.MaxPoints, 1,
                     new ExamPosition(link.Page, link.Top));
-                _context.Add(examTask);
+                _repository.Add(examTask);
                 exam.Tasks.Add(examTask);
             }
         }
@@ -166,13 +166,13 @@ public class ExamService : IExamService
         }
 
         var pdfWithoutTaskLinks = _pdfService.RemoveUriLinkAnnotations(pdf, matchedLinks.ToArray());
-        _context.Remove(exam.TaskPdfFile);
+        _repository.Remove(exam.TaskPdfFile);
         var newTaskPdfFile = new TaskPdfFile(Guid.NewGuid(), $"{examId}.pdf", pdfWithoutTaskLinks.LongLength,
             DateTime.Now, userId, pdfWithoutTaskLinks, examId);
-        _context.Add(newTaskPdfFile);
-        _context.Update(exam);
+        _repository.Add(newTaskPdfFile);
+        _repository.Update(exam);
 
-        await _context.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
     }
 
     public async Task Build(Guid examId, int count, Guid userId)
@@ -225,24 +225,24 @@ public class ExamService : IExamService
             for (int page = 1; page <= pageCount; page++)
             {
                 var bookletPage = new BookletPage(Guid.NewGuid(), page, bookletId, qrCodeData[page - 1]);
-                _context.Add(bookletPage);
+                _repository.Add(bookletPage);
             }
 
-            _context.Add(booklet);
-            _context.Add(bookletPdfFile);
+            _repository.Add(booklet);
+            _repository.Add(bookletPdfFile);
         }
 
         exam.State = ExamState.SubmissionReady;
-        _context.Update(exam);
+        _repository.Update(exam);
 
-        await _context.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
     }
 
     public async Task Clean(Guid examId)
     {
         var exam = EnsureExamExists(new ExamWithBookletsByIdSpecification(examId));
 
-        var submissionPages = _context.List(new SubmissionPageByExamSpecification(examId));
+        var submissionPages = _repository.List(new SubmissionPageByExamSpecification(examId));
         if (submissionPages.Any())
         {
             throw new InvalidOperationException("An exam with existing submission pages must not be cleaned.");
@@ -256,13 +256,13 @@ public class ExamService : IExamService
         var booklets = exam.Booklets;
         foreach (var booklet in booklets)
         {
-            _context.Remove(booklet);
+            _repository.Remove(booklet);
         }
 
         exam.State = ExamState.BuildReady;
-        _context.Update(exam);
+        _repository.Update(exam);
 
-        await _context.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
     }
 
     public byte[] GetConcatenatedBookletPdfFile(Guid examId)
@@ -286,9 +286,9 @@ public class ExamService : IExamService
 
         var pages = _pdfService.Split(pdf);
 
-        var submissions = _context.List<Submission, SubmissionWithPagesSpecification>()
+        var submissions = _repository.List<Submission, SubmissionWithPagesSpecification>()
             .ToDictionary(x => x.BookletId, x => x);
-        var students = _context.List(new StudentByExamSpecification(examId)).ToDictionary(x => x.QrCode, x => x);
+        var students = _repository.List(new StudentByExamSpecification(examId)).ToDictionary(x => x.QrCode, x => x);
         var updatedSubmissionIds = new List<Guid>();
         for (int page = 1; page <= pages.Count; page++)
         {
@@ -327,7 +327,7 @@ public class ExamService : IExamService
                     // create new submission if there has not been added one yet
                     var newSubmission = new Submission(Guid.NewGuid(), student?.Id, matchedPage.BookletId);
                     submissions.Add(newSubmission.BookletId, newSubmission);
-                    _context.Add(newSubmission);
+                    _repository.Add(newSubmission);
                 }
 
                 var submission = submissions[matchedPage.BookletId];
@@ -341,7 +341,7 @@ public class ExamService : IExamService
                     var submissionPage = new SubmissionPage(submissionPageId, examId, submissionPagePdf, submission.Id,
                         matchedPage.Id, studentQrCode);
                     submission.Pages.Add(submissionPage);
-                    _context.Add(submissionPage);
+                    _repository.Add(submissionPage);
                 }
                 else
                 {
@@ -349,7 +349,7 @@ public class ExamService : IExamService
                         $"Exam booklet page corresponding to {page} of PDF document has already been matched. The previously matched PDF page was replaced by the most recently parsed page.");
 
                     var previouslyMatchedPage = submission.Pages.Single(x => x.BookletPageId.Equals(matchedPage.Id));
-                    _context.Remove(previouslyMatchedPage.PdfFile);
+                    _repository.Remove(previouslyMatchedPage.PdfFile);
                     previouslyMatchedPage.PdfFile = submissionPagePdf;
                     previouslyMatchedPage.StudentQrCode ??= studentQrCode;
                 }
@@ -362,13 +362,13 @@ public class ExamService : IExamService
                 // persist unmatched submission pages such that they can be matched manually afterwards
                 var submissionPage = new SubmissionPage(submissionPageId, examId, submissionPagePdf, null, null,
                     studentQrCode);
-                _context.Add(submissionPage);
+                _repository.Add(submissionPage);
             }
 
-            _context.Add(submissionPagePdf);
+            _repository.Add(submissionPagePdf);
         }
 
-        await _context.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
         if (updatedSubmissionIds.Count > 0)
         {
             await MergeCompleteSubmissions(examId, updatedSubmissionIds, userId);
@@ -379,7 +379,7 @@ public class ExamService : IExamService
     public IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId)
     {
         EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
-        var submissionPages = _context.List(new SubmissionPageByExamSpecification(examId));
+        var submissionPages = _repository.List(new SubmissionPageByExamSpecification(examId));
 
         var result = submissionPages.Where(x => !x.IsMatched);
         return result;
@@ -397,19 +397,19 @@ public class ExamService : IExamService
     public async Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId, Guid userId)
     {
         EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
-        var bookletPage = _context.Find<BookletPage, Guid>(bookletPageId);
+        var bookletPage = _repository.Find<BookletPage, Guid>(bookletPageId);
         if (bookletPage == null)
         {
             throw new ArgumentException("Booklet page does not exist.");
         }
 
-        var bookletExamId = _context.Find<Booklet, Guid>(bookletPage.BookletId)!.ExamId;
+        var bookletExamId = _repository.Find<Booklet, Guid>(bookletPage.BookletId)!.ExamId;
         if (!examId.Equals(bookletExamId))
         {
             throw new InvalidOperationException("Booklet page is not part of the exam.");
         }
 
-        var submissionPage = _context.Find<SubmissionPage, Guid>(submissionPageId);
+        var submissionPage = _repository.Find<SubmissionPage, Guid>(submissionPageId);
         if (submissionPage == null)
         {
             throw new ArgumentException("Submission page does not exist.");
@@ -420,7 +420,7 @@ public class ExamService : IExamService
             throw new InvalidOperationException("Submission page is not part of the exam.");
         }
 
-        var bookletPageMatched = _context.List(new SubmissionPageByBookletPageSpecification(bookletPageId)).Any();
+        var bookletPageMatched = _repository.List(new SubmissionPageByBookletPageSpecification(bookletPageId)).Any();
 
         // not possible to manually match a previously matched pages
         if (bookletPageMatched || submissionPage.BookletPageId.HasValue)
@@ -430,19 +430,19 @@ public class ExamService : IExamService
         }
 
         var bookletId = bookletPage.BookletId;
-        var submission = _context.Find(new SubmissionByBookletSpecification(bookletId)) ??
+        var submission = _repository.Find(new SubmissionByBookletSpecification(bookletId)) ??
                          new Submission(Guid.NewGuid(), null, bookletId);
 
         var student = submissionPage.StudentQrCode != null
-            ? _context.Find(new StudentByQrCodeSpecification(submissionPage.StudentQrCode.Data))
+            ? _repository.Find(new StudentByQrCodeSpecification(submissionPage.StudentQrCode.Data))
             : null;
         AssignStudentToSubmission(student?.Id, submission);
 
         submissionPage.SubmissionId = submission.Id;
         submissionPage.BookletPageId = bookletPageId;
 
-        _context.Update(submissionPage);
-        await _context.SaveChangesAsync();
+        _repository.Update(submissionPage);
+        await _repository.SaveChangesAsync();
 
         await MergeCompleteSubmissions(examId, new[] {submission.Id}, userId);
         await CheckCompletenessOfExamSubmissions(examId);
@@ -450,7 +450,7 @@ public class ExamService : IExamService
 
     private Exam EnsureExamExists(EntityByIdSpecification<Exam, Guid> spec)
     {
-        var exam = _context.Find(spec);
+        var exam = _repository.Find(spec);
         if (exam == null)
         {
             throw new ArgumentException("Exam does not exist.");
@@ -463,9 +463,9 @@ public class ExamService : IExamService
     {
         var updatedSubmissionIdsSet = updatedSubmissionIds.ToHashSet();
         var updatedSubmissions =
-            _context.List(new SubmissionWithPdfFileAndPagesWithPdfFileByIdsSpecification(updatedSubmissionIdsSet));
+            _repository.List(new SubmissionWithPdfFileAndPagesWithPdfFileByIdsSpecification(updatedSubmissionIdsSet));
         var updatedSubmissionsDict = updatedSubmissions.ToDictionary(x => x.BookletId, x => x);
-        var exam = _context.Find(new ExamWithTasksAndBookletsWithPagesWithSubmissionPageByIdSpecification(examId))!;
+        var exam = _repository.Find(new ExamWithTasksAndBookletsWithPagesWithSubmissionPageByIdSpecification(examId))!;
 
         // get updated booklets with a complete submission
         var booklets = exam.Booklets
@@ -482,7 +482,7 @@ public class ExamService : IExamService
             var submission = updatedSubmissionsDict[booklet.Id];
             if (submission.PdfFile != null)
             {
-                _context.Remove(submission.PdfFile);
+                _repository.Remove(submission.PdfFile);
             }
             
             // merge submission pages of booklet ordered page numbers
@@ -493,20 +493,20 @@ public class ExamService : IExamService
 
             var submissionPdfFile = new SubmissionPdfFile(Guid.NewGuid(), $"submission_{submission.Id}.pdf",
                 submissionPdfWithOutline.LongLength, DateTime.Now, userId, submissionPdfWithOutline, submission.Id);
-            _context.Add(submissionPdfFile);
+            _repository.Add(submissionPdfFile);
         }
 
-        await _context.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
     }
 
     private async Task CheckCompletenessOfExamSubmissions(Guid examId)
     {
-        var exam = _context.Find(new ExamWithBookletsWithPagesWithSubmissionPageByIdSpecification(examId))!;
+        var exam = _repository.Find(new ExamWithBookletsWithPagesWithSubmissionPageByIdSpecification(examId))!;
         var hasSubmission = exam.Booklets.Any(x => x.HasCompleteSubmission);
         exam.State = hasSubmission ? ExamState.InCorrection : ExamState.SubmissionReady;
 
-        _context.Update(exam);
-        await _context.SaveChangesAsync();
+        _repository.Update(exam);
+        await _repository.SaveChangesAsync();
     }
 
     private void AssignStudentToSubmission(Guid? studentId, Submission submission)

@@ -35,14 +35,14 @@ public class CourseControllerTest : ApiIntegrationTestBase
         _student.SchoolId = _school.Id;
         var courseStudent = new CourseStudent(_course.Id, _student.Id);
 
-        using var context = GetSchoolExamDataContext();
-        context.Add(_school);
-        context.Add(_course);
-        context.Add(_teacher);
-        context.Add(courseTeacher);
-        context.Add(_student);
-        context.Add(courseStudent);
-        await context.SaveChangesAsync();
+        using var repository = GetSchoolExamRepository();
+        repository.Add(_school);
+        repository.Add(_course);
+        repository.Add(_teacher);
+        repository.Add(courseTeacher);
+        repository.Add(_student);
+        repository.Add(courseStudent);
+        await repository.SaveChangesAsync();
     }
 
     [Test]
