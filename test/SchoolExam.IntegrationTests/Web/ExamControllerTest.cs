@@ -35,7 +35,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     private School _school = null!;
     private Course _course = null!;
     private Teacher _teacher = null!;
-    private Student _student = null!;
+    private Student _student = null!, _otherStudent = null!;
     private Exam _exam = null!, _otherExam = null!;
     private User _user = null!;
     private TaskPdfFile _taskPdfFile = null!;
@@ -58,10 +58,13 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _student = TestEntityFactory.Create<Student, Guid>();
         _student.SchoolId = _school.Id;
         var courseStudent = new CourseStudent(_course.Id, _student.Id);
+        _otherStudent = TestEntityFactory.Create<Student, Guid>();
+        _student.SchoolId = _school.Id;
         _exam = TestEntityFactory.Create<Exam, Guid>();
-        var examCourse = new ExamCourse(_exam.Id, _course.Id);
         _exam.CreatorId = _teacher.Id;
         _exam.State = ExamState.SubmissionReady;
+        var examCourse = new ExamCourse(_exam.Id, _course.Id);
+        var examStudent = new ExamStudent(_exam.Id, _otherStudent.Id);
         _taskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
         _taskPdfFile.ExamId = _exam.Id;
         _user = TestEntityFactory.Create<User, Guid>();
@@ -103,9 +106,11 @@ public class ExamControllerTest : ApiIntegrationTestBase
         repository.Add(_teacher);
         repository.Add(courseTeacher);
         repository.Add(_student);
+        repository.Add(_otherStudent);
         repository.Add(courseStudent);
         repository.Add(_exam);
         repository.Add(examCourse);
+        repository.Add(examStudent);
         repository.Add(_taskPdfFile);
         repository.Add(_user);
         repository.Add(_booklet);
@@ -152,12 +157,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var response = await this.Client.GetAsync($"/Exam/ByTeacher/");
         response.EnsureSuccessStatusCode();
-        
+
         var result = await response.Content.ReadAsStringAsync();
         // make sure that custom JSON converter is used for deserialization
         var options = GetRequiredService<IOptions<JsonOptions>>();
         var exams = JsonSerializer
-            .Deserialize<IEnumerable<ExamReadModelTeacher>>(result, options.Value.JsonSerializerOptions);
+            .Deserialize<IEnumerable<ExamReadModelTeacher>>(result, options.Value.JsonSerializerOptions)?.ToList();
 
         var expectedExam1 = new ExamReadModelTeacher
         {
@@ -171,7 +176,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
                         {
                             new() {Id = _student.Id, DisplayName = $"{_student.FirstName} {_student.LastName}"}
                         }
-                    }
+                    },
+                    new ExamStudentReadModel
+                        {Id = _otherStudent.Id, DisplayName = $"{_otherStudent.FirstName} {_otherStudent.LastName}"}
                 }
         };
         var expectedExam2 = new ExamReadModelTeacher
@@ -192,7 +199,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         };
 
         exams.Should().HaveCount(2);
-        exams.Should().ContainEquivalentOf(expectedExam1, x => x.Excluding(x => x.Participants));
+        exams.Should().ContainEquivalentOf(expectedExam1);
         exams.Should().ContainEquivalentOf(expectedExam2);
     }
 
