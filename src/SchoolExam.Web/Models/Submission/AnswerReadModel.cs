@@ -1,6 +1,7 @@
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Web.Models.Exam;
 
-namespace SchoolExam.Web.Models.Exam;
+namespace SchoolExam.Web.Models.Submission;
 
 public class AnswerReadModel
 {

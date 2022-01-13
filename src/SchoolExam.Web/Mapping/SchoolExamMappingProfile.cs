@@ -7,6 +7,7 @@ using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Models.Course;
 using SchoolExam.Web.Models.Exam;
+using SchoolExam.Web.Models.Submission;
 
 namespace SchoolExam.Web.Mapping;
 
@@ -52,10 +53,12 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<ExamTaskWriteModel, ExamTaskInfo>();
 
         CreateMap<Submission, SubmissionReadModel>()
-            .ForMember(dst => dst.Data,
-                opt => opt.MapFrom(src => src.PdfFile != null ? Convert.ToBase64String(src.PdfFile.Content) : null))
+            .Include<Submission, SubmissionDetailsReadModel>()
             .ForMember(dst => dst.AchievedPoints, opt => opt.MapFrom(src => src.Answers.Sum(x => x.AchievedPoints)))
             .ForMember(dst => dst.Status, opt => opt.MapFrom(src => GetCorrectionState(src)));
+        CreateMap<Submission, SubmissionDetailsReadModel>()
+            .ForMember(dst => dst.Data,
+                opt => opt.MapFrom(src => src.PdfFile != null ? Convert.ToBase64String(src.PdfFile.Content) : null));
         CreateMap<Answer, AnswerReadModel>()
             .ForMember(dst => dst.Status, opt => opt.MapFrom(src => GetCorrectionState(src)));
         CreateMap<AnswerSegment, AnswerSegmentReadModel>();

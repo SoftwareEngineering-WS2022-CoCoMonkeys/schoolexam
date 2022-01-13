@@ -19,10 +19,17 @@ public class SubmissionService : ISubmissionService
         var result = _repository.Find(new SubmissionWithBookletWithExamByIdSpecification(submissionId));
         return result;
     }
+    
+    public Submission? GetByIdWithDetails(Guid submissionId)
+    {
+        var result =
+            _repository.Find(new SubmissionWithPdfFileStudentAndAnswersWithTaskAndSegmentByIdSpecification(submissionId));
+        return result;
+    }
 
     public IEnumerable<Submission> GetByExam(Guid examId)
     {
-        var result = _repository.List(new SubmissionWithStudentAndAnswersWithTaskAndSegmentByExamSpecification(examId));
+        var result = _repository.List(new SubmissionWithStudentByExamSpecification(examId));
         return result;
     }
 

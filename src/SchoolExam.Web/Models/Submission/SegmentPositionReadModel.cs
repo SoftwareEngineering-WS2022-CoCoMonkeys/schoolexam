@@ -1,4 +1,4 @@
-namespace SchoolExam.Web.Models.Exam;
+namespace SchoolExam.Web.Models.Submission;
 
 public class SegmentPositionReadModel
 {

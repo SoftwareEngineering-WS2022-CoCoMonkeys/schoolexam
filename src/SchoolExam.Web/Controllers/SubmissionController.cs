@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Services;
 using SchoolExam.Web.Authorization;
-using SchoolExam.Web.Models.Exam;
+using SchoolExam.Web.Models.Submission;
 
 namespace SchoolExam.Web.Controllers;
 
@@ -29,11 +29,23 @@ public class SubmissionController : ApiController<SubmissionController>
     }
 
     [HttpGet]
-    [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}")]
+    [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/Details")]
     [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
-    public IActionResult GetSubmission(Guid submissionId)
+    public SubmissionDetailsReadModel GetSubmissionWithDetails(Guid submissionId)
     {
-        var result = _submissionService.GetSubmissionPdf(submissionId);
-        return File(result, MediaTypeNames.Application.Pdf);
+        var submission = _submissionService.GetByIdWithDetails(submissionId);
+        var result = Mapper.Map<SubmissionDetailsReadModel>(submission);
+
+        return result;
+    }
+    
+    [HttpGet]
+    [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/Download")]
+    [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
+    public IActionResult DownloadSubmission(Guid submissionId)
+    {
+        var pdf = _submissionService.GetSubmissionPdf(submissionId);
+
+        return File(pdf, MediaTypeNames.Application.Pdf);
     }
 }
