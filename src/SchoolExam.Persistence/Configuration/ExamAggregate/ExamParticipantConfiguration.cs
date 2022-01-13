@@ -9,5 +9,6 @@ public class ExamParticipantConfiguration : IEntityTypeConfiguration<ExamPartici
     public void Configure(EntityTypeBuilder<ExamParticipant> builder)
     {
         builder.HasKey(x => new {x.ExamId, x.ParticipantId});
+        builder.HasOne<Exam>().WithMany(x => x.Participants).HasForeignKey(x => x.ExamId);
     }
 }

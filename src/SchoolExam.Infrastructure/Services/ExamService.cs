@@ -131,29 +131,45 @@ public class ExamService : IExamService
         }
 
         var pdf = exam.TaskPdfFile!.Content;
-        var links = _pdfService.GetUriLinkAnnotations(pdf);
+        var links = _pdfService.GetUriLinkAnnotations(pdf).ToList();
         var tasksDict = tasks.ToDictionary(x => x.Id, x => x);
-        var linkCandidates = links
-            .Where(x => Regex.IsMatch(x.Uri, $"^task-{_guidRegex}$"));
+        var startLinkCandidates = links.Where(x => Regex.IsMatch(x.Uri, $"^task-start-{_guidRegex}$"));
+        var endLinkCandidatesDict = links.Where(x => Regex.IsMatch(x.Uri, $"^task-end-{_guidRegex}$"))
+            .ToDictionary(x => x.Uri, x => x);
 
         var matchedLinks = new List<PdfUriLinkAnnotationInfo>();
         var matchedTaskIds = new HashSet<Guid>();
-        foreach (var link in linkCandidates)
+        // iterate through detected start markers
+        foreach (var startLink in startLinkCandidates)
         {
-            var taskIdString = Regex.Match(link.Uri, $"{_guidRegex}$").Value;
+            // extract task identifier
+            var taskIdString = Regex.Match(startLink.Uri, $"{_guidRegex}$").Value;
             var taskId = Guid.Parse(taskIdString);
+            // check if the exam has a task with the extracted identifier
             if (tasksDict.ContainsKey(taskId))
             {
+                // check if tasked occurs in multiple markers
                 if (matchedTaskIds.Contains(taskId))
                 {
                     throw new InvalidOperationException($"Task with id {taskId} was found in PDF more than once.");
                 }
+                
+                // find corresponding end marker
+                var taskEndString = $"task-end-{taskId}";
+                if (!endLinkCandidatesDict.ContainsKey(taskEndString))
+                {
+                    throw new InvalidOperationException($"No end marker was found for task with id {taskId}.");
+                }
+
+                var endLink = endLinkCandidatesDict[taskEndString];
 
                 matchedTaskIds.Add(taskId);
                 var task = tasksDict[taskId];
-                matchedLinks.Add(link);
+                // add start and end marker to list such that they can be removed from the PDF file afterwards
+                matchedLinks.Add(startLink);
+                matchedLinks.Add(endLink);
                 var examTask = new ExamTask(Guid.NewGuid(), task.Title, task.MaxPoints, 1,
-                    new ExamPosition(link.Page, link.Top));
+                    new ExamPosition(startLink.Page, startLink.Top), new ExamPosition(endLink.Page, endLink.Bottom));
                 _repository.Add(examTask);
                 exam.Tasks.Add(examTask);
             }
@@ -288,7 +304,14 @@ public class ExamService : IExamService
 
         var submissions = _repository.List<Submission, SubmissionWithPagesSpecification>()
             .ToDictionary(x => x.BookletId, x => x);
-        var students = _repository.List(new StudentByExamSpecification(examId)).ToDictionary(x => x.QrCode, x => x);
+
+        // get participating students
+        var examWithStudents = _repository.Find(new ExamWithParticipantsById(examId))!;
+        var studentIds = examWithStudents.Participants.OfType<ExamStudent>().Select(x => x.Student)
+            .Union(examWithStudents.Participants.OfType<ExamCourse>()
+                .SelectMany(x => x.Course.Students.Select(s => s.Student)));
+        var students = studentIds.ToDictionary(x => x.QrCode.Data, x => x);
+
         var updatedSubmissionIds = new List<Guid>();
         for (int page = 1; page <= pages.Count; page++)
         {
@@ -463,7 +486,8 @@ public class ExamService : IExamService
     {
         var updatedSubmissionIdsSet = updatedSubmissionIds.ToHashSet();
         var updatedSubmissions =
-            _repository.List(new SubmissionWithPdfFileAndPagesWithPdfFileByIdsSpecification(updatedSubmissionIdsSet));
+            _repository.List(
+                new SubmissionWithAnswersAndPdfFileAndPagesWithPdfFileByIdsSpecification(updatedSubmissionIdsSet));
         var updatedSubmissionsDict = updatedSubmissions.ToDictionary(x => x.BookletId, x => x);
         var exam = _repository.Find(new ExamWithTasksAndBookletsWithPagesWithSubmissionPageByIdSpecification(examId))!;
 
@@ -474,9 +498,10 @@ public class ExamService : IExamService
         var bookletPagesDict = booklets.SelectMany(x => x.Pages).ToDictionary(x => x.Id, x => x.Page);
 
         // prepare outline to be added to all complete submission PDFs
-        var outlineElements = exam.Tasks.Select(x => new PdfOutlineInfo(x.Title, x.Position.Page, (float) x.Position.Y))
+        var outlineElements = exam.Tasks.Select(x => new PdfOutlineInfo(x.Title, x.Start.Page, (float) x.Start.Y))
             .ToArray();
 
+        // TODO: make sure that nothing has been corrected before deleting anything
         foreach (var booklet in booklets)
         {
             var submission = updatedSubmissionsDict[booklet.Id];
@@ -484,7 +509,24 @@ public class ExamService : IExamService
             {
                 _repository.Remove(submission.PdfFile);
             }
-            
+
+            // remove previously existing
+            foreach (var answer in submission.Answers)
+            {
+                _repository.Remove(answer);
+            }
+
+            // add answers for all tasks to submission
+            foreach (var task in exam.Tasks)
+            {
+                var answer = new Answer(Guid.NewGuid(), task.Id, submission.Id, AnswerState.Pending, null);
+                var defaultSegmentAnswer = new AnswerSegment(Guid.NewGuid(),
+                    new ExamPosition(task.Start.Page, task.Start.Y), new ExamPosition(task.End.Page, task.End.Y),
+                    answer.Id);
+                _repository.Add(answer);
+                _repository.Add(defaultSegmentAnswer);
+            }
+
             // merge submission pages of booklet ordered page numbers
             var pages = submission.Pages.OrderBy(x => bookletPagesDict[x.BookletPageId!.Value])
                 .Select(x => x.PdfFile.Content).ToArray();

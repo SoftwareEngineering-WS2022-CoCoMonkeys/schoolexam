@@ -11,6 +11,7 @@ public class AnswerConfiguration : IEntityTypeConfiguration<Answer>
     {
         builder.ToTable("Answer");
         builder.HasKey(x => x.Id);
-        builder.HasOne<ExamTask>().WithMany();
+        builder.HasOne(x => x.Task).WithMany().HasForeignKey(x => x.TaskId);
+        builder.HasMany(x => x.Segments).WithOne().HasForeignKey(x => x.AnswerId);
     }
 }

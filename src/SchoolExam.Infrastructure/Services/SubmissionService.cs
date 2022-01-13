@@ -8,12 +8,12 @@ namespace SchoolExam.Infrastructure.Services;
 public class SubmissionService : ISubmissionService
 {
     private readonly ISchoolExamRepository _repository;
-    
+
     public SubmissionService(ISchoolExamRepository repository)
     {
         _repository = repository;
     }
-    
+
     public Submission? GetById(Guid submissionId)
     {
         var result = _repository.Find(new SubmissionWithBookletWithExamByIdSpecification(submissionId));
@@ -22,7 +22,7 @@ public class SubmissionService : ISubmissionService
 
     public IEnumerable<Submission> GetByExam(Guid examId)
     {
-        var result = _repository.List(new SubmissionByExamSpecification(examId));
+        var result = _repository.List(new SubmissionWithStudentAndAnswersWithTaskAndSegmentByExamSpecification(examId));
         return result;
     }
 

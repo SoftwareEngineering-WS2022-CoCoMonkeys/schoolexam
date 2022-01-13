@@ -6,7 +6,6 @@ namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 
 public class Submission : EntityBase<Guid>
 {
-    public double AchievedPoints => Answers.Sum(x => x.AchievedPoints);
     public Guid BookletId { get; set; }
     public Booklet Booklet { get; set; }
     public Guid? StudentId { get; set; }

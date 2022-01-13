@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolExam.Domain.Entities.CourseAggregate;
-using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Persistence.Extensions;
 
 namespace SchoolExam.Persistence.Configuration.CourseAggregate;

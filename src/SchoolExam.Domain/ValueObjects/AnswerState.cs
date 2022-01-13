@@ -1,8 +1,7 @@
 namespace SchoolExam.Domain.ValueObjects;
 
-public enum CorrectableState
+public enum AnswerState
 {
     Pending,
-    InProgress,
-    Finalized
+    Corrected
 }
