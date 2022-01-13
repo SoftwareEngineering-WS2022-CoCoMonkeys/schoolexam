@@ -1,6 +1,9 @@
 using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
+using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
+using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
 
 namespace SchoolExam.Infrastructure.Services;
@@ -29,7 +32,7 @@ public class SubmissionService : ISubmissionService
 
     public IEnumerable<Submission> GetByExam(Guid examId)
     {
-        var result = _repository.List(new SubmissionWithStudentByExamSpecification(examId));
+        var result = _repository.List(new SubmissionWithStudentAndAnswersByExamSpecification(examId));
         return result;
     }
 
@@ -42,5 +45,27 @@ public class SubmissionService : ISubmissionService
         }
         
         return pdfFile.Content;
+    }
+
+    public async Task SetPoints(Guid submissionId, Guid taskId, double? points)
+    {
+        var answer = _repository.Find(new AnswerBySubmissionAndTaskSpecification(submissionId, taskId));
+        if (answer == null)
+        {
+            throw new ArgumentException(
+                $"There exists no submission with identifier {submissionId} that contains a task with identifier {taskId}");
+        }
+
+        var task = _repository.Find<ExamTask, Guid>(taskId)!;
+
+        if (points < 0.0 || points > task.MaxPoints)
+        {
+            throw new ArgumentException("Points are not in allowed range between 0 and maximum points.");
+        }
+        
+        answer.AchievedPoints = points;
+        answer.State = answer.AchievedPoints.HasValue ? AnswerState.Corrected : AnswerState.Pending;
+        _repository.Update(answer);
+        await _repository.SaveChangesAsync();
     }
 }

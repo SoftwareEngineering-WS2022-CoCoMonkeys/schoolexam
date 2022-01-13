@@ -48,4 +48,14 @@ public class SubmissionController : ApiController<SubmissionController>
 
         return File(pdf, MediaTypeNames.Application.Pdf);
     }
+
+    [HttpPost]
+    [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/SetPoints")]
+    [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
+    public async Task<IActionResult> SetPoints(Guid submissionId, [FromBody] SetPointsModel setPointsModel)
+    {
+        await _submissionService.SetPoints(submissionId, setPointsModel.TaskId, setPointsModel.AchievedPoints);
+
+        return Ok();
+    }
 }

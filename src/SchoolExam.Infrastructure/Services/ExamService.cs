@@ -168,7 +168,7 @@ public class ExamService : IExamService
                 // add start and end marker to list such that they can be removed from the PDF file afterwards
                 matchedLinks.Add(startLink);
                 matchedLinks.Add(endLink);
-                var examTask = new ExamTask(Guid.NewGuid(), task.Title, task.MaxPoints, 1,
+                var examTask = new ExamTask(taskId, task.Title, task.MaxPoints, 1,
                     new ExamPosition(startLink.Page, startLink.Top), new ExamPosition(endLink.Page, endLink.Bottom));
                 _repository.Add(examTask);
                 exam.Tasks.Add(examTask);
