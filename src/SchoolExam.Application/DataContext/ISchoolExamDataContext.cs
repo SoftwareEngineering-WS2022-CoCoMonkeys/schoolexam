@@ -9,7 +9,7 @@ namespace SchoolExam.Application.DataContext;
 
 public interface ISchoolExamDataContext : IDataContext
 {
-    IQueryable<Course> Courses { get; }
+    IQueryable<Course> Courses { get; } 
     IQueryable<Exam> Exams { get; }
     IQueryable<ExamBooklet> ExamBooklets { get; }
     IQueryable<ExamBookletPage> ExamBookletPages { get; }

@@ -24,8 +24,4 @@
       <ProjectReference Include="..\SchoolExam.Infrastructure\SchoolExam.Infrastructure.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Models" />
-    </ItemGroup>
-
 </Project>
