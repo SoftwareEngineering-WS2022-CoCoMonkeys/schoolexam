@@ -1,3 +1,5 @@
+using SchoolExam.Application.TagLayout;
+
 namespace SchoolExam.Application.Pdf;
 
 public interface IPdfService
@@ -15,4 +17,5 @@ public interface IPdfService
     bool Compare(byte[] first, byte[] second);
     DateTime GetModificationDate(byte[] pdf);
     byte[] Protect(byte[] pdf, byte[] userPassword, byte[] ownerPassword);
+    byte[] CreateEmptyPdf(int pages, PageSize pageSize);
 }

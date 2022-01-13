@@ -9,6 +9,7 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Microsoft.Extensions.Logging;
 using SchoolExam.Application.Pdf;
+using PageSize = SchoolExam.Application.TagLayout.PageSize;
 
 namespace SchoolExam.Infrastructure.Pdf;
 
@@ -343,6 +344,25 @@ public class iText7PdfService : IPdfService
 
         var result = writeStream.ToArray();
 
+        return result;
+    }
+
+    public byte[] CreateEmptyPdf(int pages, PageSize pageSize)
+    {
+        using var stream = new MemoryStream();
+        var pdfWriter = new PdfWriter(stream);
+        var pdfDocument = new PdfDocument(pdfWriter);
+        var document = new Document(pdfDocument);
+
+        // set page size
+        pdfDocument.SetDefaultPageSize(iText.Kernel.Geom.PageSize.A4);
+        // add empty pages
+        for (int i = 1; i < pages; i++)
+        {
+            document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        }
+        document.Close();
+        var result = stream.ToArray();
         return result;
     }
 }

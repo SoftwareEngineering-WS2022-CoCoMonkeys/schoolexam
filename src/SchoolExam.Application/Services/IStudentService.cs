@@ -1,6 +1,8 @@
+using SchoolExam.Application.TagLayout;
+
 namespace SchoolExam.Application.Services;
 
 public interface IStudentService
 {
-    byte[] GetQrCodeByStudentId(Guid studentId);
+    byte[] GenerateQrCodeSheetForStudent<TLayout>(Guid studentId) where TLayout : ITagLayout<TLayout>, new();
 }
