@@ -39,7 +39,7 @@ public abstract class DerivedTypeJsonConverter<TBase> : JsonConverter<TBase>
 	/// <summary>
 	/// The name of the "type" property in JSON.
 	/// </summary>
-	private const string TypePropertyName = "$type";
+	private const string TypePropertyName = "type";
 
 	public override bool CanConvert(Type objectType)
 	{
