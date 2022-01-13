@@ -2,21 +2,21 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Authentication;
-using SchoolExam.Application.Repositories;
+using SchoolExam.Application.Services;
 
 namespace SchoolExam.Web.Authentication;
 
 public class AuthenticationController : ApiController<AuthenticationController>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
     private readonly ITokenGenerator _tokenGenerator;
     private readonly IPasswordHasher _passwordHasher;
 
     public AuthenticationController(ILogger<AuthenticationController> logger, IMapper mapper,
-        IUserRepository userRepository, ITokenGenerator tokenGenerator, IPasswordHasher passwordHasher) : base(logger,
+        IUserService userService, ITokenGenerator tokenGenerator, IPasswordHasher passwordHasher) : base(logger,
         mapper)
     {
-        _userRepository = userRepository;
+        _userService = userService;
         _tokenGenerator = tokenGenerator;
         _passwordHasher = passwordHasher;
     }
@@ -25,7 +25,7 @@ public class AuthenticationController : ApiController<AuthenticationController>
     [HttpPost("Authenticate")]
     public IActionResult Authenticate([FromBody] AuthenticateModel model)
     {
-        var user = _userRepository.GetByUsername(model.Username);
+        var user = _userService.GetByUsername(model.Username);
         if (user == null)
             return Forbid();
 

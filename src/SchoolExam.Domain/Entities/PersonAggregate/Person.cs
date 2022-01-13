@@ -1,5 +1,6 @@
 using SchoolExam.Domain.Base;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Entities.PersonAggregate;
 
@@ -20,7 +21,7 @@ public class Person : EntityBase<Guid>
     {
         FirstName = firstName;
         LastName = lastName;
-        DateOfBirth = dateOfBirth;
+        DateOfBirth = dateOfBirth.SetKindUtc();
         Address = address;
         EmailAddress = emailAddress;
     }

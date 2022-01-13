@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   school-exam-web:
+    container_name: school-exam-web
     build:
       context: ./
       dockerfile: Dockerfile
@@ -15,6 +16,7 @@ services:
         
   postgres:
     image: postgres
+    container_name: school-exam-postgres
     restart: always
     hostname: "postgres-develop"
     environment:

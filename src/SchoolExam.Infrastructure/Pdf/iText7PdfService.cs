@@ -129,12 +129,16 @@ public class iText7PdfService : IPdfService
         var count = pdfDocument.GetNumberOfPages();
         for (int pageNumber = 1; pageNumber <= count; pageNumber++)
         {
-            var page = pdfDocument.GetPage(count);
+            var page = pdfDocument.GetPage(pageNumber);
             var annotations = page.GetAnnotations();
             foreach (var annotation in annotations)
             {
                 var rectangle = annotation.GetRectangle();
-                var top = rectangle.GetAsNumber(3);
+                var top = rectangle.GetAsNumber(3).FloatValue();
+                var left = rectangle.GetAsNumber(0).FloatValue();
+                var right = rectangle.GetAsNumber(2).FloatValue();
+                var bottom = rectangle.GetAsNumber(1).FloatValue();
+                var width = right - left;
                 if (annotation is PdfLinkAnnotation linkAnnotation)
                 {
                     var action = linkAnnotation.GetAction();
@@ -142,7 +146,7 @@ public class iText7PdfService : IPdfService
                     if (actionType.Equals(PdfName.URI))
                     {
                         var uri = action.GetAsString(PdfName.URI);
-                        result.Add(new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, top.FloatValue()));
+                        result.Add(new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, left, top, bottom, width));
                     }
                 }
             }
@@ -165,12 +169,16 @@ public class iText7PdfService : IPdfService
         var count = pdfDocument.GetNumberOfPages();
         for (int pageNumber = 1; pageNumber <= count; pageNumber++)
         {
-            var page = pdfDocument.GetPage(count);
+            var page = pdfDocument.GetPage(pageNumber);
             var annotations = page.GetAnnotations();
             foreach (var annotation in annotations)
             {
                 var rectangle = annotation.GetRectangle();
-                var top = rectangle.GetAsNumber(3);
+                var top = rectangle.GetAsNumber(3).FloatValue();
+                var left = rectangle.GetAsNumber(0).FloatValue();
+                var right = rectangle.GetAsNumber(2).FloatValue();
+                var bottom = rectangle.GetAsNumber(1).FloatValue();
+                var width = right - left;
                 if (annotation is PdfLinkAnnotation linkAnnotation)
                 {
                     var action = linkAnnotation.GetAction();
@@ -179,7 +187,7 @@ public class iText7PdfService : IPdfService
                     {
                         var uri = action.GetAsString(PdfName.URI);
                         var parsedAnnotation =
-                            new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, top.FloatValue());
+                            new PdfUriLinkAnnotationInfo(uri.ToString(), pageNumber, left, top, bottom, width);
                         if (annotationsToRemoveSet.Contains(parsedAnnotation))
                         {
                             page.RemoveAnnotation(annotation);
@@ -204,19 +212,19 @@ public class iText7PdfService : IPdfService
         var pdfWriter = new PdfWriter(writeStream);
         var pdfDocument = new PdfDocument(pdfReader, pdfWriter);
         
-        var outline = pdfDocument.GetOutlines(false);
         // remove current outline elements
-        var children = outline.GetAllChildren();
-        foreach (var child in children)
-        {
-            child.RemoveOutline();
-        }
+        pdfDocument.GetOutlines(true).RemoveOutline();
 
-        foreach (var outlineElement in outlineElements)
+        var orderedOutlineElements =
+            outlineElements.OrderBy(x => x.DestinationPage).ThenByDescending(x => x.DestinationY);
+
+        var outline = pdfDocument.GetOutlines(true);
+        
+        foreach (var outlineElement in orderedOutlineElements)
         {
-            var newOutline = outline.AddOutline(outlineElement.Title);
+            var newOutlineElement = outline.AddOutline(outlineElement.Title);
             var page = pdfDocument.GetPage(outlineElement.DestinationPage);
-            newOutline.AddDestination(PdfExplicitDestination.CreateFitH(page, outlineElement.DestinationY));
+            newOutlineElement.AddDestination(PdfExplicitDestination.CreateFitH(page, outlineElement.DestinationY));
         }
         
         pdfDocument.Close();

@@ -4,18 +4,24 @@ public class PdfUriLinkAnnotationInfo
 {
     public string Uri { get; }
     public int Page { get;  }
-    public float Y { get; }
+    public float Left { get; }
+    public float Top { get; }
+    public float Bottom { get; }
+    public float Width { get; }
 
-    public PdfUriLinkAnnotationInfo(string uri, int page, float y)
+    public PdfUriLinkAnnotationInfo(string uri, int page, float left, float top, float bottom, float width)
     {
         Uri = uri;
         Page = page;
-        Y = y;
+        Left = left;
+        Top = top;
+        Bottom = bottom;
+        Width = width;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Uri, Page, Y);
+        return HashCode.Combine(Uri, Page, Left, Top, Bottom, Width);
     }
 
     public override bool Equals(object? obj)
@@ -29,6 +35,7 @@ public class PdfUriLinkAnnotationInfo
 
     protected bool Equals(PdfUriLinkAnnotationInfo other)
     {
-        return Uri.Equals(other.Uri) && Page.Equals(other.Page) && Y.Equals(other.Y);
+        return Uri.Equals(other.Uri) && Page.Equals(other.Page) && Left.Equals(other.Left) && Top.Equals(other.Top) &&
+               Width.Equals(other.Width) && Bottom.Equals(other.Bottom);
     }
 }

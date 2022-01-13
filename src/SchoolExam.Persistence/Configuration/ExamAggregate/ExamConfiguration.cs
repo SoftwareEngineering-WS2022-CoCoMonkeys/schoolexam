@@ -13,7 +13,7 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
         builder.HasKey(x => x.Id);
         builder.HasOne(x => x.GradingTable);
         builder.HasMany(x => x.Tasks);
-        builder.HasMany(x => x.Booklets);
+        builder.HasMany(x => x.Booklets).WithOne(x => x.Exam).HasForeignKey(x => x.ExamId);
         builder.HasOne(x => x.TaskPdfFile).WithOne().HasForeignKey<TaskPdfFile>(x => x.ExamId);
         builder.HasData(new Exam(SeedIds.ProjektmanagementExamId, "Projektmanagement",
             "Mündliche Leistungsfeststellung", new DateTime(2022, 4, 1).SetKindUtc(), SeedIds.BriggiteSchweinebauerId,

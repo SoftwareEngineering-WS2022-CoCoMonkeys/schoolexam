@@ -1,15 +1,15 @@
 ﻿using AutoMapper;
-using SchoolExam.Application.Repositories;
+using SchoolExam.Application.Services;
 
 namespace SchoolExam.Web.Controllers;
 
 public class UserController : ApiController<UserController>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
 
-    public UserController(ILogger<UserController> logger, IMapper mapper, IUserRepository userRepository) :
+    public UserController(ILogger<UserController> logger, IMapper mapper, IUserService userService) :
         base(logger, mapper)
     {
-        _userRepository = userRepository;
+        _userService = userService;
     }
 }

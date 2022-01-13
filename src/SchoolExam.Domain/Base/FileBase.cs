@@ -1,4 +1,5 @@
 using SchoolExam.Domain.Entities.UserAggregate;
+using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Base;
 
@@ -19,7 +20,7 @@ public abstract class FileBase : EntityBase<Guid>
     {
         Name = name;
         Size = size;
-        UploadedAt = uploadedAt;
+        UploadedAt = uploadedAt.SetKindUtc();
         UploaderId = uploaderId;
         Content = content;
     }

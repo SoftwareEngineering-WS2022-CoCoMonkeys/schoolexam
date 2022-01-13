@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,8 +19,11 @@ using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Authentication;
+using SchoolExam.Infrastructure.Extensions;
+using SchoolExam.Infrastructure.Specifications;
 using SchoolExam.IntegrationTests.Util;
 using SchoolExam.IntegrationTests.Util.Extensions;
+using SchoolExam.IntegrationTests.Util.Specifications;
 using SchoolExam.Web.Models.Exam;
 
 namespace SchoolExam.IntegrationTests.Web;
@@ -33,8 +36,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
     private Exam _exam = null!, _otherExam = null!;
     private User _user = null!;
     private TaskPdfFile _taskPdfFile = null!;
-    private ExamBooklet _booklet = null!;
-    private ExamBookletPage _unmatchedBookletPage = null!, _matchedBookletPage = null!, _otherBookletPage = null!;
+    private Booklet _booklet = null!;
+    private BookletPage _unmatchedBookletPage = null!, _matchedBookletPage = null!, _otherBookletPage = null!;
     private Submission _submission = null!;
 
     private SubmissionPage _unmatchedSubmissionPage = null!,
@@ -60,11 +63,11 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _taskPdfFile.ExamId = _exam.Id;
         _user = TestEntityFactory.Create<User, Guid>();
         _user.PersonId = _teacher.Id;
-        _booklet = TestEntityFactory.Create<ExamBooklet, Guid>();
+        _booklet = TestEntityFactory.Create<Booklet, Guid>();
         _booklet.ExamId = _exam.Id;
-        _matchedBookletPage = TestEntityFactory.Create<ExamBookletPage, Guid>();
+        _matchedBookletPage = TestEntityFactory.Create<BookletPage, Guid>();
         _matchedBookletPage.BookletId = _booklet.Id;
-        _unmatchedBookletPage = TestEntityFactory.Create<ExamBookletPage, Guid>();
+        _unmatchedBookletPage = TestEntityFactory.Create<BookletPage, Guid>();
         _unmatchedBookletPage.BookletId = _booklet.Id;
         _submission = TestEntityFactory.Create<Submission, Guid>();
         _submission.BookletId = _booklet.Id;
@@ -82,9 +85,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _otherExam.CourseId = _course.Id;
         var otherTaskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
         otherTaskPdfFile.ExamId = _otherExam.Id;
-        var otherBooklet = TestEntityFactory.Create<ExamBooklet, Guid>();
+        var otherBooklet = TestEntityFactory.Create<Booklet, Guid>();
         otherBooklet.ExamId = _otherExam.Id;
-        _otherBookletPage = TestEntityFactory.Create<ExamBookletPage, Guid>();
+        _otherBookletPage = TestEntityFactory.Create<BookletPage, Guid>();
         _otherBookletPage.BookletId = otherBooklet.Id;
         _otherSubmissionPage = TestEntityFactory.Create<SubmissionPage, Guid>();
         _otherSubmissionPage.ExamId = _otherExam.Id;
@@ -180,7 +183,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         response.EnsureSuccessStatusCode();
 
         using var context = GetSchoolExamDataContext();
-        var exams = context.Exams.Where(x => x.CourseId.Equals(_course.Id));
+        var exams = context.List(new ExamByCourseSpecification(_course.Id)).ToList();
         exams.Should().HaveCount(3);
 
         exams.Should().ContainEquivalentOf(newExam,
@@ -204,7 +207,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         response.EnsureSuccessStatusCode();
 
         using var context = GetSchoolExamDataContext();
-        var exams = context.Exams.Where(x => x.CourseId.Equals(_course.Id));
+        var exams = context.List(new ExamByCourseSpecification(_course.Id)).ToList();
         exams.Should().HaveCount(2);
 
         exams.Should().ContainEquivalentOf(updatedExam,
@@ -225,7 +228,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         response.EnsureSuccessStatusCode();
 
         using var context = GetSchoolExamDataContext();
-        var exams = context.Exams.Where(x => x.CourseId.Equals(_course.Id));
+        var exams = context.List(new ExamByCourseSpecification(_course.Id)).ToList();
         exams.Should().HaveCount(1);
 
         exams.Should().NotContainEquivalentOf(_exam,
@@ -248,7 +251,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         content.Should().Contain("An exam that already has been built must not be deleted.");
 
         using var context = GetSchoolExamDataContext();
-        var exams = context.Exams.Where(x => x.CourseId.Equals(_course.Id));
+        var exams = context.List(new ExamByCourseSpecification(_course.Id)).ToList();
         exams.Should().HaveCount(2);
     }
 
@@ -256,8 +259,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
     public async Task ExamController_UploadTaskPdf_ExamCreator_Success()
     {
         await ResetExam();
-        
-        var content = Encoding.UTF8.GetBytes("This is a test exam.");
+
+        var content = TestEntityFactory.Create<TaskPdfFile, Guid>().Content;
 
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
@@ -270,7 +273,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         response.EnsureSuccessStatusCode();
 
         using var context = GetSchoolExamDataContext();
-        var exam = context.Find<Exam, Guid>(_exam.Id, nameof(Exam.TaskPdfFile));
+        var exam = context.Find(new ExamWithTaskPdfFileByIdSpecification(_exam.Id));
         exam?.State.Should().Be(ExamState.BuildReady);
         var taskPdfFile = exam?.TaskPdfFile;
 
@@ -282,7 +285,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         {
             taskPdfFile!.Id.Should().NotBeEmpty();
             taskPdfFile.Should().BeEquivalentTo(expectedTaskPdfFile,
-                opts => opts.Excluding(x => x.Id).Excluding(x => x.UploadedAt));
+                opts => opts.Excluding(x => x.Id).Excluding(x => x.UploadedAt).Excluding(x => x.Size)
+                    .Excluding(x => x.Content));
         }
     }
     
@@ -324,7 +328,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         byte[] submissionPdf;
         using (var context = GetSchoolExamDataContext())
         {
-            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            var exam = context.Find(new ExamWithBookletsWithPagesAndPdfFileByIdSpecification(_exam.Id));
             exam?.State.Should().Be(ExamState.SubmissionReady);
             var booklets = exam?.Booklets;
             booklets.Should().HaveCount(2);
@@ -336,23 +340,25 @@ public class ExamControllerTest : ApiIntegrationTestBase
             submissionPdf = pdfService.Merge(pdfs ?? Array.Empty<byte[]>());
         }
 
-        var fileName = "test-submission.pdf";
-
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
-            new MultipartFormDataContent {{new ByteArrayContent(submissionPdf), "submissionPdfFormFile", fileName}});
+        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf)};
+
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
         response.EnsureSuccessStatusCode();
 
         using (var context = GetSchoolExamDataContext())
         {
-            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            var exam = context.Find<Exam, Guid>(_exam.Id);
             exam?.State.Should().Be(ExamState.InCorrection);
-            var pages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)).ToList();
+            var pages = context.List(new SubmissionPageByExamSpecification(_exam.Id)).ToList();
             pages.Should().HaveCount(4);
             pages.Select(x => x.SubmissionId.HasValue).Should().AllBeEquivalentTo(true);
+            var submissionIds = pages.Select(x => x.SubmissionId!.Value).ToHashSet();
+            var submissions = context.List(new SubmissionWithPdfFileByIdsSpecification(submissionIds));
+            submissions.Select(x => x.PdfFile != null).Should().AllBeEquivalentTo(true);
         }
     }
     
@@ -374,8 +380,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         byte[] submissionPdf;
         using (var context = GetSchoolExamDataContext())
         {
-            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
-            exam?.State.Should().Be(ExamState.SubmissionReady);
+            var exam = context.Find(new ExamWithBookletsWithPagesAndPdfFileByIdSpecification(_exam.Id))!;
+            exam.State.Should().Be(ExamState.SubmissionReady);
             var booklets = exam?.Booklets;
             booklets.Should().HaveCount(2);
             var pages = booklets?.SelectMany(x => x.Pages);
@@ -385,25 +391,27 @@ public class ExamControllerTest : ApiIntegrationTestBase
             var pdfs = booklets?.Select(x => x.PdfFile.Content).ToArray();
             submissionPdf = pdfService.Merge(pdfs?.Concat(pdfs).ToArray() ?? Array.Empty<byte[]>());
         }
-
-        var fileName = "test-submission.pdf";
-
+        
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+        
+        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf)};
 
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
-            new MultipartFormDataContent {{new ByteArrayContent(submissionPdf), "submissionPdfFormFile", fileName}});
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
         
         response.EnsureSuccessStatusCode();
 
         using (var context = GetSchoolExamDataContext())
         {
-            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            var exam = context.Find<Exam, Guid>(_exam.Id);
             exam?.State.Should().Be(ExamState.InCorrection);
-            var pages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)).ToList();
+            var pages = context.List(new SubmissionPageByExamSpecification(_exam.Id)).ToList();
             pages.Should().HaveCount(4);
             pages.Select(x => x.SubmissionId.HasValue).Should().AllBeEquivalentTo(true);
+            var submissionIds = pages.Select(x => x.SubmissionId!.Value).ToHashSet();
+            var submissions = context.List(new SubmissionWithPdfFileByIdsSpecification(submissionIds));
+            submissions.Select(x => x.PdfFile != null).Should().AllBeEquivalentTo(true);
         }
     }
 
@@ -452,7 +460,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         await ResetExam();
         using (var context = GetSchoolExamDataContext())
         {
-            var exam = context.Exams.Single(x => x.Id.Equals(_exam.Id));
+            var exam = context.Find(new ExamWithTaskPdfFileByIdSpecification(_exam.Id))!;
             context.Remove(exam.TaskPdfFile!);
             await context.SaveChangesAsync();
         }
@@ -479,26 +487,25 @@ public class ExamControllerTest : ApiIntegrationTestBase
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
+        
+        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(_booklet.PdfFile.Content)};
 
-        var fileName = "test-submission.pdf";
-
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
-            new MultipartFormDataContent
-                {{new ByteArrayContent(_booklet.PdfFile.Content), "submissionPdfFormFile", fileName}});
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
         response.EnsureSuccessStatusCode();
 
         using var context = GetSchoolExamDataContext();
-        var submissionPages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id)).ToList();
+        var submissionPages = context.List(new SubmissionPageByExamSpecification(_exam.Id)).ToList();
         submissionPages.Should().HaveCount(4);
         submissionPages.Count(x => x.SubmissionId.HasValue).Should().Be(1);
         submissionPages.Single(x => x.SubmissionId.HasValue).Id.Should().Be(_matchedSubmissionPage.Id);
 
-        var bookletPages = context.ExamBooklets.Where(x => x.ExamId.Equals(_exam.Id)).SelectMany(x => x.Pages);
+        var bookletPages = context.List(new BookletWithPagesByExamSpecification(_exam.Id)).SelectMany(x => x.Pages)
+            .ToList();
         bookletPages.Should().HaveCount(2);
         bookletPages.Count(x => x.SubmissionPage != null).Should().Be(1);
         bookletPages.Single(x => x.SubmissionPage != null).Id.Should().Be(_matchedBookletPage.Id);
-            
-        var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+
+        var exam = context.Find<Exam, Guid>(_exam.Id);
         exam?.State.Should().Be(ExamState.SubmissionReady);
     }
     
@@ -513,9 +520,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var submissionPdf = TestEntityFactory.Create<SubmissionPagePdfFile, Guid>();
 
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Match",
-            new MultipartFormDataContent
-                {{new ByteArrayContent(submissionPdf.Content), "submissionPdfFormFile", $"{submissionPdf.Name}.pdf"}});
+        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf.Content)};
+
+        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         
         var content = await response.Content.ReadAsStringAsync();
@@ -528,12 +535,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
     {
         using (var context = GetSchoolExamDataContext())
         {
-            foreach (var submission in context.Submissions)
+            foreach (var submission in context.List<Submission>())
             {
                 context.Remove(submission);
             }
 
-            foreach (var submissionPage in context.SubmissionPages)
+            foreach (var submissionPage in context.List<SubmissionPage>())
             {
                 context.Remove(submissionPage);
             }
@@ -549,7 +556,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         
         using (var context = GetSchoolExamDataContext())
         {
-            var exam = context.Exams.SingleOrDefault(x => x.Id == _exam.Id);
+            var exam = context.Find(new ExamWithBookletsByIdSpecification(_exam.Id));
             exam?.State.Should().Be(ExamState.BuildReady);
             var booklets = exam?.Booklets;
             booklets.Should().HaveCount(0);
@@ -643,9 +650,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
         response.EnsureSuccessStatusCode();
 
         using var context = GetSchoolExamDataContext();
-        var submissionPages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id));
+        var submissionPages = context.List(new SubmissionPageByExamSpecification(_exam.Id));
         submissionPages.Select(x => x.SubmissionId.HasValue).Should().AllBeEquivalentTo(true);
-        var exam = context.Exams.SingleOrDefault(x => x.Id.Equals(_exam.Id));
+        var exam = context.Find(new ExamWithBookletsWithPagesByIdSpecification(_exam.Id));
         exam?.State.Should().Be(ExamState.InCorrection);
         var bookletPages = exam?.Booklets.SelectMany(x => x.Pages);
         bookletPages?.Select(x => x.SubmissionPage != null).Should().AllBeEquivalentTo(true);
@@ -798,6 +805,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         {
             _matchedSubmissionPage.BookletPageId = null;
             _matchedSubmissionPage.SubmissionId = null;
+            _matchedBookletPage.SubmissionPage = null;
             context.Update(_matchedSubmissionPage);
             context.Remove(_submission);
             await context.SaveChangesAsync();
@@ -821,9 +829,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         using (var context = GetSchoolExamDataContext())
         {
-            var submissionPages = context.SubmissionPages.Where(x => x.ExamId.Equals(_exam.Id));
+            var submissionPages = context.List(new SubmissionPageByExamSpecification(_exam.Id));
             submissionPages.Count(x => x.SubmissionId.HasValue).Should().Be(1);
-            var exam = context.Exams.SingleOrDefault(x => x.Id.Equals(_exam.Id));
+            var exam = context.Find(new ExamWithBookletsWithPagesByIdSpecification(_exam.Id));
             exam?.State.Should().Be(ExamState.SubmissionReady);
             var bookletPages = exam?.Booklets.SelectMany(x => x.Pages);
             bookletPages?.Count(x => x.SubmissionPage != null).Should().Be(1);
@@ -833,22 +841,22 @@ public class ExamControllerTest : ApiIntegrationTestBase
     private async Task ResetExam()
     {
         using var context = GetSchoolExamDataContext();
-        foreach (var booklet in context.ExamBooklets)
+        foreach (var booklet in context.List<Booklet>())
         {
             context.Remove(booklet);
         }
 
-        foreach (var submissionPage in context.SubmissionPages)
+        foreach (var submissionPage in context.List<SubmissionPage>())
         {
             context.Remove(submissionPage);
         }
         
-        foreach (var submission in context.Submissions)
+        foreach (var submission in context.List<Submission>())
         {
             context.Remove(submission);
         }
 
-        var exam = context.Exams.Single(x => x.Id.Equals(_exam.Id));
+        var exam = context.Find<Exam, Guid>(_exam.Id)!;
         exam.State = ExamState.BuildReady;
         context.Update(exam);
         

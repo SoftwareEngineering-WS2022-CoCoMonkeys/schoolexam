@@ -1,6 +1,7 @@
 using SchoolExam.Domain.Base;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
 
@@ -10,7 +11,7 @@ public class Exam : EntityBase<Guid>
     public string Description { get; set; }
     public GradingTable? GradingTable { get; set; }
     public ICollection<ExamTask> Tasks { get; set; }
-    public ICollection<ExamBooklet> Booklets { get; set; }
+    public ICollection<Booklet> Booklets { get; set; }
     public DateTime Date { get; set; }
     public DateTime DueDate { get; set; }
     public Guid CourseId { get; set; }
@@ -27,13 +28,13 @@ public class Exam : EntityBase<Guid>
     {
         Title = title;
         Description = description;
-        Date = date;
+        Date = date.SetKindUtc();
         // due date of exam correction is 14 days after exam date
         DueDate = date.AddDays(14);
         CourseId = courseId;
         CreatorId = creatorId;
         Tasks = new List<ExamTask>();
-        Booklets = new List<ExamBooklet>();
+        Booklets = new List<Booklet>();
         State = ExamState.Planned;
     }
 
