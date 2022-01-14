@@ -1,6 +1,6 @@
 namespace SchoolExam.Web.Models.Exam;
 
-public class ExamTaskModel
+public class ExamTaskWriteModel
 {
     public Guid Id { get; set; }
     public string Title { get; set; }

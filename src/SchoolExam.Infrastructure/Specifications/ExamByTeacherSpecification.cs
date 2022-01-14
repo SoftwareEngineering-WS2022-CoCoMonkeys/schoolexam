@@ -9,8 +9,12 @@ public class ExamByTeacherSpecification : EntitySpecification<Exam>
 {
     public ExamByTeacherSpecification(Guid teacherId) : base(x => x.CreatorId.Equals(teacherId))
     {
-        AddInclude(x => x.Course);
-        AddInclude($"{nameof(Exam.Course)}.{nameof(Course.Students)}");
+        AddInclude(x => x.Participants);
+        AddInclude($"{nameof(Exam.Participants)}.{nameof(ExamCourse.Course)}");
+        AddInclude($"{nameof(Exam.Participants)}.{nameof(ExamCourse.Course)}.{nameof(Course.Students)}");
+        AddInclude(
+            $"{nameof(Exam.Participants)}.{nameof(ExamCourse.Course)}.{nameof(Course.Students)}.{nameof(CourseStudent.Student)}");
+        AddInclude($"{nameof(Exam.Participants)}.{nameof(ExamStudent.Student)}");
         AddInclude(x => x.Booklets);
         AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Submission)}");
         AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Submission)}.{nameof(Submission.Answers)}");

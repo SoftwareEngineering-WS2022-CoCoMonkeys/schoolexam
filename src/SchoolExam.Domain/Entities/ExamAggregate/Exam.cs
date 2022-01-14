@@ -1,5 +1,4 @@
 using SchoolExam.Domain.Base;
-using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Extensions;
 
@@ -14,27 +13,28 @@ public class Exam : EntityBase<Guid>
     public ICollection<Booklet> Booklets { get; set; }
     public DateTime Date { get; set; }
     public DateTime DueDate { get; set; }
-    public Guid CourseId { get; set; }
-    public Course Course { get; set; }
+    public ICollection<ExamParticipant> Participants { get; set; }
     public Guid CreatorId { get; set; }
     public TaskPdfFile? TaskPdfFile { get; set; }
     public ExamState State { get; set; }
+    public Topic Topic { get; set; }
 
     protected Exam(Guid id) : base(id)
     {
     }
 
-    public Exam(Guid id, string title, string description, DateTime date, Guid creatorId, Guid courseId) : this(id)
+    public Exam(Guid id, string title, string description, DateTime date, Guid creatorId, Topic topic) : this(id)
     {
         Title = title;
         Description = description;
         Date = date.SetKindUtc();
         // due date of exam correction is 14 days after exam date
         DueDate = date.AddDays(14);
-        CourseId = courseId;
         CreatorId = creatorId;
+        Topic = topic;
         Tasks = new List<ExamTask>();
         Booklets = new List<Booklet>();
+        Participants = new List<ExamParticipant>();
         State = ExamState.Planned;
     }
 

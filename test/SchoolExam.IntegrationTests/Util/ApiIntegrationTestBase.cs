@@ -98,12 +98,12 @@ public abstract class ApiIntegrationTestBase
         return context;
     }
 
-    protected ISchoolExamRepository GetSchoolExamDataContext()
+    protected ISchoolExamRepository GetSchoolExamRepository()
     {
         var context = GetSchoolExamDbContext();
-        var dataContext = new SchoolExamRepository(context);
+        var repository = new SchoolExamRepository(context);
 
-        return dataContext;
+        return repository;
     }
 
     protected void SetClaims(params Claim[] claims)

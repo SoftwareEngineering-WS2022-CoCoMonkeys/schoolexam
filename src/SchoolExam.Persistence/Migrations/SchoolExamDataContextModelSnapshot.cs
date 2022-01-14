@@ -177,9 +177,6 @@ namespace SchoolExam.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("CreatorId")
                         .HasColumnType("uuid");
 
@@ -205,8 +202,6 @@ namespace SchoolExam.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId");
-
                     b.HasIndex("CreatorId");
 
                     b.HasIndex("GradingTableId");
@@ -217,14 +212,26 @@ namespace SchoolExam.Persistence.Migrations
                         new
                         {
                             Id = new Guid("4c9be4e7-5507-46b2-9b9e-9746c931ee25"),
-                            CourseId = new Guid("e5fa7d18-dddd-4969-b22a-12f89ac0b18a"),
                             CreatorId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
                             Date = new DateTime(2022, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Mündliche Leistungsfeststellung",
+                            Description = "",
                             DueDate = new DateTime(2022, 4, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             State = 0,
-                            Title = "Projektmanagement"
+                            Title = ""
                         });
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamParticipant", b =>
+                {
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ParticipantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ExamId", "ParticipantId");
+
+                    b.ToTable("ExamParticipant");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamTask", b =>
@@ -238,9 +245,6 @@ namespace SchoolExam.Persistence.Migrations
 
                     b.Property<double>("MaxPoints")
                         .HasColumnType("double precision");
-
-                    b.Property<int>("Number")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -374,22 +378,41 @@ namespace SchoolExam.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<double>("AchievedPoints")
+                    b.Property<double?>("AchievedPoints")
                         .HasColumnType("double precision");
 
-                    b.Property<Guid>("ExamTaskId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("SubmissionId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("Id");
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid");
 
-                    b.HasIndex("ExamTaskId");
+                    b.HasKey("Id");
 
                     b.HasIndex("SubmissionId");
 
+                    b.HasIndex("TaskId");
+
                     b.ToTable("Answer", (string)null);
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.AnswerSegment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AnswerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnswerId");
+
+                    b.ToTable("AnswerSegment", (string)null);
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.Submission", b =>
@@ -488,6 +511,31 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasDiscriminator().HasValue("BookletPdfFile");
                 });
 
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamCourse", b =>
+                {
+                    b.HasBaseType("SchoolExam.Domain.Entities.ExamAggregate.ExamParticipant");
+
+                    b.HasIndex("ParticipantId");
+
+                    b.ToTable("ExamCourse", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            ExamId = new Guid("4c9be4e7-5507-46b2-9b9e-9746c931ee25"),
+                            ParticipantId = new Guid("e5fa7d18-dddd-4969-b22a-12f89ac0b18a")
+                        });
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamStudent", b =>
+                {
+                    b.HasBaseType("SchoolExam.Domain.Entities.ExamAggregate.ExamParticipant");
+
+                    b.HasIndex("ParticipantId");
+
+                    b.ToTable("ExamStudent", (string)null);
+                });
+
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.TaskPdfFile", b =>
                 {
                     b.HasBaseType("SchoolExam.Domain.Base.FileBase");
@@ -568,14 +616,14 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.CourseAggregate.Course", b =>
                 {
-                    b.OwnsOne("SchoolExam.Domain.ValueObjects.Subject", "Subject", b1 =>
+                    b.OwnsOne("SchoolExam.Domain.ValueObjects.Topic", "Topic", b1 =>
                         {
                             b1.Property<Guid>("CourseId")
                                 .HasColumnType("uuid");
 
                             b1.Property<string>("Name")
                                 .HasColumnType("text")
-                                .HasColumnName("Subject");
+                                .HasColumnName("Topic");
 
                             b1.HasKey("CourseId");
 
@@ -592,7 +640,7 @@ namespace SchoolExam.Persistence.Migrations
                                 });
                         });
 
-                    b.Navigation("Subject");
+                    b.Navigation("Topic");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.CourseAggregate.CourseStudent", b =>
@@ -603,13 +651,15 @@ namespace SchoolExam.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Student", null)
+                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Student", "Student")
                         .WithMany("Courses")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Course");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.CourseAggregate.CourseTeacher", b =>
@@ -675,12 +725,6 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Exam", b =>
                 {
-                    b.HasOne("SchoolExam.Domain.Entities.CourseAggregate.Course", "Course")
-                        .WithMany("Exams")
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Teacher", null)
                         .WithMany()
                         .HasForeignKey("CreatorId")
@@ -691,9 +735,44 @@ namespace SchoolExam.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("GradingTableId");
 
-                    b.Navigation("Course");
+                    b.OwnsOne("SchoolExam.Domain.ValueObjects.Topic", "Topic", b1 =>
+                        {
+                            b1.Property<Guid>("ExamId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("Topic");
+
+                            b1.HasKey("ExamId");
+
+                            b1.ToTable("Exam");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ExamId");
+
+                            b1.HasData(
+                                new
+                                {
+                                    ExamId = new Guid("4c9be4e7-5507-46b2-9b9e-9746c931ee25"),
+                                    Name = "Sozialwissenschaften"
+                                });
+                        });
 
                     b.Navigation("GradingTable");
+
+                    b.Navigation("Topic")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamParticipant", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", null)
+                        .WithMany("Participants")
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamTask", b =>
@@ -702,18 +781,18 @@ namespace SchoolExam.Persistence.Migrations
                         .WithMany("Tasks")
                         .HasForeignKey("ExamId");
 
-                    b.OwnsOne("SchoolExam.Domain.ValueObjects.ExamPosition", "Position", b1 =>
+                    b.OwnsOne("SchoolExam.Domain.ValueObjects.ExamPosition", "End", b1 =>
                         {
                             b1.Property<Guid>("ExamTaskId")
                                 .HasColumnType("uuid");
 
                             b1.Property<int>("Page")
                                 .HasColumnType("integer")
-                                .HasColumnName("Page");
+                                .HasColumnName("EndPage");
 
                             b1.Property<double>("Y")
                                 .HasColumnType("double precision")
-                                .HasColumnName("Y");
+                                .HasColumnName("EndY");
 
                             b1.HasKey("ExamTaskId");
 
@@ -723,7 +802,31 @@ namespace SchoolExam.Persistence.Migrations
                                 .HasForeignKey("ExamTaskId");
                         });
 
-                    b.Navigation("Position")
+                    b.OwnsOne("SchoolExam.Domain.ValueObjects.ExamPosition", "Start", b1 =>
+                        {
+                            b1.Property<Guid>("ExamTaskId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Page")
+                                .HasColumnType("integer")
+                                .HasColumnName("StartPage");
+
+                            b1.Property<double>("Y")
+                                .HasColumnType("double precision")
+                                .HasColumnName("StartY");
+
+                            b1.HasKey("ExamTaskId");
+
+                            b1.ToTable("ExamTask");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ExamTaskId");
+                        });
+
+                    b.Navigation("End")
+                        .IsRequired();
+
+                    b.Navigation("Start")
                         .IsRequired();
                 });
 
@@ -959,16 +1062,75 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.Answer", b =>
                 {
-                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.ExamTask", null)
-                        .WithMany()
-                        .HasForeignKey("ExamTaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("SchoolExam.Domain.Entities.SubmissionAggregate.Submission", null)
                         .WithMany("Answers")
                         .HasForeignKey("SubmissionId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.ExamTask", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Task");
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.AnswerSegment", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.SubmissionAggregate.Answer", null)
+                        .WithMany("Segments")
+                        .HasForeignKey("AnswerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("SchoolExam.Domain.ValueObjects.ExamPosition", "End", b1 =>
+                        {
+                            b1.Property<Guid>("AnswerSegmentId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Page")
+                                .HasColumnType("integer")
+                                .HasColumnName("EndPage");
+
+                            b1.Property<double>("Y")
+                                .HasColumnType("double precision")
+                                .HasColumnName("EndY");
+
+                            b1.HasKey("AnswerSegmentId");
+
+                            b1.ToTable("AnswerSegment");
+
+                            b1.WithOwner()
+                                .HasForeignKey("AnswerSegmentId");
+                        });
+
+                    b.OwnsOne("SchoolExam.Domain.ValueObjects.ExamPosition", "Start", b1 =>
+                        {
+                            b1.Property<Guid>("AnswerSegmentId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Page")
+                                .HasColumnType("integer")
+                                .HasColumnName("StartPage");
+
+                            b1.Property<double>("Y")
+                                .HasColumnType("double precision")
+                                .HasColumnName("StartY");
+
+                            b1.HasKey("AnswerSegmentId");
+
+                            b1.ToTable("AnswerSegment");
+
+                            b1.WithOwner()
+                                .HasForeignKey("AnswerSegmentId");
+                        });
+
+                    b.Navigation("End")
+                        .IsRequired();
+
+                    b.Navigation("Start")
                         .IsRequired();
                 });
 
@@ -1073,6 +1235,40 @@ namespace SchoolExam.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamCourse", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.CourseAggregate.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("ParticipantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.ExamParticipant", null)
+                        .WithOne()
+                        .HasForeignKey("SchoolExam.Domain.Entities.ExamAggregate.ExamCourse", "ExamId", "ParticipantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamStudent", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("ParticipantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.ExamParticipant", null)
+                        .WithOne()
+                        .HasForeignKey("SchoolExam.Domain.Entities.ExamAggregate.ExamStudent", "ExamId", "ParticipantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.TaskPdfFile", b =>
                 {
                     b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", null)
@@ -1136,8 +1332,6 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.CourseAggregate.Course", b =>
                 {
-                    b.Navigation("Exams");
-
                     b.Navigation("Students");
 
                     b.Navigation("Teachers");
@@ -1162,6 +1356,8 @@ namespace SchoolExam.Persistence.Migrations
                 {
                     b.Navigation("Booklets");
 
+                    b.Navigation("Participants");
+
                     b.Navigation("TaskPdfFile");
 
                     b.Navigation("Tasks");
@@ -1170,6 +1366,11 @@ namespace SchoolExam.Persistence.Migrations
             modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.School", b =>
                 {
                     b.Navigation("Teachers");
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.Answer", b =>
+                {
+                    b.Navigation("Segments");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.Submission", b =>

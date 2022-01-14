@@ -19,6 +19,6 @@ public class QRCoderQrCodeGenerator : IQrCodeGenerator
         var data = Encoding.ASCII.GetBytes(message);
         var qrCodeData = _qrCodeGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.H);
         var pngByteQrCode = new PngByteQRCode(qrCodeData);
-        return pngByteQrCode.GetGraphic(_pixelsPerModule);
+        return pngByteQrCode.GetGraphic(_pixelsPerModule, false);
     }
 }

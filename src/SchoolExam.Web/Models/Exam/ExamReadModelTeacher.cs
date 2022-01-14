@@ -5,11 +5,12 @@ namespace SchoolExam.Web.Models.Exam;
 public class ExamReadModelTeacher
 {
     public Guid Id { get; set; }
-    public ExamState State { get; set; }
+    public ExamState Status { get; set; }
     public string Title { get; set; }
-    public DateTime DueDate { get; set; }
     public DateTime Date { get; set; }
-    public string Subject { get; set; }
-    public int ParticipantCount { get; set; }
-    public double? CorrectionProgress { get; set; }
+    public DateTime DueDate { get; set; }
+    public string Topic { get; set; }
+    public double? Quota { get; set; }
+    public IEnumerable<ExamParticipantReadModel> Participants { get; set; }
+    public IEnumerable<ExamTaskReadModel> Tasks { get; set; }
 }

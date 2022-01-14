@@ -1,14 +1,19 @@
 using iText.IO.Image;
+using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Annot;
+using iText.Kernel.Pdf.Canvas;
 using iText.Kernel.Pdf.Canvas.Parser;
 using iText.Kernel.Pdf.Navigation;
 using iText.Kernel.Utils;
 using iText.Layout;
+using iText.Layout.Borders;
 using iText.Layout.Element;
+using iText.Layout.Layout;
 using iText.Layout.Properties;
 using Microsoft.Extensions.Logging;
 using SchoolExam.Application.Pdf;
+using PageSize = SchoolExam.Application.TagLayout.PageSize;
 
 namespace SchoolExam.Infrastructure.Pdf;
 
@@ -70,7 +75,8 @@ public class iText7PdfService : IPdfService
             var div = new Div().SetPageNumber(text.Page).SetWidth(text.Width).SetHeight(text.Height)
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE).SetFixedPosition(text.Left, text.Bottom, text.Width);
 
-            var paragraph = new Paragraph(text.Text);
+            var paragraph = new Paragraph(text.Text).SetFontSize(text.FontSize).SetTextAlignment(TextAlignment.CENTER)
+                .SetMargin(0);
             div.Add(paragraph);
 
             document.Add(div);
@@ -80,6 +86,43 @@ public class iText7PdfService : IPdfService
         var result = writeStream.ToArray();
 
         return result;
+    }
+
+    public float GetMaximumFittingFontSize(string text, float width, float height)
+    {
+        var stream = new MemoryStream();
+        var pdfWriter = new PdfWriter(stream);
+        var pdfDocument = new PdfDocument(pdfWriter);
+
+        var lineTextRectangle = new Rectangle(width, height);
+        var lineText = new Text(text);
+        var lineDiv = new Div().SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+        var lineParagraph = new Paragraph().Add(lineText).SetTextAlignment(TextAlignment.CENTER)
+            .SetMargin(0);
+        lineDiv.Add(lineParagraph);
+
+        float fontSizeL = 1;
+        float fontSizeR = 20;
+
+        var canvas = new Canvas(new PdfCanvas(pdfDocument.AddNewPage()), lineTextRectangle);
+        while (Math.Abs(fontSizeL - fontSizeR) > 1e-1)
+        {
+            float fontSizeCurrent = (fontSizeL + fontSizeR) / 2;
+            lineDiv.SetFontSize(fontSizeCurrent);
+            var renderer = lineDiv.CreateRendererSubTree().SetParent(canvas.GetRenderer());
+            var context = new LayoutContext(new LayoutArea(1, lineTextRectangle));
+            if (renderer.Layout(context).GetStatus() == LayoutResult.FULL)
+            {
+                fontSizeL = fontSizeCurrent;
+            }
+            else
+            {
+                fontSizeR = fontSizeCurrent;
+            }
+        }
+
+        return fontSizeL;
     }
 
     public IEnumerable<PdfImageParseInfo> ParseImages(byte[] pdf)
@@ -151,6 +194,7 @@ public class iText7PdfService : IPdfService
                 }
             }
         }
+
         pdfDocument.Close();
 
         return result;
@@ -165,7 +209,7 @@ public class iText7PdfService : IPdfService
         var pdfDocument = new PdfDocument(pdfReader, pdfWriter);
 
         var annotationsToRemoveSet = annotationsToRemove.ToHashSet();
-        
+
         var count = pdfDocument.GetNumberOfPages();
         for (int pageNumber = 1; pageNumber <= count; pageNumber++)
         {
@@ -196,7 +240,7 @@ public class iText7PdfService : IPdfService
                 }
             }
         }
-        
+
         pdfDocument.Close();
 
         var result = writeStream.ToArray();
@@ -211,7 +255,7 @@ public class iText7PdfService : IPdfService
         var pdfReader = new PdfReader(readStream);
         var pdfWriter = new PdfWriter(writeStream);
         var pdfDocument = new PdfDocument(pdfReader, pdfWriter);
-        
+
         // remove current outline elements
         pdfDocument.GetOutlines(true).RemoveOutline();
 
@@ -219,14 +263,14 @@ public class iText7PdfService : IPdfService
             outlineElements.OrderBy(x => x.DestinationPage).ThenByDescending(x => x.DestinationY);
 
         var outline = pdfDocument.GetOutlines(true);
-        
+
         foreach (var outlineElement in orderedOutlineElements)
         {
             var newOutlineElement = outline.AddOutline(outlineElement.Title);
             var page = pdfDocument.GetPage(outlineElement.DestinationPage);
             newOutlineElement.AddDestination(PdfExplicitDestination.CreateFitH(page, outlineElement.DestinationY));
         }
-        
+
         pdfDocument.Close();
 
         var result = writeStream.ToArray();
@@ -343,6 +387,26 @@ public class iText7PdfService : IPdfService
 
         var result = writeStream.ToArray();
 
+        return result;
+    }
+
+    public byte[] CreateEmptyPdf(int pages, PageSize pageSize)
+    {
+        using var stream = new MemoryStream();
+        var pdfWriter = new PdfWriter(stream);
+        var pdfDocument = new PdfDocument(pdfWriter);
+        var document = new Document(pdfDocument);
+
+        // set page size
+        pdfDocument.SetDefaultPageSize(iText.Kernel.Geom.PageSize.A4);
+        // add empty pages
+        for (int i = 1; i < pages; i++)
+        {
+            document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        }
+
+        document.Close();
+        var result = stream.ToArray();
         return result;
     }
 }

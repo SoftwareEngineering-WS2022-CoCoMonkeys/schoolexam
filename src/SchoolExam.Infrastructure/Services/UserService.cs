@@ -10,22 +10,22 @@ namespace SchoolExam.Infrastructure.Services;
 
 public class UserService : IUserService
 {
-    private readonly ISchoolExamRepository _context;
+    private readonly ISchoolExamRepository _repository;
     private readonly IPasswordHasher _passwordHasher;
 
-    public UserService(ISchoolExamRepository context, IPasswordHasher passwordHasher)
+    public UserService(ISchoolExamRepository repository, IPasswordHasher passwordHasher)
     {
-        _context = context;
+        _repository = repository;
         _passwordHasher = passwordHasher;
     }
 
     public User? GetById(Guid id)
     {
-        return _context.Find(new UserByUserIdSpecification(id));
+        return _repository.Find(new UserByUserIdSpecification(id));
     }
     public User? GetByUsername(string username)
     {
-        return _context.Find(new UserByUserNameSpecification(username));
+        return _repository.Find(new UserByUserNameSpecification(username));
     }
 
     public async Task Create(string username, string password, Role role, Guid? personId)
@@ -34,8 +34,8 @@ public class UserService : IUserService
         
         var user = new User(userId, username,_passwordHasher.HashPassword(password), role, personId);
 
-        _context.Add(user);
-        await _context.SaveChangesAsync();
+        _repository.Add(user);
+        await _repository.SaveChangesAsync();
     }
 
     public async Task Update( string username, string password, Role role, Guid? personId)
@@ -46,24 +46,23 @@ public class UserService : IUserService
         user.Password = _passwordHasher.HashPassword(password);
         user.Role = role;
         user.PersonId = personId;
-        await _context.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
     }
 
     public async Task Delete(String username)
     {
         var user = EnsureUserExists(new UserByUserNameSpecification(username));
-        _context.Remove(user);
-        await _context.SaveChangesAsync();
+        _repository.Remove(user);
+        await _repository.SaveChangesAsync();
     }
     
     private User EnsureUserExists(EntitySpecification<User> spec)
     {
-        var user = _context.Find(spec);
+        var user = _repository.Find(spec);
         if (user == null)
         {
             throw new ArgumentException("User does not exist");
         }
-
         return user;
     }
 }

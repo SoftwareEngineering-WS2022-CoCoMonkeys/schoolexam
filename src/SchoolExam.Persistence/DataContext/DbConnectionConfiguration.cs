@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using SchoolExam.Persistence.Base;
 
 namespace SchoolExam.Persistence.DataContext;

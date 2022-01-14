@@ -1,10 +1,10 @@
 namespace SchoolExam.Domain.ValueObjects;
 
-public class Subject
+public class Topic
 {
     public string Name { get; }
 
-    public Subject(string name)
+    public Topic(string name)
     {
         Name = name;
     }

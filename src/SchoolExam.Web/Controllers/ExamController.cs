@@ -29,12 +29,12 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpPost]
-    [Route($"Create/{{{RouteParameterNames.CourseIdParameterName}}}")]
-    [Authorize(PolicyNames.CourseTeacherPolicyName)]
-    public async Task<IActionResult> Create(Guid courseId, [FromBody] ExamWriteModel examWriteModel)
+    [Route($"Create")]
+    [Authorize(Roles = Role.TeacherName)]
+    public async Task<IActionResult> Create([FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Create(examWriteModel.Title, examWriteModel.Description, examWriteModel.Date, courseId,
-            GetPersonId()!.Value);
+        await _examService.Create(examWriteModel.Title, examWriteModel.Description, examWriteModel.Date,
+            GetPersonId()!.Value, examWriteModel.Topic);
         return Ok();
     }
 
@@ -73,11 +73,11 @@ public class ExamController : ApiController<ExamController>
     [HttpPost]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Build")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> Build(Guid examId, [FromBody] BuildExamModel buildExamModel)
+    public async Task<BuildResultModel> Build(Guid examId)
     {
-        await _examService.Build(examId, buildExamModel.Count, GetUserId()!.Value);
-        var result = _examService.GetConcatenatedBookletPdfFile(examId);
-        return File(result, MediaTypeNames.Application.Pdf);
+        var count = await _examService.Build(examId, GetUserId()!.Value);
+        var pdf = _examService.GetConcatenatedBookletPdfFile(examId);
+        return new BuildResultModel {Count = count, PdfFile = Convert.ToBase64String(pdf)};
     }
 
     [HttpPost]
@@ -93,12 +93,12 @@ public class ExamController : ApiController<ExamController>
     [HttpPost]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Rebuild")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> Rebuild(Guid examId, [FromBody] BuildExamModel buildExamModel)
+    public async Task<BuildResultModel> Rebuild(Guid examId)
     {
         await _examService.Clean(examId);
-        await _examService.Build(examId, buildExamModel.Count, GetUserId()!.Value);
-        var result = _examService.GetConcatenatedBookletPdfFile(examId);
-        return File(result, MediaTypeNames.Application.Pdf);
+        var count = await _examService.Build(examId, GetUserId()!.Value);
+        var pdf = _examService.GetConcatenatedBookletPdfFile(examId);
+        return new BuildResultModel {Count = count, PdfFile = Convert.ToBase64String(pdf)};
     }
 
     [HttpPost]

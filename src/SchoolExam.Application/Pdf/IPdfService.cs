@@ -1,3 +1,5 @@
+using SchoolExam.Application.TagLayout;
+
 namespace SchoolExam.Application.Pdf;
 
 public interface IPdfService
@@ -5,6 +7,7 @@ public interface IPdfService
     int GetNumberOfPages(byte[] pdf);
     byte[] RenderImages(byte[] pdf, params PdfImageRenderInfo[] images);
     byte[] RenderTexts(byte[] pdf, params PdfTextRenderInfo[] texts);
+    float GetMaximumFittingFontSize(string text, float width, float height);
     IEnumerable<PdfImageParseInfo> ParseImages(byte[] pdf);
     IEnumerable<PdfUriLinkAnnotationInfo> GetUriLinkAnnotations(byte[] pdf);
     byte[] RemoveUriLinkAnnotations(byte[] pdf, params PdfUriLinkAnnotationInfo[] annotationsToRemove);
@@ -15,4 +18,5 @@ public interface IPdfService
     bool Compare(byte[] first, byte[] second);
     DateTime GetModificationDate(byte[] pdf);
     byte[] Protect(byte[] pdf, byte[] userPassword, byte[] ownerPassword);
+    byte[] CreateEmptyPdf(int pages, PageSize pageSize);
 }

@@ -8,12 +8,17 @@ namespace SchoolExam.Persistence.Extensions;
 public static class ExamPositionExtensions
 {
     public static EntityTypeBuilder<TEntity> OwnsExamPosition<TEntity>(this EntityTypeBuilder<TEntity> builder,
-        Expression<Func<TEntity, ExamPosition?>> navigationExpression) where TEntity : class
+        Expression<Func<TEntity, ExamPosition?>> navigationExpressionStart,
+        Expression<Func<TEntity, ExamPosition?>> navigationExpressionEnd) where TEntity : class
     {
-        return builder.OwnsOne(navigationExpression, x =>
+        return builder.OwnsOne(navigationExpressionStart, x =>
         {
-            x.Property(y => y.Page).HasColumnName("Page");
-            x.Property(y => y.Y).HasColumnName("Y");
+            x.Property(y => y.Page).HasColumnName("StartPage");
+            x.Property(y => y.Y).HasColumnName("StartY");
+        }).OwnsOne(navigationExpressionEnd, x =>
+        {
+            x.Property(y => y.Page).HasColumnName("EndPage");
+            x.Property(y => y.Y).HasColumnName("EndY");
         });
     }
 }
