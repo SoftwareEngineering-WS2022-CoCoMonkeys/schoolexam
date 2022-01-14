@@ -128,6 +128,7 @@ builder.Services.AddTransient<IStudentService, StudentService>();
 builder.Services.AddTransient<IExamService, ExamService>();
 builder.Services.AddTransient<ISubmissionService, SubmissionService>();
 builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<IPersonService, PersonService>();
 builder.Services.AddScoped<ISchoolExamRepositoryInitService, SchoolExamRepositoryInitService>();
 
 var app = builder.Build();
