@@ -166,7 +166,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var expectedExam1 = new ExamReadModelTeacher
         {
-            Id = _exam.Id, Title = _exam.Title, Date = _exam.Date, Status = _exam.State, Topic = _exam.Topic.Name,
+            Id = _exam.Id, Title = _exam.Title, Date = _exam.Date, Status = _exam.State.ToString(), Topic = _exam.Topic.Name,
             Quota = null, DueDate = _exam.DueDate, Tasks = new List<ExamTaskReadModel>(), Participants =
                 new List<ExamParticipantReadModel>
                 {
@@ -183,7 +183,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         };
         var expectedExam2 = new ExamReadModelTeacher
         {
-            Id = _otherExam.Id, Title = _otherExam.Title, Date = _otherExam.Date, Status = _otherExam.State,
+            Id = _otherExam.Id, Title = _otherExam.Title, Date = _otherExam.Date, Status = _otherExam.State.ToString(),
             Topic = _otherExam.Topic.Name, Quota = null, DueDate = _otherExam.DueDate,
             Tasks = new List<ExamTaskReadModel>(),
             Participants = new List<ExamParticipantReadModel>
