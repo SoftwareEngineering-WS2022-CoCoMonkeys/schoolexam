@@ -21,7 +21,7 @@ public class PersonController : ApiController<PersonController>
 
     [HttpGet]
     [Route($"{{{RouteParameterNames.PersonIdParameterName}}}")]
-    [Authorize(PolicyNames.StudentOrTeachesStudentPolicyName)]
+    [Authorize]
     public PersonReadModelBase GetPersonById(Guid id)
     {
         var person = _personService.GetById(id);
