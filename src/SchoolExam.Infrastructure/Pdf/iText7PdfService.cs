@@ -75,7 +75,8 @@ public class iText7PdfService : IPdfService
             var div = new Div().SetPageNumber(text.Page).SetWidth(text.Width).SetHeight(text.Height)
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE).SetFixedPosition(text.Left, text.Bottom, text.Width);
 
-            var paragraph = new Paragraph(text.Text).SetFontSize(text.FontSize).SetTextAlignment(TextAlignment.CENTER)
+            var fontSize = GetMaximumFittingFontSize(pdfDocument, text.Text, text.Width, text.Height);
+            var paragraph = new Paragraph(text.Text).SetFontSize(fontSize).SetTextAlignment(TextAlignment.CENTER)
                 .SetMargin(0);
             div.Add(paragraph);
 
@@ -88,12 +89,8 @@ public class iText7PdfService : IPdfService
         return result;
     }
 
-    public float GetMaximumFittingFontSize(string text, float width, float height)
+    private float GetMaximumFittingFontSize(PdfDocument pdfDocument, string text, float width, float height)
     {
-        var stream = new MemoryStream();
-        var pdfWriter = new PdfWriter(stream);
-        var pdfDocument = new PdfDocument(pdfWriter);
-
         var lineTextRectangle = new Rectangle(width, height);
         var lineText = new Text(text);
         var lineDiv = new Div().SetVerticalAlignment(VerticalAlignment.MIDDLE);
@@ -104,8 +101,8 @@ public class iText7PdfService : IPdfService
 
         float fontSizeL = 1;
         float fontSizeR = 20;
-
-        var canvas = new Canvas(new PdfCanvas(pdfDocument.AddNewPage()), lineTextRectangle);
+        
+        var canvas = new Canvas(new PdfCanvas(pdfDocument.GetPage(1)), lineTextRectangle);
         while (Math.Abs(fontSizeL - fontSizeR) > 1e-1)
         {
             float fontSizeCurrent = (fontSizeL + fontSizeR) / 2;

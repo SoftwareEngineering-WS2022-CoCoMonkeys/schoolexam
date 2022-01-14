@@ -6,7 +6,9 @@ using SchoolExam.Application.RandomGenerator;
 using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
+using SchoolExam.Application.TagLayout;
 using SchoolExam.Domain.Entities.ExamAggregate;
+using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.Extensions;
 using SchoolExam.Domain.ValueObjects;
@@ -260,6 +262,51 @@ public class ExamService : IExamService
         return count;
     }
 
+    public byte[] GetParticipantQrCodePdf<TLayout>(Guid examId) where TLayout : ITagLayout<TLayout>, new()
+    {
+        EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+
+        var students = GetStudentsByExam(examId).ToArray();
+
+        var layout = new TLayout();
+        var elements = layout.GetElements().ToArray();
+        
+        var textHeight = PdfUnitConverter.ConvertMmToPoint(5);
+        // width and height are always equal for a QR code
+        var qrCodeSize = Math.Min(layout.TagSize.Width, layout.TagSize.Height - textHeight - layout.Padding) -
+                         2 * layout.Padding;
+        var qrCodeLeft = (layout.TagSize.Width - qrCodeSize) / 2;
+        var qrCodeBottom = (layout.TagSize.Height - qrCodeSize - layout.Padding - textHeight) / 2 + layout.Padding +
+                           textHeight;
+        
+        var images = new List<PdfImageRenderInfo>();
+        var texts = new List<PdfTextRenderInfo>();
+        for (int i = 0; i < students.Length; i++)
+        {
+            var student = students[i];
+            var qrCode = _qrCodeGenerator.GeneratePngQrCode(student.QrCode.Data);
+            var page = i / elements.Length + 1;
+            
+            var element = elements[i % elements.Length];
+            var left = element.Left + qrCodeLeft;
+            var bottom = layout.PageSize.Height - element.Top - layout.TagSize.Height + qrCodeBottom;
+            images.Add(new PdfImageRenderInfo(page, left, bottom, qrCodeSize, qrCode));
+            
+            var studentName = $"{student.FirstName} {student.LastName}";
+            var leftText = element.Left + layout.Padding;
+            var bottomText = layout.PageSize.Height - element.Top - layout.TagSize.Height + layout.Padding;
+            var widthText = layout.TagSize.Width - 2 * layout.Padding;
+            var heightText = textHeight;
+            texts.Add(new PdfTextRenderInfo(studentName, page, leftText, bottomText, widthText, heightText));
+        }
+
+        var pdf = _pdfService.CreateEmptyPdf(1, layout.PageSize);
+        var pdfWithQrCodes =  _pdfService.RenderImages(pdf, images.ToArray());
+        var pdfWithTexts = _pdfService.RenderTexts(pdfWithQrCodes, texts.ToArray());
+
+        return pdfWithTexts;
+    }
+
     private async Task Clean(Guid examId)
     {
         var exam = EnsureExamExists(new ExamWithBookletsByIdSpecification(examId));
@@ -312,11 +359,8 @@ public class ExamService : IExamService
             .ToDictionary(x => x.BookletId, x => x);
 
         // get participating students
-        var examWithStudents = _repository.Find(new ExamWithParticipantsById(examId))!;
-        var studentIds = examWithStudents.Participants.OfType<ExamStudent>().Select(x => x.Student)
-            .Union(examWithStudents.Participants.OfType<ExamCourse>()
-                .SelectMany(x => x.Course.Students.Select(s => s.Student)));
-        var students = studentIds.ToDictionary(x => x.QrCode.Data, x => x);
+        var students = GetStudentsByExam(examId);
+        var studentsDict = students.ToDictionary(x => x.QrCode.Data, x => x);
 
         var updatedSubmissionIds = new List<Guid>();
         for (int page = 1; page <= pages.Count; page++)
@@ -327,12 +371,12 @@ public class ExamService : IExamService
             var images = _pdfService.ParseImages(pagePdf).ToList();
             var qrCodes = images.SelectMany(x => _qrCodeReader.ReadQrCodes(x.Data, x.RotationMatrix)).ToList();
             // find student identifier QR code
-            var matchedStudentQrCode = qrCodes.SingleOrDefault(qrCode => students.ContainsKey(qrCode.Data))?.Data;
+            var matchedStudentQrCode = qrCodes.SingleOrDefault(qrCode => studentsDict.ContainsKey(qrCode.Data))?.Data;
             var studentQrCode = matchedStudentQrCode != null
                 ? new SchoolExam.Domain.ValueObjects.QrCode(matchedStudentQrCode)
                 : null;
             // find student with identifier QR code
-            var student = matchedStudentQrCode != null ? students[matchedStudentQrCode] : null;
+            var student = matchedStudentQrCode != null ? studentsDict[matchedStudentQrCode] : null;
 
             var submissionPageId = Guid.NewGuid();
             var submissionPagePdf = new SubmissionPagePdfFile(Guid.NewGuid(), $"{page}.pdf", pagePdf.LongLength,
@@ -574,5 +618,15 @@ public class ExamService : IExamService
 
         // assign student to submission
         submission.StudentId ??= studentId;
+    }
+
+    private IEnumerable<Student> GetStudentsByExam(Guid examId)
+    {
+        var examWithStudents = _repository.Find(new ExamWithParticipantsById(examId))!;
+        var students = examWithStudents.Participants.OfType<ExamStudent>().Select(x => x.Student)
+            .Union(examWithStudents.Participants.OfType<ExamCourse>()
+                .SelectMany(x => x.Course.Students.Select(s => s.Student)));
+
+        return students;
     }
 }

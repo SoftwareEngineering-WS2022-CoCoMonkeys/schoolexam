@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Services;
+using SchoolExam.Application.TagLayout;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Models.Exam;
@@ -76,7 +77,9 @@ public class ExamController : ApiController<ExamController>
     {
         var count = await _examService.Build(examId, GetUserId()!.Value);
         var pdf = _examService.GetConcatenatedBookletPdfFile(examId);
-        return new BuildResultModel {Count = count, PdfFile = Convert.ToBase64String(pdf)};
+        var qrCodePdf = _examService.GetParticipantQrCodePdf<AveryZweckform3475200>(examId);
+        return new BuildResultModel
+            {Count = count, PdfFile = Convert.ToBase64String(pdf), QrCodePdfFile = Convert.ToBase64String(qrCodePdf)};
     }
 
     [HttpPost]
