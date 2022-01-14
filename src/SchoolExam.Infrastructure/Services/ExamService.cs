@@ -191,14 +191,16 @@ public class ExamService : IExamService
         await _repository.SaveChangesAsync();
     }
 
-    public async Task Build(Guid examId, int count, Guid userId)
+    public async Task<int> Build(Guid examId, Guid userId)
     {
+        var exam = EnsureExamExists(new ExamWithTaskPdfFileAndParticipantsById(examId));
+        var count = exam.Participants.Count(x => x is ExamStudent) +
+                    exam.Participants.OfType<ExamCourse>().Sum(x => x.Course.Students.Count);
         if (count < 1)
         {
             throw new ArgumentException("At least one exam booklet must be built.");
         }
-
-        var exam = EnsureExamExists(new ExamWithTaskPdfFileByIdSpecification(examId));
+        
         if (exam.State.HasBeenBuilt())
         {
             throw new InvalidOperationException("Exam has already been built.");
@@ -252,6 +254,8 @@ public class ExamService : IExamService
         _repository.Update(exam);
 
         await _repository.SaveChangesAsync();
+
+        return count;
     }
 
     public async Task Clean(Guid examId)

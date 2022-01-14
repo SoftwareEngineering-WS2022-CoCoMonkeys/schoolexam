@@ -353,16 +353,17 @@ public class ExamControllerTest : ApiIntegrationTestBase
     public async Task ExamController_BuildAndMatch_ExamCreator_Success()
     {
         await ResetExam();
-        int count = 2;
 
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var buildExamModel = new BuildExamModel {Count = count};
-
-        var buildResponse = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/Build", buildExamModel);
+        var buildResponse = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
         buildResponse.EnsureSuccessStatusCode();
+        var buildContent = await buildResponse.Content.ReadAsStringAsync();
+        var buildResult = JsonConvert.DeserializeObject<BuildResultModel>(buildContent);
+
+        buildResult.Count.Should().Be(2);
 
         byte[] submissionPdf;
         using (var repository = GetSchoolExamRepository())
@@ -405,16 +406,17 @@ public class ExamControllerTest : ApiIntegrationTestBase
     public async Task ExamController_BuildAndMatch_ConcatSameSubmissionPdfTwice_Success()
     {
         await ResetExam();
-        int count = 2;
 
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var buildExamModel = new BuildExamModel {Count = count};
-
-        var buildResponse = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/Build", buildExamModel);
+        var buildResponse = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
         buildResponse.EnsureSuccessStatusCode();
+        var buildContent = await buildResponse.Content.ReadAsStringAsync();
+        var buildResult = JsonConvert.DeserializeObject<BuildResultModel>(buildContent);
+
+        buildResult.Count.Should().Be(2);
 
         byte[] submissionPdf;
         using (var repository = GetSchoolExamRepository())
@@ -458,15 +460,30 @@ public class ExamControllerTest : ApiIntegrationTestBase
     public async Task ExamController_Build_ExamCountNotPositive_ThrowsException()
     {
         await ResetExam();
-        int count = 0;
+        
+        // remove all participants
+        using (var repository = GetSchoolExamRepository())
+        {
+            var examCourses = repository.List<ExamCourse>();
+            foreach (var examCourse in examCourses)
+            {
+                repository.Remove(examCourse);
+            }
+
+            var examStudents = repository.List<ExamStudent>();
+            foreach (var examStudent in examStudents)
+            {
+                repository.Remove(examStudent);
+            }
+
+            await repository.SaveChangesAsync();
+        }
 
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var buildExamModel = new BuildExamModel {Count = count};
-
-        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/Build", buildExamModel);
+        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
 
         var content = await response.Content.ReadAsStringAsync();
@@ -477,15 +494,11 @@ public class ExamControllerTest : ApiIntegrationTestBase
     [Test]
     public async Task ExamController_Build_ExamBuiltPreviously_ThrowsException()
     {
-        int count = 2;
-
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var buildExamModel = new BuildExamModel {Count = count};
-
-        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/Build", buildExamModel);
+        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
 
         var content = await response.Content.ReadAsStringAsync();
@@ -504,15 +517,11 @@ public class ExamControllerTest : ApiIntegrationTestBase
             await repository.SaveChangesAsync();
         }
 
-        int count = 2;
-
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var buildExamModel = new BuildExamModel {Count = count};
-
-        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/Build", buildExamModel);
+        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
 
         var content = await response.Content.ReadAsStringAsync();
