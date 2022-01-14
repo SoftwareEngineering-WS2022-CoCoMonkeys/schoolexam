@@ -22,12 +22,26 @@ public class SubmissionService : ISubmissionService
         var result = _repository.Find(new SubmissionWithBookletWithExamByIdSpecification(submissionId));
         return result;
     }
+    
+    public IEnumerable<Submission> GetByIds(IEnumerable<Guid> ids)
+    {
+        var result = _repository.List(new SubmissionWithBookletWithExamByIdsSpecification(ids.ToHashSet()));
+        return result;
+    }
 
     public Submission? GetByIdWithDetails(Guid submissionId)
     {
         var result =
             _repository.Find(
-                new SubmissionWithPdfFileStudentAndAnswersWithTaskAndSegmentByIdSpecification(submissionId));
+                new SubmissionWithPdfFileAndStudentAndAnswersWithTaskAndSegmentsByIdSpecification(submissionId));
+        return result;
+    }
+
+    public IEnumerable<Submission> GetByIdsWithDetails(IEnumerable<Guid> ids)
+    {
+        var result =
+            _repository.List(
+                new SubmissionWithPdfFileAndStudentAndAnswersWithTaskAndSegmentsByIdsSpecification(ids.ToHashSet()));
         return result;
     }
 

@@ -39,6 +39,18 @@ public class SubmissionController : ApiController<SubmissionController>
         return result;
     }
     
+    [HttpPost]
+    [Route("ByIdsWithDetails")]
+    [Authorize(PolicyNames.SubmissionsExamCreatorPolicyName)]
+    public IEnumerable<SubmissionDetailsReadModel> GetSubmissionsByIdsWithDetails(
+        [FromBody] SubmissionsByIdsModel submissionsByIdsModel)
+    {
+        var submissions = _submissionService.GetByIdsWithDetails(submissionsByIdsModel.Ids);
+        var result = Mapper.Map<IEnumerable<SubmissionDetailsReadModel>>(submissions);
+
+        return result;
+    }
+
     [HttpGet]
     [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/Download")]
     [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]

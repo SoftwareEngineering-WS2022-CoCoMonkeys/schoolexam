@@ -82,6 +82,11 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(Role.Teacher);
         policy.AddRequirement<SubmissionExamCreatorAuthorizationRequirement>();
     });
+    options.AddPolicy(PolicyNames.SubmissionsExamCreatorPolicyName, policy =>
+    {
+        policy.RequireRole(Role.Teacher);
+        policy.AddRequirement<SubmissionsExamCreatorAuthorizationRequirement>();
+    });
     
     // StudentController
     options.AddPolicy(PolicyNames.StudentOrTeachesStudentPolicyName, policy =>
@@ -106,6 +111,7 @@ builder.Services.AddScoped<IAuthorizationHandler, CourseStudentAuthorizationHand
 builder.Services.AddScoped<IAuthorizationHandler, ExamCreatorAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, SubmissionExamCreatorAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, StudentOrTeachesStudentAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SubmissionsExamCreatorAuthorizationHandler>();
 
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();

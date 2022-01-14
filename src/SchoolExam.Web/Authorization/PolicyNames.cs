@@ -6,5 +6,6 @@ public static class PolicyNames
     public const string CourseStudentPolicyName = "CourseStudentPolicy";
     public const string ExamCreatorPolicyName = "ExamCreatorPolicy";
     public const string SubmissionExamCreatorPolicyName = "SubmissionExamCreatorPolicyName";
+    public const string SubmissionsExamCreatorPolicyName = "SubmissionsExamCreatorPolicyName";
     public const string StudentOrTeachesStudentPolicyName = "StudentOrTeachesStudentPolicyName";
 }

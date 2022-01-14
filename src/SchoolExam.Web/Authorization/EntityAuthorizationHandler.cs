@@ -6,33 +6,32 @@ using SchoolExam.Web.Extensions;
 namespace SchoolExam.Web.Authorization;
 
 public abstract class EntityAuthorizationHandler<TRequirement> : AuthorizationHandler<TRequirement>
-    where TRequirement : IEntityAuthorizationRequirement
+    where TRequirement : IAuthorizationRequirement
 {
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, TRequirement requirement)
+    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, TRequirement requirement)
     {
         if (context.Resource is DefaultHttpContext httpContext)
         {
-            var resourceParameter = httpContext.GetRouteData().Values[requirement.ParameterName];
-            if (resourceParameter is string entityIdString)
+            var routeParameters = httpContext.GetRouteData().Values;
+            var request = httpContext.Request;
+            request.EnableBuffering();
+            var personIdString = httpContext.User.GetClaim(CustomClaimTypes.PersonId);
+            if (personIdString == null)
             {
-                var entityId = Guid.Parse(entityIdString);
-                var personIdString = httpContext.User.GetClaim(CustomClaimTypes.PersonId);
-                if (personIdString == null)
-                {
-                    return Task.CompletedTask;
-                }
+                return;
+            }
+            var personId = Guid.Parse(personIdString);
+            // rule has a value if claim for PersonId is set
+            var role = httpContext.User.GetClaim(ClaimTypes.Role)!;
 
-                var personId = Guid.Parse(personIdString);
-                var role = httpContext.User.GetClaim(ClaimTypes.Role)!;
-                if (IsAuthorized(personId, role, entityId))
-                {
-                    context.Succeed(requirement);
-                }
+            var isAuthorized = await IsAuthorized(personId, role, routeParameters, request, requirement);
+            if (isAuthorized)
+            {
+                context.Succeed(requirement);
             }
         }
-
-        return Task.CompletedTask;
     }
 
-    protected abstract bool IsAuthorized(Guid personId, string role, Guid entityId);
+    protected abstract Task<bool> IsAuthorized(Guid personId, string role, RouteValueDictionary routeParameters,
+        HttpRequest? request, TRequirement requirement);
 }
