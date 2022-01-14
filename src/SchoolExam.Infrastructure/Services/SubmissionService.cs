@@ -3,6 +3,7 @@ using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Extensions;
 using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
 
@@ -23,16 +24,31 @@ public class SubmissionService : ISubmissionService
         return result;
     }
     
+    public IEnumerable<Submission> GetByIds(IEnumerable<Guid> ids)
+    {
+        var result = _repository.List(new SubmissionWithBookletWithExamByIdsSpecification(ids.ToHashSet()));
+        return result;
+    }
+
     public Submission? GetByIdWithDetails(Guid submissionId)
     {
         var result =
-            _repository.Find(new SubmissionWithPdfFileStudentAndAnswersWithTaskAndSegmentByIdSpecification(submissionId));
+            _repository.Find(
+                new SubmissionWithPdfFileAndStudentAndAnswersWithTaskAndSegmentsByIdSpecification(submissionId));
+        return result;
+    }
+
+    public IEnumerable<Submission> GetByIdsWithDetails(IEnumerable<Guid> ids)
+    {
+        var result =
+            _repository.List(
+                new SubmissionWithPdfFileAndStudentAndAnswersWithTaskAndSegmentsByIdsSpecification(ids.ToHashSet()));
         return result;
     }
 
     public IEnumerable<Submission> GetByExam(Guid examId)
     {
-        var result = _repository.List(new SubmissionWithStudentAndAnswersByExamSpecification(examId));
+        var result = _repository.List(new SubmissionWithPdfFileAndStudentAndAnswersByExamSpecification(examId));
         return result;
     }
 
@@ -43,7 +59,7 @@ public class SubmissionService : ISubmissionService
         {
             throw new ArgumentException("There exists no PDF file for the submission.");
         }
-        
+
         return pdfFile.Content;
     }
 
@@ -62,10 +78,29 @@ public class SubmissionService : ISubmissionService
         {
             throw new ArgumentException("Points are not in allowed range between 0 and maximum points.");
         }
-        
+
         answer.AchievedPoints = points;
         answer.State = answer.AchievedPoints.HasValue ? AnswerState.Corrected : AnswerState.Pending;
         _repository.Update(answer);
+        await _repository.SaveChangesAsync();
+    }
+
+    public async Task SetRemark(Guid submissionId, byte[] remarkPdf, Guid userId)
+    {
+        var submission = _repository.Find(new SubmissionWithRemarkPdfByIdSpecification(submissionId));
+        if (submission == null)
+        {
+            throw new ArgumentException("Submission does not exist.");
+        }
+        if (submission.RemarkPdfFile != null)
+        {
+            _repository.Remove(submission.RemarkPdfFile);
+        }
+
+        var remarkPdfFile = new RemarkPdfFile(Guid.NewGuid(), $"{submission.Id}_corrected.pdf",
+            remarkPdf.LongLength, DateTime.Now.SetKindUtc(), userId, remarkPdf, submissionId);
+        _repository.Add(remarkPdf);
+
         await _repository.SaveChangesAsync();
     }
 }

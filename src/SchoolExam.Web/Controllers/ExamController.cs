@@ -1,8 +1,8 @@
-using System.Net.Mime;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Services;
+using SchoolExam.Application.TagLayout;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Models.Exam;
@@ -77,28 +77,9 @@ public class ExamController : ApiController<ExamController>
     {
         var count = await _examService.Build(examId, GetUserId()!.Value);
         var pdf = _examService.GetConcatenatedBookletPdfFile(examId);
-        return new BuildResultModel {Count = count, PdfFile = Convert.ToBase64String(pdf)};
-    }
-
-    [HttpPost]
-    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Clean")]
-    [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> Clean(Guid examId)
-    {
-        await _examService.Clean(examId);
-
-        return Ok();
-    }
-
-    [HttpPost]
-    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Rebuild")]
-    [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<BuildResultModel> Rebuild(Guid examId)
-    {
-        await _examService.Clean(examId);
-        var count = await _examService.Build(examId, GetUserId()!.Value);
-        var pdf = _examService.GetConcatenatedBookletPdfFile(examId);
-        return new BuildResultModel {Count = count, PdfFile = Convert.ToBase64String(pdf)};
+        var qrCodePdf = _examService.GetParticipantQrCodePdf<AveryZweckform3475200>(examId);
+        return new BuildResultModel
+            {Count = count, PdfFile = Convert.ToBase64String(pdf), QrCodePdfFile = Convert.ToBase64String(qrCodePdf)};
     }
 
     [HttpPost]

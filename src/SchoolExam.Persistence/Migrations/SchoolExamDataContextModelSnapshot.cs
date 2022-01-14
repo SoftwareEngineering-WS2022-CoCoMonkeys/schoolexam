@@ -427,6 +427,9 @@ namespace SchoolExam.Persistence.Migrations
                     b.Property<Guid?>("StudentId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BookletId")
@@ -577,6 +580,19 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasDiscriminator().HasValue("Teacher");
                 });
 
+            modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.RemarkPdfFile", b =>
+                {
+                    b.HasBaseType("SchoolExam.Domain.Base.FileBase");
+
+                    b.Property<Guid>("SubmissionId")
+                        .HasColumnType("uuid");
+
+                    b.HasIndex("SubmissionId")
+                        .IsUnique();
+
+                    b.HasDiscriminator().HasValue("RemarkPdfFile");
+                });
+
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.SubmissionPagePdfFile", b =>
                 {
                     b.HasBaseType("SchoolExam.Domain.Base.FileBase");
@@ -595,7 +611,8 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasBaseType("SchoolExam.Domain.Base.FileBase");
 
                     b.Property<Guid>("SubmissionId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("SubmissionPdfFile_SubmissionId");
 
                     b.HasIndex("SubmissionId")
                         .IsUnique();
@@ -1312,6 +1329,15 @@ namespace SchoolExam.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.RemarkPdfFile", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.SubmissionAggregate.Submission", null)
+                        .WithOne("RemarkPdfFile")
+                        .HasForeignKey("SchoolExam.Domain.Entities.SubmissionAggregate.RemarkPdfFile", "SubmissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.SubmissionPagePdfFile", b =>
                 {
                     b.HasOne("SchoolExam.Domain.Entities.SubmissionAggregate.SubmissionPage", null)
@@ -1380,6 +1406,8 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("Pages");
 
                     b.Navigation("PdfFile");
+
+                    b.Navigation("RemarkPdfFile");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.SubmissionPage", b =>

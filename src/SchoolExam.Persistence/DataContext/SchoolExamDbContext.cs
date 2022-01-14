@@ -56,6 +56,7 @@ public class SchoolExamDbContext : DbContextBase
         modelBuilder.ApplyConfiguration(new SubmissionPagePdfFileConfiguration());
         modelBuilder.ApplyConfiguration(new AnswerConfiguration());
         modelBuilder.ApplyConfiguration(new AnswerSegmentConfiguration());
+        modelBuilder.ApplyConfiguration(new RemarkPdfFileConfiguration());
 
         modelBuilder.ApplyConfiguration(new UserConfiguration());
     }

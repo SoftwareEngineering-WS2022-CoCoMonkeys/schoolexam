@@ -1,6 +1,6 @@
 namespace SchoolExam.Web.Authorization;
 
-public class ExamCreatorAuthorizationRequirement : IEntityAuthorizationRequirement
+public class ExamCreatorAuthorizationRequirement : IRouteParameterEntityAuthorizationRequirement
 {
     public string ParameterName => RouteParameterNames.ExamIdParameterName;
 }

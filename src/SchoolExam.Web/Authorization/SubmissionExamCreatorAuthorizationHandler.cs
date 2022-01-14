@@ -3,7 +3,7 @@ using SchoolExam.Application.Services;
 namespace SchoolExam.Web.Authorization;
 
 public class
-    SubmissionExamCreatorAuthorizationHandler : EntityAuthorizationHandler<
+    SubmissionExamCreatorAuthorizationHandler : RouteParameterEntityAuthorizationHandler<
         SubmissionExamCreatorAuthorizationRequirement>
 {
     private readonly ISubmissionService _submissionService;
@@ -13,7 +13,7 @@ public class
         _submissionService = submissionService;
     }
 
-    protected override bool IsAuthorized(Guid personId, string role, Guid entityId)
+    protected override Task<bool> IsAuthorized(Guid personId, string role, Guid entityId)
     {
         var submission = _submissionService.GetById(entityId);
         if (submission != null)
@@ -21,10 +21,10 @@ public class
             var creatorId = submission.Booklet.Exam.CreatorId;
             if (!creatorId.Equals(personId))
             {
-                return false;
+                return Task.FromResult(false);
             }
         }
 
-        return true;
+        return Task.FromResult(true);
     }
 }

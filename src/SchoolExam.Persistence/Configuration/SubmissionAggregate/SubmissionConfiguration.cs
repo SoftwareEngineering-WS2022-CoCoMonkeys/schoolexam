@@ -16,5 +16,6 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         builder.HasMany(x => x.Answers);
         builder.HasMany(x => x.Pages).WithOne().HasForeignKey(x => x.SubmissionId);
         builder.HasOne(x => x.PdfFile).WithOne().HasForeignKey<SubmissionPdfFile>(x => x.SubmissionId);
+        builder.HasOne(x => x.RemarkPdfFile).WithOne().HasForeignKey<RemarkPdfFile>(x => x.SubmissionId);
     }
 }

@@ -2,16 +2,17 @@ using SchoolExam.Application.Services;
 
 namespace SchoolExam.Web.Authorization;
 
-public class CourseTeacherAuthorizationHandler : EntityAuthorizationHandler<CourseTeacherAuthorizationRequirement>
+public class
+    CourseTeacherAuthorizationHandler : RouteParameterEntityAuthorizationHandler<CourseTeacherAuthorizationRequirement>
 {
     private readonly ICourseService _courseService;
-    
+
     public CourseTeacherAuthorizationHandler(ICourseService courseService)
     {
         _courseService = courseService;
     }
-    
-    protected override bool IsAuthorized(Guid personId, string role, Guid entityId)
+
+    protected override Task<bool> IsAuthorized(Guid personId, string role, Guid entityId)
     {
         var course = _courseService.GetById(entityId);
         if (course != null)
@@ -19,10 +20,10 @@ public class CourseTeacherAuthorizationHandler : EntityAuthorizationHandler<Cour
             var teacherIds = course.Teachers.Select(x => x.TeacherId).ToHashSet();
             if (!teacherIds.Contains(personId))
             {
-                return false;
+                return Task.FromResult(false);
             }
         }
 
-        return true;
+        return Task.FromResult(true);
     }
 }

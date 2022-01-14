@@ -166,7 +166,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var expectedExam1 = new ExamReadModelTeacher
         {
-            Id = _exam.Id, Title = _exam.Title, Date = _exam.Date, Status = _exam.State, Topic = _exam.Topic.Name,
+            Id = _exam.Id, Title = _exam.Title, Date = _exam.Date, Status = _exam.State.ToString(), Topic = _exam.Topic.Name,
             Quota = null, DueDate = _exam.DueDate, Tasks = new List<ExamTaskReadModel>(), Participants =
                 new List<ExamParticipantReadModel>
                 {
@@ -183,7 +183,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         };
         var expectedExam2 = new ExamReadModelTeacher
         {
-            Id = _otherExam.Id, Title = _otherExam.Title, Date = _otherExam.Date, Status = _otherExam.State,
+            Id = _otherExam.Id, Title = _otherExam.Title, Date = _otherExam.Date, Status = _otherExam.State.ToString(),
             Topic = _otherExam.Topic.Name, Quota = null, DueDate = _otherExam.DueDate,
             Tasks = new List<ExamTaskReadModel>(),
             Participants = new List<ExamParticipantReadModel>
@@ -492,21 +492,6 @@ public class ExamControllerTest : ApiIntegrationTestBase
     }
 
     [Test]
-    public async Task ExamController_Build_ExamBuiltPreviously_ThrowsException()
-    {
-        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
-            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
-            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-
-        var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(InvalidOperationException));
-        content.Should().Contain("Exam has already been built.");
-    }
-
-    [Test]
     public async Task ExamController_Build_TaskPdfFileMissing_ThrowsException()
     {
         await ResetExam();
@@ -579,64 +564,13 @@ public class ExamControllerTest : ApiIntegrationTestBase
     }
 
     [Test]
-    public async Task ExamController_Clean_ExamCreator_Success()
-    {
-        using (var repository = GetSchoolExamRepository())
-        {
-            foreach (var submission in repository.List<Submission>())
-            {
-                repository.Remove(submission);
-            }
-
-            foreach (var submissionPage in repository.List<SubmissionPage>())
-            {
-                repository.Remove(submissionPage);
-            }
-
-            await repository.SaveChangesAsync();
-        }
-
-        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
-            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
-            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Clean", null);
-        response.EnsureSuccessStatusCode();
-
-        using (var repository = GetSchoolExamRepository())
-        {
-            var exam = repository.Find(new ExamWithBookletsByIdSpecification(_exam.Id));
-            exam?.State.Should().Be(ExamState.BuildReady);
-            var booklets = exam?.Booklets;
-            booklets.Should().HaveCount(0);
-        }
-    }
-
-    [Test]
-    public async Task ExamController_Clean_ExamNotBuiltPreviously_ThrowsException()
-    {
-        await ResetExam();
-
-        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
-            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
-            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Clean", null);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-
-        var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(InvalidOperationException));
-        content.Should().Contain("The exam has not been built yet.");
-    }
-
-    [Test]
     public async Task ExamController_Clean_ExamWithSubmissionPages_ThrowsException()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Clean", null);
+        var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
 
         var content = await response.Content.ReadAsStringAsync();

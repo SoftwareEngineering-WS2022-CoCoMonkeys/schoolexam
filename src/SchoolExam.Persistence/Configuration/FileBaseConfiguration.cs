@@ -12,6 +12,6 @@ public class FileBaseConfiguration : IEntityTypeConfiguration<FileBase>
         builder.ToTable("File");
         builder.HasKey(x => x.Id);
         builder.HasDiscriminator();
-        builder.HasOne<User>(x => x.Uploader).WithMany().HasForeignKey(x => x.UploaderId);
+        builder.HasOne(x => x.Uploader).WithMany().HasForeignKey(x => x.UploaderId);
     }
 }

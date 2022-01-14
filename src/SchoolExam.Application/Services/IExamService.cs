@@ -1,3 +1,4 @@
+using SchoolExam.Application.TagLayout;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 
@@ -14,7 +15,7 @@ public interface IExamService
     Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content);
     Task FindTasks(Guid examId, Guid userId, params ExamTaskInfo[] tasks);
     Task<int> Build(Guid examId, Guid userId);
-    Task Clean(Guid examId);
+    byte[] GetParticipantQrCodePdf<TLayout>(Guid examId) where TLayout : ITagLayout<TLayout>, new();
     byte[] GetConcatenatedBookletPdfFile(Guid examId);
     Task Match(Guid examId, byte[] pdf, Guid userId);
     IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId);
