@@ -22,17 +22,18 @@ public class SubmissionService : ISubmissionService
         var result = _repository.Find(new SubmissionWithBookletWithExamByIdSpecification(submissionId));
         return result;
     }
-    
+
     public Submission? GetByIdWithDetails(Guid submissionId)
     {
         var result =
-            _repository.Find(new SubmissionWithPdfFileStudentAndAnswersWithTaskAndSegmentByIdSpecification(submissionId));
+            _repository.Find(
+                new SubmissionWithPdfFileStudentAndAnswersWithTaskAndSegmentByIdSpecification(submissionId));
         return result;
     }
 
     public IEnumerable<Submission> GetByExam(Guid examId)
     {
-        var result = _repository.List(new SubmissionWithStudentAndAnswersByExamSpecification(examId));
+        var result = _repository.List(new SubmissionWithPdfFileAndStudentAndAnswersByExamSpecification(examId));
         return result;
     }
 
@@ -43,7 +44,7 @@ public class SubmissionService : ISubmissionService
         {
             throw new ArgumentException("There exists no PDF file for the submission.");
         }
-        
+
         return pdfFile.Content;
     }
 
@@ -62,7 +63,7 @@ public class SubmissionService : ISubmissionService
         {
             throw new ArgumentException("Points are not in allowed range between 0 and maximum points.");
         }
-        
+
         answer.AchievedPoints = points;
         answer.State = answer.AchievedPoints.HasValue ? AnswerState.Corrected : AnswerState.Pending;
         _repository.Update(answer);

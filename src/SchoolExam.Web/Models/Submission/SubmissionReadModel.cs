@@ -9,4 +9,7 @@ public class SubmissionReadModel
     public ExamStudentReadModel Student { get; set; }
     public double? AchievedPoints { get; set; }
     public CorrectionState Status { get; set; }
+    public bool IsComplete { get; set; }
+    public bool IsMatchedToStudent { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }

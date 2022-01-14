@@ -13,16 +13,18 @@ public class Submission : EntityBase<Guid>
     public ICollection<Answer> Answers { get; set; }
     public ICollection<SubmissionPage> Pages { get; set; }
     public SubmissionPdfFile? PdfFile { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public Submission(Guid id) : base(id)
     {
     }
 
-    public Submission(Guid id, Guid? studentId, Guid bookletId) :
+    public Submission(Guid id, Guid? studentId, Guid bookletId, DateTime updatedAt) :
         this(id)
     {
         StudentId = studentId;
         BookletId = bookletId;
+        UpdatedAt = updatedAt;
         Answers = new List<Answer>();
         Pages = new List<SubmissionPage>();
     }

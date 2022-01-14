@@ -10,6 +10,7 @@ using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.Extensions;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Extensions;
 using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
 
@@ -352,9 +353,14 @@ public class ExamService : IExamService
                 if (!submissions.ContainsKey(matchedPage.BookletId))
                 {
                     // create new submission if there has not been added one yet
-                    var newSubmission = new Submission(Guid.NewGuid(), student?.Id, matchedPage.BookletId);
+                    var newSubmission = new Submission(Guid.NewGuid(), student?.Id, matchedPage.BookletId,
+                        DateTime.Now.SetKindUtc());
                     submissions.Add(newSubmission.BookletId, newSubmission);
                     _repository.Add(newSubmission);
+                }
+                else
+                {
+                    submissions[matchedPage.BookletId].UpdatedAt = DateTime.Now.SetKindUtc();
                 }
 
                 var submission = submissions[matchedPage.BookletId];
@@ -458,7 +464,7 @@ public class ExamService : IExamService
 
         var bookletId = bookletPage.BookletId;
         var submission = _repository.Find(new SubmissionByBookletSpecification(bookletId)) ??
-                         new Submission(Guid.NewGuid(), null, bookletId);
+                         new Submission(Guid.NewGuid(), null, bookletId, DateTime.Now.SetKindUtc());
 
         var student = submissionPage.StudentQrCode != null
             ? _repository.Find(new StudentByQrCodeSpecification(submissionPage.StudentQrCode.Data))
@@ -467,7 +473,8 @@ public class ExamService : IExamService
 
         submissionPage.SubmissionId = submission.Id;
         submissionPage.BookletPageId = bookletPageId;
-
+        submission.UpdatedAt = DateTime.Now.SetKindUtc();
+        
         _repository.Update(submissionPage);
         await _repository.SaveChangesAsync();
 
