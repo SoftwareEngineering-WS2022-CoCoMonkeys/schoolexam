@@ -201,15 +201,16 @@ public class ExamService : IExamService
         {
             throw new ArgumentException("At least one exam booklet must be built.");
         }
-        
-        if (exam.State.HasBeenBuilt())
-        {
-            throw new InvalidOperationException("Exam has already been built.");
-        }
 
         if (exam.TaskPdfFile == null)
         {
             throw new InvalidOperationException("Exam does not have a task PDF file.");
+        }
+        
+        // clean booklets from previous builds
+        if (exam.State.HasBeenBuilt())
+        {
+            await Clean(examId);
         }
 
         var content = exam.TaskPdfFile.Content;
@@ -259,7 +260,7 @@ public class ExamService : IExamService
         return count;
     }
 
-    public async Task Clean(Guid examId)
+    private async Task Clean(Guid examId)
     {
         var exam = EnsureExamExists(new ExamWithBookletsByIdSpecification(examId));
 

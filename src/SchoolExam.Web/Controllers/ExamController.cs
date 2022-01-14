@@ -1,4 +1,3 @@
-using System.Net.Mime;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -75,27 +74,6 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<BuildResultModel> Build(Guid examId)
     {
-        var count = await _examService.Build(examId, GetUserId()!.Value);
-        var pdf = _examService.GetConcatenatedBookletPdfFile(examId);
-        return new BuildResultModel {Count = count, PdfFile = Convert.ToBase64String(pdf)};
-    }
-
-    [HttpPost]
-    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Clean")]
-    [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> Clean(Guid examId)
-    {
-        await _examService.Clean(examId);
-
-        return Ok();
-    }
-
-    [HttpPost]
-    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Rebuild")]
-    [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<BuildResultModel> Rebuild(Guid examId)
-    {
-        await _examService.Clean(examId);
         var count = await _examService.Build(examId, GetUserId()!.Value);
         var pdf = _examService.GetConcatenatedBookletPdfFile(examId);
         return new BuildResultModel {Count = count, PdfFile = Convert.ToBase64String(pdf)};
