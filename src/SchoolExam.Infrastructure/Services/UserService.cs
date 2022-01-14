@@ -8,21 +8,21 @@ namespace SchoolExam.Infrastructure.Services;
 
 public class UserService : IUserService
 {
-    private readonly ISchoolExamRepository _context;
+    private readonly ISchoolExamRepository _repository;
 
-    public UserService(ISchoolExamRepository context)
+    public UserService(ISchoolExamRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
 
     public User? GetByUsername(string username)
     {
-        return _context.Find(new UserByUserIdSpecification(username));
+        return _repository.Find(new UserByUserNameSpecification(username));
     }
 
     public async Task Update(Guid userId, string username, string password, Role role, Guid personId)
     {
-        var user = _context.Find(new UserByUserNameSpecification(username));
+        var user = _repository.Find(new UserByUserNameSpecification(username));
         if (user == null)
         {
             throw new ArgumentException("User does not exist");
@@ -34,7 +34,7 @@ public class UserService : IUserService
         
         
         
-        await _context.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
     }
     
 }
