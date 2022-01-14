@@ -5,18 +5,21 @@ namespace SchoolExam.Domain.Entities.ExamAggregate;
 
 public class ExamTask : EntityBase<Guid>
 {
-    public int MaxPoints { get; set; }
-    public int Number { get; set; }
-    public ExamTaskPosition Position { get; set; }
+    public double MaxPoints { get; set; }
+    public string Title { get; set; }
+    public ExamPosition Start { get; set; }
+    public ExamPosition End { get; set; }
 
     public ExamTask(Guid id) : base(id)
     {
     }
 
-    public ExamTask(Guid id, int maxPoints, int number, ExamTaskPosition position) : this(id)
+    public ExamTask(Guid id, string title, double maxPoints, int number, ExamPosition start, ExamPosition end) :
+        this(id)
     {
+        Title = title;
         MaxPoints = maxPoints;
-        Number = number;
-        Position = position;
+        Start = start;
+        End = end;
     }
 }

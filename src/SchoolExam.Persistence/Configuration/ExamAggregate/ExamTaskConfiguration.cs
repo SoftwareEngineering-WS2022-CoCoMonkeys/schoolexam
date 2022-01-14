@@ -11,6 +11,6 @@ public class ExamTaskConfiguration : IEntityTypeConfiguration<ExamTask>
     {
         builder.ToTable("ExamTask");
         builder.HasKey(x => x.Id);
-        builder.OwnsExamTaskPosition(x => x.Position);
+        builder.OwnsExamPosition(x => x.Start, x => x.End);
     }
 }

@@ -10,7 +10,7 @@ namespace SchoolExam.Infrastructure.QrCode;
 public class ZXingNetQrCodeReader : IQrCodeReader
 {
     private readonly BarcodeReader _reader;
-
+    
     public ZXingNetQrCodeReader()
     {
         _reader = new BarcodeReader
@@ -28,8 +28,14 @@ public class ZXingNetQrCodeReader : IQrCodeReader
     public IEnumerable<QrCodeParseInfo> ReadQrCodes(byte[] image, RotationMatrix rotationMatrix)
     {
         using var bitmap = SKBitmap.Decode(image);
-        var result = _reader.DecodeMultiple(bitmap);
+        var result = _reader.DecodeMultiple(bitmap).Where(IsValidQrCode);
         return result.Select(x => new QrCodeParseInfo(GetOrientation(x, rotationMatrix), x.Text));
+    }
+
+    private bool IsValidQrCode(Result result)
+    {
+        return result.ResultPoints.Count(x => x is FinderPattern) == 3 &&
+               result.ResultPoints.Count(x => x is AlignmentPattern) == 1;
     }
 
     private QrCodeAlignmentPatternPosition GetOrientation(Result result, RotationMatrix rotationMatrix)

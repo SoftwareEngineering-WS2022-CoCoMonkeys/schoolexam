@@ -35,14 +35,14 @@ public class CourseControllerTest : ApiIntegrationTestBase
         _student.SchoolId = _school.Id;
         var courseStudent = new CourseStudent(_course.Id, _student.Id);
 
-        using var context = GetSchoolExamDataContext();
-        context.Add(_school);
-        context.Add(_course);
-        context.Add(_teacher);
-        context.Add(courseTeacher);
-        context.Add(_student);
-        context.Add(courseStudent);
-        await context.SaveChangesAsync();
+        using var repository = GetSchoolExamRepository();
+        repository.Add(_school);
+        repository.Add(_course);
+        repository.Add(_teacher);
+        repository.Add(courseTeacher);
+        repository.Add(_student);
+        repository.Add(courseStudent);
+        await repository.SaveChangesAsync();
     }
 
     [Test]
@@ -62,7 +62,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
         var expectedCourseDto = new CourseReadModelTeacher
         {
             Id = _course.Id.ToString(), Description = _course.Description, Name = _course.Name,
-            Subject = _course.Subject?.Name, Year = _course.Year, StudentCount = 1
+            Topic = _course.Topic?.Name, StudentCount = 1
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
     }
@@ -95,7 +95,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
         var expectedCourseDto = new CourseReadModelStudent
         {
             Id = _course.Id.ToString(), Description = _course.Description, Name = _course.Name,
-            Subject = _course.Subject?.Name, Year = _course.Year
+            Topic = _course.Topic?.Name
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
     }

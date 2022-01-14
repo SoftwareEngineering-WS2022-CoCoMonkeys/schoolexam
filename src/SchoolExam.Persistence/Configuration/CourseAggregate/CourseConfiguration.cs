@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolExam.Domain.Entities.CourseAggregate;
-using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Persistence.Extensions;
 
 namespace SchoolExam.Persistence.Configuration.CourseAggregate;
@@ -12,8 +11,15 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
     {
         builder.ToTable("Course");
         builder.HasKey(x => x.Id);
-        builder.OwnsSubject(x => x.Subject, false);
-        builder.Property(x => x.Year).HasDefaultValue(DateTime.Now.Year);
-        builder.HasMany<Exam>().WithOne(x => x.Course).HasForeignKey(x => x.CourseId);
+        builder.OwnsTopic(x => x.Topic, false, new
+        {
+            CourseId = SeedIds.SozialwissenschaftenCourseId,
+            Name = "Sozialwissenschaften"
+        });
+        builder.HasData(new
+        {
+            Id = SeedIds.SozialwissenschaftenCourseId, Name = "Sozialwissenschaften 2022",
+            Description = "Projektmanagement, etc.", SchoolId = SeedIds.GymnasiumDiedorfId
+        });
     }
 }

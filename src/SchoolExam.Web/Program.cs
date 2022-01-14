@@ -1,31 +1,35 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using SchoolExam.Application.Authentication;
-using SchoolExam.Application.DataContext;
 using SchoolExam.Application.Pdf;
 using SchoolExam.Application.QrCode;
 using SchoolExam.Application.RandomGenerator;
-using SchoolExam.Application.Repositories;
-using SchoolExam.Domain.Entities.CourseAggregate;
-using SchoolExam.Domain.Entities.ExamAggregate;
+using SchoolExam.Application.Repository;
+using SchoolExam.Application.Services;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Authentication;
-using SchoolExam.Infrastructure.DataContext;
 using SchoolExam.Infrastructure.Pdf;
 using SchoolExam.Infrastructure.QrCode;
 using SchoolExam.Infrastructure.RandomGenerator;
-using SchoolExam.Infrastructure.Repositories;
+using SchoolExam.Infrastructure.Repository;
+using SchoolExam.Infrastructure.Services;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
 using SchoolExam.Web.Authorization;
+using SchoolExam.Web.Extensions;
 using SchoolExam.Web.Mapping;
+using SchoolExam.Web.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new ExamParticipantReadModelJsonConverter());
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -57,22 +61,32 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(PolicyNames.CourseTeacherPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
-        policy.AddRequirements(new OwnerRequirement<Course>(course => course.Teachers.Select(x => x.TeacherId),
-            RouteParameterNames.CourseIdParameterName, nameof(Course.Teachers)));
+        policy.AddRequirement<CourseTeacherAuthorizationRequirement>();
     });
     options.AddPolicy(PolicyNames.CourseStudentPolicyName, policy =>
     {
         policy.RequireRole(Role.Student);
-        policy.AddRequirements(new OwnerRequirement<Course>(course => course.Students.Select(x => x.StudentId),
-            RouteParameterNames.CourseIdParameterName, nameof(Course.Students)));
+        policy.AddRequirement<CourseStudentAuthorizationRequirement>();
     });
 
     // ExamController authorization policies
     options.AddPolicy(PolicyNames.ExamCreatorPolicyName, policy =>
     {
         policy.RequireRole(Role.Teacher);
-        policy.AddRequirements(new OwnerRequirement<Exam>(exam => exam.CreatorId,
-            RouteParameterNames.ExamIdParameterName));
+        policy.AddRequirement<ExamCreatorAuthorizationRequirement>();
+    });
+    
+    // SubmissionController authorization policies
+    options.AddPolicy(PolicyNames.SubmissionExamCreatorPolicyName, policy =>
+    {
+        policy.RequireRole(Role.Teacher);
+        policy.AddRequirement<SubmissionExamCreatorAuthorizationRequirement>();
+    });
+    
+    // StudentController
+    options.AddPolicy(PolicyNames.StudentOrTeachesStudentPolicyName, policy =>
+    {
+        policy.AddRequirement<StudentOrTeachesStudentAuthorizationRequirement>();
     });
 });
 
@@ -87,8 +101,11 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartBodyLengthLimit = 52428800;
 });
 
-builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Course>>();
-builder.Services.AddScoped<IAuthorizationHandler, OwnerHandler<Exam>>();
+builder.Services.AddScoped<IAuthorizationHandler, CourseTeacherAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, CourseStudentAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ExamCreatorAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SubmissionExamCreatorAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, StudentOrTeachesStudentAuthorizationHandler>();
 
 builder.Services.AddDbContext<SchoolExamDbContext>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
@@ -110,22 +127,25 @@ builder.Services.AddSingleton<Random>();
 builder.Services.AddSingleton<IRandomGenerator, RandomGenerator>();
 builder.Services.AddSingleton<IPdfService, iText7PdfService>();
 builder.Services.AddSingleton<IQrCodeReader, ZXingNetQrCodeReader>();
-builder.Services.AddTransient<ISchoolExamDataContext, SchoolExamDataContext>();
-builder.Services.AddTransient<ICourseRepository, CourseRepository>();
-builder.Services.AddTransient<IExamRepository, ExamRepository>();
-builder.Services.AddTransient<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ISchoolExamDataContextInitService, SchoolExamDataContextInitService>();
+builder.Services.AddTransient<ISchoolExamRepository, SchoolExamRepository>();
+builder.Services.AddTransient<ICourseService, CourseService>();
+builder.Services.AddTransient<IStudentService, StudentService>();
+builder.Services.AddTransient<IExamService, ExamService>();
+builder.Services.AddTransient<ISubmissionService, SubmissionService>();
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddScoped<ISchoolExamRepositoryInitService, SchoolExamRepositoryInitService>();
 
 var app = builder.Build();
 
 using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
 {
-    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamDataContextInitService>();
+    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamRepositoryInitService>();
     await initService!.Init();
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// swagger also added for production to make development easier
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();

@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SchoolExam.Application.Authentication;
-using SchoolExam.Application.DataContext;
-using SchoolExam.Infrastructure.DataContext;
+using SchoolExam.Application.Repository;
+using SchoolExam.Infrastructure.Repository;
 using SchoolExam.IntegrationTests.Util.Mock;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
@@ -32,7 +32,7 @@ public abstract class ApiIntegrationTestBase
                         .AddSingleton<IDbConnectionConfiguration,
                             EntityFrameworkInMemoryDbConnectionConfiguration>();
                     services.AddSingleton<IPasswordHasher, TestPasswordHasher>();
-                    services.AddScoped<ISchoolExamDataContextInitService, TestSchoolExamDataContextInitService>();
+                    services.AddScoped<ISchoolExamRepositoryInitService, TestSchoolExamRepositoryInitService>();
                     services.AddAuthentication(options =>
                         {
                             options.DefaultAuthenticateScheme = TestAuthenticationHandler.AuthenticationScheme;
@@ -98,12 +98,12 @@ public abstract class ApiIntegrationTestBase
         return context;
     }
 
-    protected ISchoolExamDataContext GetSchoolExamDataContext()
+    protected ISchoolExamRepository GetSchoolExamRepository()
     {
         var context = GetSchoolExamDbContext();
-        var dataContext = new SchoolExamDataContext(context);
+        var repository = new SchoolExamRepository(context);
 
-        return dataContext;
+        return repository;
     }
 
     protected void SetClaims(params Claim[] claims)
