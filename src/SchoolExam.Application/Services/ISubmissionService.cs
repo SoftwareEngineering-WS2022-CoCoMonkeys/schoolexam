@@ -11,4 +11,5 @@ public interface ISubmissionService
     IEnumerable<Submission> GetByExam(Guid examId);
     byte[] GetSubmissionPdf(Guid submissionId);
     Task SetPoints(Guid submissionId, Guid taskId, double? points);
+    Task SetRemark(Guid submissionId, byte[] remarkPdf, Guid userId);
 }

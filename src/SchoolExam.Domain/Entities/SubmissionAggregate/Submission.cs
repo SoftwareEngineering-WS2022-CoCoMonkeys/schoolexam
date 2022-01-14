@@ -14,6 +14,7 @@ public class Submission : EntityBase<Guid>
     public ICollection<SubmissionPage> Pages { get; set; }
     public SubmissionPdfFile? PdfFile { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public RemarkPdfFile? RemarkPdfFile { get; set; }
 
     public Submission(Guid id) : base(id)
     {

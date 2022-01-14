@@ -1,4 +1,4 @@
-namespace SchoolExam.Web.Authentication;
+namespace SchoolExam.Web.Models.Authentication;
 
 public class AuthenticateModel
 {

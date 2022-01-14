@@ -11,12 +11,13 @@ namespace SchoolExam.Web.Controllers;
 public class SubmissionController : ApiController<SubmissionController>
 {
     private readonly ISubmissionService _submissionService;
-    
-    public SubmissionController(ILogger<SubmissionController> logger, IMapper mapper, ISubmissionService submissionService) : base(logger, mapper)
+
+    public SubmissionController(ILogger<SubmissionController> logger, IMapper mapper,
+        ISubmissionService submissionService) : base(logger, mapper)
     {
         _submissionService = submissionService;
     }
-    
+
     [HttpGet]
     [Route($"ByExam/{{{RouteParameterNames.ExamIdParameterName}}}")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
@@ -38,7 +39,7 @@ public class SubmissionController : ApiController<SubmissionController>
 
         return result;
     }
-    
+
     [HttpPost]
     [Route("ByIdsWithDetails")]
     [Authorize(PolicyNames.SubmissionsExamCreatorPolicyName)]
@@ -67,6 +68,17 @@ public class SubmissionController : ApiController<SubmissionController>
     public async Task<IActionResult> SetPoints(Guid submissionId, [FromBody] SetPointsModel setPointsModel)
     {
         await _submissionService.SetPoints(submissionId, setPointsModel.TaskId, setPointsModel.AchievedPoints);
+
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/UploadRemark")]
+    [Authorize(PolicyNames.SubmissionsExamCreatorPolicyName)]
+    public async Task<IActionResult> UploadRemark(Guid submissionId, [FromBody] UploadRemarkModel uploadRemarkModel)
+    {
+        var remarkPdf = Convert.FromBase64String(uploadRemarkModel.RemarkPdf);
+        await _submissionService.SetRemark(submissionId, remarkPdf, GetUserId()!.Value);
 
         return Ok();
     }

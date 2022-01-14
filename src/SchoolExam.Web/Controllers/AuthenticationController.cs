@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Authentication;
 using SchoolExam.Application.Services;
+using SchoolExam.Web.Models.Authentication;
 
-namespace SchoolExam.Web.Authentication;
+namespace SchoolExam.Web.Controllers;
 
 public class AuthenticationController : ApiController<AuthenticationController>
 {
