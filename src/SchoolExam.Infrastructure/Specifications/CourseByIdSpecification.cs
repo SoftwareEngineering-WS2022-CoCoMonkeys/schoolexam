@@ -3,7 +3,7 @@ using SchoolExam.Domain.Entities.CourseAggregate;
 
 namespace SchoolExam.Infrastructure.Specifications;
 
-public class CourseByIdSpecification : EntityByIdSpecification<Course, Guid>
+public class CourseByIdSpecification : EntityByIdSpecification<Course>
 {
     public CourseByIdSpecification(Guid id) : base(id)
     {

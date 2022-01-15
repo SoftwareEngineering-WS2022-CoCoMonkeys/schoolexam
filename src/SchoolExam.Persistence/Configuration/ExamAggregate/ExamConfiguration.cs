@@ -20,8 +20,7 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
         builder.HasData(new
         {
             Id = SeedIds.ProjektmanagementExamId,
-            Title = "",
-            Description = "",
+            Title = "1. Schulaufgabe",
             Date = new DateTime(2022, 4, 1).SetKindUtc(),
             DueDate = new DateTime(2022, 4, 1).AddDays(14).SetKindUtc(),
             CreatorId = SeedIds.BriggiteSchweinebauerId,
@@ -30,7 +29,8 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
         builder.OwnsTopic(x => x.Topic, true, new
         {
             ExamId = SeedIds.ProjektmanagementExamId,
-            Name = "Sozialwissenschaften"
+            Name = "Sozialwissenschaften",
+             
         });
     }
 }

@@ -3,7 +3,7 @@ using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Base;
 
-public abstract class FileBase : EntityBase<Guid>
+public abstract class FileBase : EntityBase
 {
     public string Name { get; set; }
     public long Size { get; set; }

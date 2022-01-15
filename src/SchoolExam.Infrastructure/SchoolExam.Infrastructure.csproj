@@ -29,4 +29,8 @@
       <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.12" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Specifications\StudentByIdSpecification.cs" />
+    </ItemGroup>
+
 </Project>

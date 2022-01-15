@@ -25,13 +25,13 @@ public class CourseControllerTest : ApiIntegrationTestBase
     
     protected override async void SetUpData()
     {
-        _school = TestEntityFactory.Create<School, Guid>();
-        _course = TestEntityFactory.Create<Course, Guid>();
+        _school = TestEntityFactory.Create<School>();
+        _course = TestEntityFactory.Create<Course>();
         _course.SchoolId = _school.Id;
-        _teacher = TestEntityFactory.Create<Teacher, Guid>();
+        _teacher = TestEntityFactory.Create<Teacher>();
         _teacher.SchoolId = _school.Id;
         var courseTeacher = new CourseTeacher(_course.Id, _teacher.Id);
-        _student = TestEntityFactory.Create<Student, Guid>();
+        _student = TestEntityFactory.Create<Student>();
         _student.SchoolId = _school.Id;
         var courseStudent = new CourseStudent(_course.Id, _student.Id);
 
@@ -61,7 +61,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
 
         var expectedCourseDto = new CourseReadModelTeacher
         {
-            Id = _course.Id.ToString(), Description = _course.Description, Name = _course.Name,
+            Id = _course.Id.ToString(), Name = _course.Name,
             Topic = _course.Topic?.Name, StudentCount = 1
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
@@ -94,7 +94,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
 
         var expectedCourseDto = new CourseReadModelStudent
         {
-            Id = _course.Id.ToString(), Description = _course.Description, Name = _course.Name,
+            Id = _course.Id.ToString(), Name = _course.Name,
             Topic = _course.Topic?.Name
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);

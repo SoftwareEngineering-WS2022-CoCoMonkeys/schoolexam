@@ -72,7 +72,7 @@ public class SubmissionService : ISubmissionService
                 $"There exists no submission with identifier {submissionId} that contains a task with identifier {taskId}");
         }
 
-        var task = _repository.Find<ExamTask, Guid>(taskId)!;
+        var task = _repository.Find<ExamTask>(taskId)!;
 
         if (points < 0.0 || points > task.MaxPoints)
         {

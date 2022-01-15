@@ -4,7 +4,7 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.UserAggregate;
 
-public class User : EntityBase<Guid>
+public class User : EntityBase
 {
     public string Username { get; set; }
     public string Password { get; set; }

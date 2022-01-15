@@ -3,7 +3,7 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 
-public class AnswerSegment : EntityBase<Guid>
+public class AnswerSegment : EntityBase
 {
     public ExamPosition Start { get; set; }
     public ExamPosition End { get; set; }

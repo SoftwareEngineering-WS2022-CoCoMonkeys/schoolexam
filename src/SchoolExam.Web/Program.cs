@@ -128,7 +128,7 @@ builder.Services.AddSingleton<Random>();
 builder.Services.AddSingleton<IRandomGenerator, RandomGenerator>();
 builder.Services.AddSingleton<IPdfService, iText7PdfService>();
 builder.Services.AddSingleton<IQrCodeReader, ZXingNetQrCodeReader>();
-builder.Services.AddTransient<IEmailCreator, EmailCreator>();
+builder.Services.AddTransient<IPublishingService, PublishingService>();
 builder.Services.AddTransient<ISchoolExamRepository, SchoolExamRepository>();
 builder.Services.AddTransient<ICourseService, CourseService>();
 builder.Services.AddTransient<IExamService, ExamService>();

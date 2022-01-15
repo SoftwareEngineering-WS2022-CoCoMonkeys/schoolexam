@@ -6,10 +6,9 @@ namespace SchoolExam.Infrastructure.Extensions;
 
 public static class RepositoryExtensions
 {
-    public static TEntity? Find<TEntity, TIdentity>(this IRepository repository, TIdentity id)
-        where TEntity : class, IEntity<TIdentity>
+    public static TEntity? Find<TEntity>(this IRepository repository, Guid id) where TEntity : class, IEntity
     {
-        var spec = new EntityByIdSpecification<TEntity, TIdentity>(id);
+        var spec = new EntityByIdSpecification<TEntity>(id);
         return repository.Find(spec);
     }
 

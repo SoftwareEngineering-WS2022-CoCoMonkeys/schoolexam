@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SchoolExam.Persistence.DataContext;
@@ -11,9 +12,10 @@ using SchoolExam.Persistence.DataContext;
 namespace SchoolExam.Persistence.Migrations
 {
     [DbContext(typeof(SchoolExamDbContext))]
-    partial class SchoolExamDataContextModelSnapshot : ModelSnapshot
+    [Migration("20220115192348_AddsAdmin2")]
+    partial class AddsAdmin2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -181,6 +183,9 @@ namespace SchoolExam.Persistence.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("GradingTableId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("State")
                         .HasColumnType("integer");
 
@@ -191,6 +196,8 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatorId");
+
+                    b.HasIndex("GradingTableId");
 
                     b.ToTable("Exam", (string)null);
 
@@ -225,7 +232,7 @@ namespace SchoolExam.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ExamId")
+                    b.Property<Guid?>("ExamId")
                         .HasColumnType("uuid");
 
                     b.Property<double>("MaxPoints")
@@ -248,13 +255,7 @@ namespace SchoolExam.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ExamId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ExamId")
-                        .IsUnique();
 
                     b.ToTable("GradingTable", (string)null);
                 });
@@ -745,6 +746,10 @@ namespace SchoolExam.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.GradingTable", "GradingTable")
+                        .WithMany()
+                        .HasForeignKey("GradingTableId");
+
                     b.OwnsOne("SchoolExam.Domain.ValueObjects.Topic", "Topic", b1 =>
                         {
                             b1.Property<Guid>("ExamId")
@@ -770,6 +775,8 @@ namespace SchoolExam.Persistence.Migrations
                                 });
                         });
 
+                    b.Navigation("GradingTable");
+
                     b.Navigation("Topic")
                         .IsRequired();
                 });
@@ -787,9 +794,7 @@ namespace SchoolExam.Persistence.Migrations
                 {
                     b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", null)
                         .WithMany("Tasks")
-                        .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ExamId");
 
                     b.OwnsOne("SchoolExam.Domain.ValueObjects.ExamPosition", "End", b1 =>
                         {
@@ -842,12 +847,6 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.GradingTable", b =>
                 {
-                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", null)
-                        .WithOne("GradingTable")
-                        .HasForeignKey("SchoolExam.Domain.Entities.ExamAggregate.GradingTable", "ExamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.OwnsMany("SchoolExam.Domain.ValueObjects.GradingTableInterval", "Intervals", b1 =>
                         {
                             b1.Property<Guid>("GradingTableId")
@@ -859,9 +858,8 @@ namespace SchoolExam.Persistence.Migrations
 
                             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
 
-                            b1.Property<string>("Grade")
-                                .IsRequired()
-                                .HasColumnType("text")
+                            b1.Property<double>("Grade")
+                                .HasColumnType("double precision")
                                 .HasColumnName("Grade");
 
                             b1.HasKey("GradingTableId", "Id");
@@ -879,8 +877,8 @@ namespace SchoolExam.Persistence.Migrations
                                     b2.Property<int>("GradingTableIntervalId")
                                         .HasColumnType("integer");
 
-                                    b2.Property<double>("Points")
-                                        .HasColumnType("double precision")
+                                    b2.Property<int>("Points")
+                                        .HasColumnType("integer")
                                         .HasColumnName("EndPoints");
 
                                     b2.Property<int>("Type")
@@ -903,8 +901,8 @@ namespace SchoolExam.Persistence.Migrations
                                     b2.Property<int>("GradingTableIntervalId")
                                         .HasColumnType("integer");
 
-                                    b2.Property<double>("Points")
-                                        .HasColumnType("double precision")
+                                    b2.Property<int>("Points")
+                                        .HasColumnType("integer")
                                         .HasColumnName("StartPoints");
 
                                     b2.Property<int>("Type")
@@ -1210,7 +1208,7 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.UserAggregate.User", b =>
                 {
-                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Person", "Person")
+                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Person", null)
                         .WithOne()
                         .HasForeignKey("SchoolExam.Domain.Entities.UserAggregate.User", "PersonId");
 
@@ -1243,8 +1241,6 @@ namespace SchoolExam.Persistence.Migrations
                                     Name = "Administrator"
                                 });
                         });
-
-                    b.Navigation("Person");
 
                     b.Navigation("Role")
                         .IsRequired();
@@ -1388,8 +1384,6 @@ namespace SchoolExam.Persistence.Migrations
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Exam", b =>
                 {
                     b.Navigation("Booklets");
-
-                    b.Navigation("GradingTable");
 
                     b.Navigation("Participants");
 

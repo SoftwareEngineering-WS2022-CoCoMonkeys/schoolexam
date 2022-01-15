@@ -3,7 +3,7 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate
 {
-    public class GradingTable : EntityBase<Guid>
+    public class GradingTable : EntityBase
     {
         public ICollection<GradingTableInterval> Intervals { get; set; }
         public Guid ExamId { get; set; }

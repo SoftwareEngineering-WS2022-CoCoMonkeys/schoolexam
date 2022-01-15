@@ -8,4 +8,8 @@ public static class SeedIds
     public static Guid SozialwissenschaftenCourseId { get; } = Guid.Parse("e5fa7d18-dddd-4969-b22a-12f89ac0b18a");
     public static Guid ProjektmanagementExamId { get; } = Guid.Parse("4c9be4e7-5507-46b2-9b9e-9746c931ee25");
     public static Guid AmiraJabbarId { get; } = Guid.Parse("3e0fe3ab-3a84-43b1-a501-11ffb47fc894");
+
+    public static Guid AdminId { get; } = Guid.Parse("16771069-c615-4e02-8703-0ff100d1b0b7");
+
+    public static Guid AmiraJabbarSubmissionId { get; } = Guid.Parse("4e0fe3ab-3a84-43b1-a501-11ffb47fc894");
 }
