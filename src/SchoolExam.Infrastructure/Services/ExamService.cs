@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using SchoolExam.Application.Pdf;
+using SchoolExam.Application.Publishing;
 using SchoolExam.Application.QrCode;
 using SchoolExam.Application.RandomGenerator;
 using SchoolExam.Application.Repository;
@@ -30,10 +31,11 @@ public class ExamService : IExamService
     private readonly IQrCodeGenerator _qrCodeGenerator;
     private readonly IPdfService _pdfService;
     private readonly IQrCodeReader _qrCodeReader;
+    private readonly IEmailCreator _emailCreator;
 
     public ExamService(ILogger<ExamService> logger, ISchoolExamRepository repository,
         IRandomGenerator randomGenerator, IQrCodeGenerator qrCodeGenerator, IPdfService pdfService,
-        IQrCodeReader qrCodeReader)
+        IQrCodeReader qrCodeReader, IEmailCreator emailCreator)
     {
         _logger = logger;
         _repository = repository;
@@ -41,6 +43,7 @@ public class ExamService : IExamService
         _qrCodeGenerator = qrCodeGenerator;
         _pdfService = pdfService;
         _qrCodeReader = qrCodeReader;
+        _emailCreator = emailCreator;
     }
 
     public Exam? GetById(Guid examId)
@@ -359,6 +362,7 @@ public class ExamService : IExamService
             .ToDictionary(x => x.BookletId, x => x);
 
         // get participating students
+
         var students = GetStudentsByExam(examId);
         var studentsDict = students.ToDictionary(x => x.QrCode.Data, x => x);
 
@@ -527,6 +531,31 @@ public class ExamService : IExamService
         await CheckCompletenessOfExamSubmissions(examId);
     }
 
+    public async Task PublishExam(Guid examId, DateTime? publishDateTime)
+    {
+        var exam = EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        if (exam.State == ExamState.Published)
+        {
+            throw new InvalidOperationException("Exam is already published.");
+        }
+        var students = GetStudentsByExam(examId);
+        if (!publishDateTime.HasValue || publishDateTime.Value < DateTime.UtcNow)
+        {
+            foreach(Student student in students)
+            {
+                _emailCreator.sendEmailToStudent(student, exam);
+                
+            }
+            exam.State = ExamState.Published;
+            _repository.Update(exam);
+            await _repository.SaveChangesAsync();
+        }
+        else
+        {
+            _emailCreator.scheduleSendEmailToStudent(students, exam, publishDateTime.Value);
+        }
+    }
+
     private Exam EnsureExamExists(EntityByIdSpecification<Exam, Guid> spec)
     {
         var exam = _repository.Find(spec);
@@ -619,7 +648,7 @@ public class ExamService : IExamService
         // assign student to submission
         submission.StudentId ??= studentId;
     }
-
+    
     private IEnumerable<Student> GetStudentsByExam(Guid examId)
     {
         var examWithStudents = _repository.Find(new ExamWithParticipantsById(examId))!;
@@ -629,4 +658,5 @@ public class ExamService : IExamService
 
         return students;
     }
+    
 }
