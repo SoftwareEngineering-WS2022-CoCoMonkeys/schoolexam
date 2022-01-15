@@ -2,21 +2,35 @@
 using System.Net;
 using System.Net.Mail;
 using System.Net.Mime;
+using PdfSharp.Pdf.IO;
+using PdfSharp.Pdf.Security;
 using SchoolExam.Application.Publishing;
+using SchoolExam.Application.Repository;
+using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
+using SchoolExam.Domain.Entities.SubmissionAggregate;
+using SchoolExam.Domain.ValueObjects;
+using PdfReader = iText.Kernel.Pdf.PdfReader;
 
 namespace SchoolExam.Infrastructure.Publishing;
 
-public class EmailCreator : IEmailCreator
+public class PublishingService : IPublishingService
 {
-    public bool sendEmailToStudent(Student student, Exam exam)
+    private readonly ISchoolExamRepository _repository;
+    private Timer timer;
+    
+    public PublishingService(ISchoolExamRepository repository)
+    {
+        _repository = repository;
+    }
+    
+    public bool sendEmailToStudent(Booklet booklet, Exam exam)
     {
 
-        // Specify the file to be attached and sent.
-        // This example assumes that a file named Data.xls exists in the
-        // current working directory.
-        string file = "data.xls";
+        var student = booklet.Submission.Student;
+        var remarkPdf = booklet.Submission.RemarkPdfFile;
+        
         // Create a message and set up the recipients.
         var mailSubject =
             string.Format(
@@ -38,15 +52,10 @@ public class EmailCreator : IEmailCreator
             string.Format($"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}"));
 
 
-        // Create  the file attachment for this email message.
-        Attachment data = new Attachment(file, MediaTypeNames.Application.Octet);
-        // Add time stamp information for the file.
-        ContentDisposition disposition = data.ContentDisposition;
-        disposition.CreationDate = System.IO.File.GetCreationTime(file);
-        disposition.ModificationDate = System.IO.File.GetLastWriteTime(file);
-        disposition.ReadDate = System.IO.File.GetLastAccessTime(file);
-        // Add the file attachment to this email message.
-        message.Attachments.Add(data);
+        var examToBePublishedPdf = GetExamPdfToBePublished(remarkPdf, student);
+            
+        var attachment = GetPublishingExamAttachment(examToBePublishedPdf);
+        message.Attachments.Add(attachment);
 
         //Send the message.
         SmtpClient client = new SmtpClient
@@ -69,12 +78,86 @@ public class EmailCreator : IEmailCreator
                 ex.ToString());
         }
 
-        data.Dispose();
+        attachment.Dispose();
         return true;
     }
 
-    public async Task scheduleSendEmailToStudent(IEnumerable<Student>  student, Exam exam, DateTime publishDateTime)
+    private Attachment GetPublishingExamAttachment(PdfSharp.Pdf.PdfDocument examToBePublishedPdf)
     {
-           
+        
+        // Specify the file to be attached and sent.
+        // This example assumes that a file named Data.xls exists in the
+        // current working directory.
+        MemoryStream stream = new MemoryStream();
+
+        examToBePublishedPdf.Save(stream,false);
+        
+        // Create  the file attachment for this email message.
+        Attachment attachment = new Attachment(stream, MediaTypeNames.Application.Octet);
+        // Add time stamp information for the file.
+        ContentDisposition disposition = attachment.ContentDisposition;
+        //disposition.CreationDate = System.IO.File.GetCreationTime(file);
+        //disposition.ModificationDate = System.IO.File.GetLastWriteTime(file);
+        //disposition.ReadDate = System.IO.File.GetLastAccessTime(file);
+        // Add the file attachment to this email message.
+        stream.Close();
+        return attachment;
     }
+    
+    private PdfSharp.Pdf.PdfDocument GetExamPdfToBePublished(RemarkPdfFile remarkPdf, Student student)
+    {
+
+        //Steam pdf byte array and put in new document to add password
+        MemoryStream stream = new MemoryStream(remarkPdf.Content);
+        PdfSharp.Pdf.PdfDocument document = PdfSharp.Pdf.IO.PdfReader.Open(stream, PdfDocumentOpenMode.Modify);
+
+        PdfSecuritySettings securitySettings = document.SecuritySettings;
+
+        // Setting one of the passwords automatically sets the security level to 
+        // PdfDocumentSecurityLevel.Encrypted128Bit.
+        securitySettings.UserPassword  = String.Format($"{student.Id.ToString().Substring(0,12)}");
+        securitySettings.OwnerPassword = String.Format($"{student.Id.ToString()}");
+
+
+
+        // Restrict some rights.
+        /*securitySettings.PermitAccessibilityExtractContent = false;
+        securitySettings.PermitAnnotations = false;
+        securitySettings.PermitAssembleDocument = false;
+        securitySettings.PermitExtractContent = false;
+        securitySettings.PermitFormsFill = true;
+        securitySettings.PermitFullQualityPrint = false;
+        securitySettings.PermitModifyDocument = true;
+        securitySettings.PermitPrint = false;*/
+
+        return document;
+    }
+
+    public async Task ScheduleSendEmailToStudent(IEnumerable<Booklet>  booklets, Exam exam, DateTime publishDateTime)
+    {
+        DateTime current = DateTime.Now;
+        TimeSpan timeToGo = publishDateTime - current;
+        if (timeToGo < TimeSpan.Zero)
+        {
+            await DoPublishExam(booklets, exam);
+            return;
+        }
+        timer = new Timer(x =>
+        {
+            DoPublishExam(booklets, exam);
+        }, null, timeToGo, Timeout.InfiniteTimeSpan);
+    }
+
+    public async Task DoPublishExam(IEnumerable<Booklet> booklets, Exam exam)
+    {
+        foreach(Booklet booklet in booklets)
+        {
+           sendEmailToStudent(booklet, exam);
+                
+        }
+        exam.State = ExamState.Published;
+        _repository.Update(exam);
+        await _repository.SaveChangesAsync();
+    }
+    
 }

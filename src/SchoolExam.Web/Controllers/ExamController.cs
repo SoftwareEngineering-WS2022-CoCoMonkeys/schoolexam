@@ -33,7 +33,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(Roles = Role.TeacherName)]
     public async Task<IActionResult> Create([FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Create(examWriteModel.Title, examWriteModel.Description, examWriteModel.Date,
+        await _examService.Create(examWriteModel.Title, examWriteModel.Date,
             GetPersonId()!.Value, examWriteModel.Topic);
         return Ok();
     }
@@ -43,7 +43,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> Update(Guid examId, [FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Update(examId, examWriteModel.Title, examWriteModel.Description, examWriteModel.Date);
+        await _examService.Update(examId, examWriteModel.Title, examWriteModel.Date);
         return Ok();
     }
 

@@ -30,7 +30,7 @@ public class UserController : ApiController<UserController>
     }
     
     [HttpGet]
-    [Route($"{{{RouteParameterNames.UserIdParameterName}}}")]
+    [Route($"ById/{{{RouteParameterNames.UserIdParameterName}}}")]
     [Authorize(Roles = Role.AdministratorName)]
     public UserReadModelBase GetUserById(Guid id)
     {
@@ -38,13 +38,23 @@ public class UserController : ApiController<UserController>
         return Mapper.Map<UserReadModelBase>(user);
     }
     
+    [HttpGet]
+    [Route("GetAllUsers")]
+    [Authorize(Roles = Role.AdministratorName)]
+    public List<UserReadModelBase> GetAllUser()
+    {
+        var users = _userService.GetAllUsers();
+        return Mapper.Map<List<UserReadModelBase>>(users);
+    }
+    
+    
     [HttpPost]
     [Route("Create")]
     [Authorize(Roles = Role.AdministratorName)]
     public async Task<IActionResult> Create(string username,  [FromBody] UserWriteModel userWriteModel)
     {
         var personId = !string.IsNullOrEmpty(userWriteModel.PersonId) ? (Guid?) Guid.Parse(userWriteModel.PersonId) : null;
-        await _userService.Create(username, userWriteModel.Password, userWriteModel.Role, personId);
+        await _userService.Create(username, userWriteModel.Password, new Role(userWriteModel.Role), personId);
         return Ok();
     }
     
@@ -55,7 +65,7 @@ public class UserController : ApiController<UserController>
     {
         
         var personId = !string.IsNullOrEmpty(userWriteModel.PersonId) ? (Guid?) Guid.Parse(userWriteModel.PersonId) : null;
-        await _userService.Update( username, userWriteModel.Password, userWriteModel.Role, personId);
+        await _userService.Update( username, userWriteModel.Password, Mapper.Map<Role>(userWriteModel.Role), personId);
         return Ok();
     }
 

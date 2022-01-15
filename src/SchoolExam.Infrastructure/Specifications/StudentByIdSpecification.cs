@@ -1,6 +1,11 @@
-﻿namespace SchoolExam.Infrastructure.Specifications;
+﻿using SchoolExam.Application.Specifications;
+using SchoolExam.Domain.Entities.PersonAggregate;
 
-public class StudentByIdSpecification
+namespace SchoolExam.Infrastructure.Specifications;
+
+public class StudentByIdSpecification: EntityByIdSpecification<Student, Guid>
 {
-    
+    public StudentByIdSpecification(Guid id) : base(id)
+    {
+    }
 }

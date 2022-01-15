@@ -4,10 +4,12 @@ using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
+using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Models.Course;
 using SchoolExam.Web.Models.Exam;
 using SchoolExam.Web.Models.Submission;
+using SchoolExam.Web.Models.User;
 
 namespace SchoolExam.Web.Mapping;
 
@@ -50,7 +52,9 @@ public class SchoolExamMappingProfile : Profile
             .ForMember(dst => dst.DisplayName,
                 opt => opt.MapFrom(src => $"{src.Student.FirstName} {src.Student.LastName}"));
 
+
         CreateMap<ExamTaskWriteModel, ExamTaskInfo>();
+        
 
         CreateMap<Submission, SubmissionReadModel>()
             .Include<Submission, SubmissionDetailsReadModel>()
