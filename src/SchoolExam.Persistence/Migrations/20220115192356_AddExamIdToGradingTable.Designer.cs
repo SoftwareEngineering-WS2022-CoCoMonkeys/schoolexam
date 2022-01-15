@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SchoolExam.Persistence.DataContext;
@@ -11,9 +12,10 @@ using SchoolExam.Persistence.DataContext;
 namespace SchoolExam.Persistence.Migrations
 {
     [DbContext(typeof(SchoolExamDbContext))]
-    partial class SchoolExamDataContextModelSnapshot : ModelSnapshot
+    [Migration("20220115192356_AddExamIdToGradingTable")]
+    partial class AddExamIdToGradingTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,6 +66,10 @@ namespace SchoolExam.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -79,6 +85,7 @@ namespace SchoolExam.Persistence.Migrations
                         new
                         {
                             Id = new Guid("e5fa7d18-dddd-4969-b22a-12f89ac0b18a"),
+                            Description = "Projektmanagement, etc.",
                             Name = "Sozialwissenschaften 2022",
                             SchoolId = new Guid("04bceee7-a744-48a7-9a0a-eda2d4a142d5")
                         });
@@ -178,6 +185,10 @@ namespace SchoolExam.Persistence.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -200,9 +211,10 @@ namespace SchoolExam.Persistence.Migrations
                             Id = new Guid("4c9be4e7-5507-46b2-9b9e-9746c931ee25"),
                             CreatorId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
                             Date = new DateTime(2022, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "",
                             DueDate = new DateTime(2022, 4, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             State = 0,
-                            Title = "1. Schulaufgabe"
+                            Title = ""
                         });
                 });
 
@@ -489,12 +501,6 @@ namespace SchoolExam.Persistence.Migrations
                             Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
                             PersonId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
                             Username = "admin"
-                        },
-                        new
-                        {
-                            Id = new Guid("16771069-c615-4e02-8703-0ff100d1b0b7"),
-                            Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
-                            Username = "admin2"
                         });
                 });
 
@@ -1236,11 +1242,6 @@ namespace SchoolExam.Persistence.Migrations
                                 {
                                     UserId = new Guid("314ddd2e-62bb-4a29-8517-bb38ef96c897"),
                                     Name = "Teacher"
-                                },
-                                new
-                                {
-                                    UserId = new Guid("16771069-c615-4e02-8703-0ff100d1b0b7"),
-                                    Name = "Administrator"
                                 });
                         });
 

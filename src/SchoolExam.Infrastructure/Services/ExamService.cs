@@ -173,10 +173,9 @@ public class ExamService : IExamService
                 // add start and end marker to list such that they can be removed from the PDF file afterwards
                 matchedLinks.Add(startLink);
                 matchedLinks.Add(endLink);
-                var examTask = new ExamTask(taskId, task.Title, task.MaxPoints, 1,
+                var examTask = new ExamTask(taskId, task.Title, task.MaxPoints, examId,
                     new ExamPosition(startLink.Page, startLink.Top), new ExamPosition(endLink.Page, endLink.Bottom));
                 _repository.Add(examTask);
-                exam.Tasks.Add(examTask);
             }
         }
 
@@ -210,7 +209,7 @@ public class ExamService : IExamService
         {
             throw new InvalidOperationException("Exam does not have a task PDF file.");
         }
-
+        
         // clean booklets from previous builds
         if (exam.State.HasBeenBuilt())
         {
@@ -361,7 +360,6 @@ public class ExamService : IExamService
             .ToDictionary(x => x.BookletId, x => x);
 
         // get participating students
-
         var students = GetStudentsByExam(examId);
         var studentsDict = students.ToDictionary(x => x.QrCode.Data, x => x);
 
@@ -528,6 +526,71 @@ public class ExamService : IExamService
 
         await MergeCompleteSubmissions(examId, new[] {submission.Id}, userId);
         await CheckCompletenessOfExamSubmissions(examId);
+    }
+
+    public double GetMaxPoints(Guid examId)
+    {
+        var exam = EnsureExamExists(new ExamWithTasksByIdSpecification(examId));
+        var maxPoints = exam.Tasks.Sum(x => x.MaxPoints);
+        return maxPoints;
+    }
+
+    public async Task SetGradingTable(Guid examId, params GradingTableIntervalLowerBound[] lowerBounds)
+    {
+        var exam = EnsureExamExists(new ExamWithGradingTableById(examId));
+        
+        // remove previously existing grading table
+        if (exam.GradingTable != null)
+        {
+            _repository.Remove(exam.GradingTable);
+        }
+
+        var tasks = _repository.List(new ExamTaskByExamSpecification(examId));
+        var maxPoints = tasks.Sum(x => x.MaxPoints);
+
+        var lowerBoundsOrdered = lowerBounds.OrderBy(x => x.Points).ToArray();
+        var count = lowerBoundsOrdered.Length;
+        if (count < 1)
+        {
+            throw new ArgumentException("Grading table must contain at least one interval.");
+        }
+
+        if (lowerBoundsOrdered[0].Points != 0.0)
+        {
+            throw new ArgumentException("A grading interval starting from 0.0 points must be included.");
+        }
+        
+        var intervals = new List<GradingTableInterval>();
+        for (int i = 0; i < count - 1; i++)
+        {
+            var current = lowerBoundsOrdered[i];
+            if (current.Points > maxPoints)
+            {
+                throw new ArgumentException("A grading interval exceeds the maximum number of points.");
+            }
+            var next = lowerBoundsOrdered[i + 1];
+            if (current == next)
+            {
+                throw new ArgumentException("A grading interval must not be empty.");
+            }
+            var lowerBound = new GradingTableIntervalBound(current.Points, GradingTableIntervalBoundType.Inclusive);
+            var upperBound = new GradingTableIntervalBound(next.Points, GradingTableIntervalBoundType.Exclusive);
+            intervals.Add(new GradingTableInterval(lowerBound, upperBound, current.Grade));
+        }
+
+        // deal with last bound separately
+        var last = lowerBoundsOrdered[count - 1];
+        var lowerBoundLast = new GradingTableIntervalBound(last.Points, GradingTableIntervalBoundType.Inclusive);
+        var upperBoundLast = new GradingTableIntervalBound(maxPoints, GradingTableIntervalBoundType.Inclusive);
+        intervals.Add(new GradingTableInterval(lowerBoundLast, upperBoundLast, last.Grade));
+        
+        var gradingTable = new GradingTable(Guid.NewGuid(), examId)
+        {
+            Intervals = intervals
+        };
+        _repository.Add(gradingTable);
+
+        await _repository.SaveChangesAsync();
     }
 
     public async Task PublishExam(Guid examId, DateTime? publishDateTime)

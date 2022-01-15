@@ -2,10 +2,10 @@ namespace SchoolExam.Domain.ValueObjects;
 
 public class GradingTableIntervalBound : IComparable<GradingTableIntervalBound>
 {
-    public int Points { get; }
+    public double Points { get; }
     public GradingTableIntervalBoundType Type { get; }
 
-    public GradingTableIntervalBound(int points, GradingTableIntervalBoundType type)
+    public GradingTableIntervalBound(double points, GradingTableIntervalBoundType type)
     {
         Points = points;
         Type = type;
