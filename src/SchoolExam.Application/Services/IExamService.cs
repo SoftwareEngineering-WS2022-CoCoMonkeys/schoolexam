@@ -1,5 +1,6 @@
 using SchoolExam.Application.TagLayout;
 using SchoolExam.Domain.Entities.ExamAggregate;
+using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 
 namespace SchoolExam.Application.Services;
@@ -9,8 +10,8 @@ public interface IExamService
     Exam? GetById(Guid examId);
     IEnumerable<Exam> GetByTeacher(Guid teacherId);
     IEnumerable<Exam> GetByStudent(Guid studentId);
-    Task Create(string title, string description, DateTime date, Guid teacherId, string topic);
-    Task Update(Guid examId, string title, string description, DateTime date);
+    Task Create(string title, DateTime date, Guid teacherId, string topic);
+    Task Update(Guid examId, string title, DateTime date);
     Task Delete(Guid examId);
     Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content);
     Task FindTasks(Guid examId, Guid userId, params ExamTaskInfo[] tasks);
@@ -23,4 +24,5 @@ public interface IExamService
     Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId, Guid userId);
 
     Task PublishExam(Guid examId, DateTime? publishDateTime);
+
 }

@@ -213,7 +213,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var newExam = TestEntityFactory.Create<Exam>();
 
         var examWriteModel = new ExamWriteModel
-            {Title = newExam.Title, Description = newExam.Description, Date = newExam.Date, Topic = newExam.Topic.Name};
+            {Title = newExam.Title, Date = newExam.Date, Topic = newExam.Topic.Name};
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/Create", examWriteModel);
         response.EnsureSuccessStatusCode();
@@ -223,7 +223,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         exams.Should().HaveCount(3);
 
         exams.Should().ContainEquivalentOf(newExam,
-            opts => opts.Including(x => x.Title).Including(x => x.Description).Including(x => x.Date));
+            opts => opts.Including(x => x.Title).Including(x => x.Date));
     }
 
     [Test]
@@ -238,7 +238,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var examWriteModel = new ExamWriteModel
         {
-            Title = updatedExam.Title, Description = updatedExam.Description, Date = updatedExam.Date,
+            Title = updatedExam.Title, Date = updatedExam.Date,
             Topic = updatedExam.Topic.Name
         };
 
@@ -250,7 +250,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         exams.Should().HaveCount(2);
 
         exams.Should().ContainEquivalentOf(updatedExam,
-            opts => opts.Including(x => x.Id).Including(x => x.Title).Including(x => x.Description)
+            opts => opts.Including(x => x.Id).Including(x => x.Title)
                 .Including(x => x.Date));
     }
 
@@ -271,7 +271,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         exams.Should().HaveCount(1);
 
         exams.Should().NotContainEquivalentOf(_exam,
-            opts => opts.Including(x => x.Id).Including(x => x.Title).Including(x => x.Description)
+            opts => opts.Including(x => x.Id).Including(x => x.Title)
                 .Including(x => x.Date));
     }
 

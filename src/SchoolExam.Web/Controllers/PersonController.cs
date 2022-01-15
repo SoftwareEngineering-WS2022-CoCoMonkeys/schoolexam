@@ -5,6 +5,7 @@ using SchoolExam.Application.Services;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Models.Person;
+using SchoolExam.Web.Models.User;
 
 namespace SchoolExam.Web.Controllers;
 
@@ -27,6 +28,17 @@ public class PersonController : ApiController<PersonController>
         var person = _personService.GetById(id);
         return Mapper.Map<PersonReadModel>(person);
     }
+    
+    [HttpGet]
+    [Route($"{{{RouteParameterNames.UserIdParameterName}}}")]
+    [Authorize(Roles = Role.AdministratorName)]
+    public List<UserReadModel> GetAllPersons()
+    {
+        var persons = _personService.GetAllPersons();
+        return Mapper.Map<List<UserReadModel>>(persons);
+    }
+
+
 
     
     [HttpPost]
@@ -46,7 +58,7 @@ public class PersonController : ApiController<PersonController>
     {
         await _personService.CreateWithUser(personWriteWithUserModel.FirstName,  personWriteWithUserModel.LastName, personWriteWithUserModel.DateOfBirth, 
             personWriteWithUserModel.Address, personWriteWithUserModel.EmailAddress, personWriteWithUserModel.Username, 
-            personWriteWithUserModel.Password, personWriteWithUserModel.Role);
+            personWriteWithUserModel.Password, Mapper.Map<Role>(personWriteWithUserModel.Role));
         return Ok();
     }
     

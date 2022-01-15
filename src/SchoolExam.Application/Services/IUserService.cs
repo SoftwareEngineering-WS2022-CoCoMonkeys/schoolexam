@@ -9,6 +9,8 @@ public interface IUserService
     
     User? GetById(Guid id);
 
+    IEnumerable<User> GetAllUsers();
+
     Task Create(string username, string password, Role role, Guid? personId);
 
     Task Update( string username, string password, Role role, Guid? personId);

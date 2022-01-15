@@ -10,4 +10,8 @@
       <ProjectReference Include="..\SchoolExam.Domain\SchoolExam.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="PDFSharp.Standard" Version="1.51.15" />
+    </ItemGroup>
+
 </Project>

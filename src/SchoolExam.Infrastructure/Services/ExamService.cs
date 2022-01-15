@@ -31,11 +31,11 @@ public class ExamService : IExamService
     private readonly IQrCodeGenerator _qrCodeGenerator;
     private readonly IPdfService _pdfService;
     private readonly IQrCodeReader _qrCodeReader;
-    private readonly IEmailCreator _emailCreator;
+    private readonly IPublishingService _publishingService;
 
     public ExamService(ILogger<ExamService> logger, ISchoolExamRepository repository,
         IRandomGenerator randomGenerator, IQrCodeGenerator qrCodeGenerator, IPdfService pdfService,
-        IQrCodeReader qrCodeReader, IEmailCreator emailCreator)
+        IQrCodeReader qrCodeReader, IPublishingService publishingService)
     {
         _logger = logger;
         _repository = repository;
@@ -43,7 +43,7 @@ public class ExamService : IExamService
         _qrCodeGenerator = qrCodeGenerator;
         _pdfService = pdfService;
         _qrCodeReader = qrCodeReader;
-        _emailCreator = emailCreator;
+        _publishingService = publishingService;
     }
 
     public Exam? GetById(Guid examId)
@@ -63,16 +63,16 @@ public class ExamService : IExamService
         throw new NotImplementedException();
     }
 
-    public async Task Create(string title, string description, DateTime date, Guid teacherId, string topic)
+    public async Task Create(string title,  DateTime date, Guid teacherId, string topic)
     {
         var examId = Guid.NewGuid();
-        var exam = new Exam(examId, title, description, date, teacherId, new Topic(topic));
+        var exam = new Exam(examId, title,date, teacherId, new Topic(topic));
 
         _repository.Add(exam);
         await _repository.SaveChangesAsync();
     }
 
-    public async Task Update(Guid examId, string title, string description, DateTime date)
+    public async Task Update(Guid examId, string title, DateTime date)
     {
         var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         exam.Title = title;
@@ -538,21 +538,19 @@ public class ExamService : IExamService
         {
             throw new InvalidOperationException("Exam is already published.");
         }
-        var students = GetStudentsByExam(examId);
-        if (!publishDateTime.HasValue || publishDateTime.Value < DateTime.UtcNow)
+        //var students = GetStudentsByExam(examId);
+        var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
+        
+        if (publishDateTime.HasValue && publishDateTime.Value > DateTime.UtcNow)
         {
-            foreach(Student student in students)
-            {
-                _emailCreator.sendEmailToStudent(student, exam);
-                
-            }
-            exam.State = ExamState.Published;
-            _repository.Update(exam);
-            await _repository.SaveChangesAsync();
+            var scheduledExamId = Guid.NewGuid();
+            var scheduledExam = new ScheduledExam(scheduledExamId, examId, publishDateTime.Value, false);
+            _repository.Add(scheduledExam);
+            await _publishingService.ScheduleSendEmailToStudent(booklets, exam, publishDateTime.Value);
         }
         else
         {
-            _emailCreator.scheduleSendEmailToStudent(students, exam, publishDateTime.Value);
+            await _publishingService.DoPublishExam(booklets, exam);
         }
     }
 

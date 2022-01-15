@@ -4,6 +4,7 @@ using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
 
 namespace SchoolExam.Infrastructure.Services;
@@ -26,6 +27,11 @@ public class UserService : IUserService
     public User? GetByUsername(string username)
     {
         return _repository.Find(new UserByUserNameSpecification(username));
+    }
+
+    public IEnumerable<User> GetAllUsers()
+    {
+        return _repository.List<User>();
     }
 
     public async Task Create(string username, string password, Role role, Guid? personId)

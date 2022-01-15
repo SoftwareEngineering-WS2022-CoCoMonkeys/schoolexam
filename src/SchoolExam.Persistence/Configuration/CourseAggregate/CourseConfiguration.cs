@@ -19,7 +19,7 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.HasData(new
         {
             Id = SeedIds.SozialwissenschaftenCourseId, Name = "Sozialwissenschaften 2022",
-            Description = "Projektmanagement, etc.", SchoolId = SeedIds.GymnasiumDiedorfId
+            SchoolId = SeedIds.GymnasiumDiedorfId
         });
     }
 }
