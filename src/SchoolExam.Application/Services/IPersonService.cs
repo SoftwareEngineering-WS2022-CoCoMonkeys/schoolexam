@@ -6,6 +6,8 @@ namespace SchoolExam.Application.Services;
 public interface IPersonService
 {
     Person? GetById(Guid id);
+
+    IEnumerable<Person> GetAllPersons();
     
     Task Create(string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress);
 

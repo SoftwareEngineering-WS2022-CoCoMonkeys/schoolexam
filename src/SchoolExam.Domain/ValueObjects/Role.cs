@@ -22,7 +22,7 @@ public class Role
 
     public string Name { get; }
     
-    private Role(string name)
+    public Role(string name)
     {
         Name = name;
     }

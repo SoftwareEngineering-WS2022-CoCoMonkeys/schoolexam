@@ -1,12 +1,12 @@
 namespace SchoolExam.Domain.Base
 {
-    public class EntityBase<TIdentity> : IEntity<TIdentity>
+    public class EntityBase : IEntity
     {
-        protected EntityBase(TIdentity id)
+        protected EntityBase(Guid id)
         {
             Id = id;
         }
 
-        public TIdentity Id { get; set; }
+        public Guid Id { get; set; }
     }
 }

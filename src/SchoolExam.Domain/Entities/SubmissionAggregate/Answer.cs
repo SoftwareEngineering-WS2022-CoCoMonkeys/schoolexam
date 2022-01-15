@@ -4,7 +4,7 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 
-public class Answer : EntityBase<Guid>
+public class Answer : EntityBase
 {
     public AnswerState State { get; set; }
     public double? AchievedPoints { get; set; }

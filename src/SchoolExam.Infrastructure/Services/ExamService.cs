@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using SchoolExam.Application.Pdf;
+using SchoolExam.Application.Publishing;
 using SchoolExam.Application.QrCode;
 using SchoolExam.Application.RandomGenerator;
 using SchoolExam.Application.Repository;
@@ -30,10 +31,11 @@ public class ExamService : IExamService
     private readonly IQrCodeGenerator _qrCodeGenerator;
     private readonly IPdfService _pdfService;
     private readonly IQrCodeReader _qrCodeReader;
+    private readonly IPublishingService _publishingService;
 
     public ExamService(ILogger<ExamService> logger, ISchoolExamRepository repository,
         IRandomGenerator randomGenerator, IQrCodeGenerator qrCodeGenerator, IPdfService pdfService,
-        IQrCodeReader qrCodeReader)
+        IQrCodeReader qrCodeReader, IPublishingService publishingService)
     {
         _logger = logger;
         _repository = repository;
@@ -41,11 +43,12 @@ public class ExamService : IExamService
         _qrCodeGenerator = qrCodeGenerator;
         _pdfService = pdfService;
         _qrCodeReader = qrCodeReader;
+        _publishingService = publishingService;
     }
 
     public Exam? GetById(Guid examId)
     {
-        var result = _repository.Find<Exam, Guid>(examId);
+        var result = _repository.Find<Exam>(examId);
         return result;
     }
 
@@ -60,20 +63,19 @@ public class ExamService : IExamService
         throw new NotImplementedException();
     }
 
-    public async Task Create(string title, string description, DateTime date, Guid teacherId, string topic)
+    public async Task Create(string title, DateTime date, Guid teacherId, string topic)
     {
         var examId = Guid.NewGuid();
-        var exam = new Exam(examId, title, description, date, teacherId, new Topic(topic));
+        var exam = new Exam(examId, title, date, teacherId, new Topic(topic));
 
         _repository.Add(exam);
         await _repository.SaveChangesAsync();
     }
 
-    public async Task Update(Guid examId, string title, string description, DateTime date)
+    public async Task Update(Guid examId, string title, DateTime date)
     {
-        var exam = EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         exam.Title = title;
-        exam.Description = description;
         exam.Date = date;
 
         _repository.Update(exam);
@@ -82,7 +84,7 @@ public class ExamService : IExamService
 
     public async Task Delete(Guid examId)
     {
-        var exam = EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         if (exam.State.HasBeenBuilt())
         {
             throw new InvalidOperationException("An exam that already has been built must not be deleted.");
@@ -156,7 +158,7 @@ public class ExamService : IExamService
                 {
                     throw new InvalidOperationException($"Task with id {taskId} was found in PDF more than once.");
                 }
-                
+
                 // find corresponding end marker
                 var taskEndString = $"task-end-{taskId}";
                 if (!endLinkCandidatesDict.ContainsKey(taskEndString))
@@ -171,10 +173,9 @@ public class ExamService : IExamService
                 // add start and end marker to list such that they can be removed from the PDF file afterwards
                 matchedLinks.Add(startLink);
                 matchedLinks.Add(endLink);
-                var examTask = new ExamTask(taskId, task.Title, task.MaxPoints, 1,
+                var examTask = new ExamTask(taskId, task.Title, task.MaxPoints, examId,
                     new ExamPosition(startLink.Page, startLink.Top), new ExamPosition(endLink.Page, endLink.Bottom));
                 _repository.Add(examTask);
-                exam.Tasks.Add(examTask);
             }
         }
 
@@ -264,13 +265,13 @@ public class ExamService : IExamService
 
     public byte[] GetParticipantQrCodePdf<TLayout>(Guid examId) where TLayout : ITagLayout<TLayout>, new()
     {
-        EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
 
         var students = GetStudentsByExam(examId).ToArray();
 
         var layout = new TLayout();
         var elements = layout.GetElements().ToArray();
-        
+
         var textHeight = PdfUnitConverter.ConvertMmToPoint(5);
         // width and height are always equal for a QR code
         var qrCodeSize = Math.Min(layout.TagSize.Width, layout.TagSize.Height - textHeight - layout.Padding) -
@@ -278,7 +279,7 @@ public class ExamService : IExamService
         var qrCodeLeft = (layout.TagSize.Width - qrCodeSize) / 2;
         var qrCodeBottom = (layout.TagSize.Height - qrCodeSize - layout.Padding - textHeight) / 2 + layout.Padding +
                            textHeight;
-        
+
         var images = new List<PdfImageRenderInfo>();
         var texts = new List<PdfTextRenderInfo>();
         for (int i = 0; i < students.Length; i++)
@@ -286,12 +287,12 @@ public class ExamService : IExamService
             var student = students[i];
             var qrCode = _qrCodeGenerator.GeneratePngQrCode(student.QrCode.Data);
             var page = i / elements.Length + 1;
-            
+
             var element = elements[i % elements.Length];
             var left = element.Left + qrCodeLeft;
             var bottom = layout.PageSize.Height - element.Top - layout.TagSize.Height + qrCodeBottom;
             images.Add(new PdfImageRenderInfo(page, left, bottom, qrCodeSize, qrCode));
-            
+
             var studentName = $"{student.FirstName} {student.LastName}";
             var leftText = element.Left + layout.Padding;
             var bottomText = layout.PageSize.Height - element.Top - layout.TagSize.Height + layout.Padding;
@@ -301,7 +302,7 @@ public class ExamService : IExamService
         }
 
         var pdf = _pdfService.CreateEmptyPdf(1, layout.PageSize);
-        var pdfWithQrCodes =  _pdfService.RenderImages(pdf, images.ToArray());
+        var pdfWithQrCodes = _pdfService.RenderImages(pdf, images.ToArray());
         var pdfWithTexts = _pdfService.RenderTexts(pdfWithQrCodes, texts.ToArray());
 
         return pdfWithTexts;
@@ -456,7 +457,7 @@ public class ExamService : IExamService
 
     public IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId)
     {
-        EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         var submissionPages = _repository.List(new SubmissionPageByExamSpecification(examId));
 
         var result = submissionPages.Where(x => !x.IsMatched);
@@ -474,20 +475,20 @@ public class ExamService : IExamService
 
     public async Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId, Guid userId)
     {
-        EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
-        var bookletPage = _repository.Find<BookletPage, Guid>(bookletPageId);
+        EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
+        var bookletPage = _repository.Find<BookletPage>(bookletPageId);
         if (bookletPage == null)
         {
             throw new ArgumentException("Booklet page does not exist.");
         }
 
-        var bookletExamId = _repository.Find<Booklet, Guid>(bookletPage.BookletId)!.ExamId;
+        var bookletExamId = _repository.Find<Booklet>(bookletPage.BookletId)!.ExamId;
         if (!examId.Equals(bookletExamId))
         {
             throw new InvalidOperationException("Booklet page is not part of the exam.");
         }
 
-        var submissionPage = _repository.Find<SubmissionPage, Guid>(submissionPageId);
+        var submissionPage = _repository.Find<SubmissionPage>(submissionPageId);
         if (submissionPage == null)
         {
             throw new ArgumentException("Submission page does not exist.");
@@ -519,7 +520,7 @@ public class ExamService : IExamService
         submissionPage.SubmissionId = submission.Id;
         submissionPage.BookletPageId = bookletPageId;
         submission.UpdatedAt = DateTime.Now.SetKindUtc();
-        
+
         _repository.Update(submissionPage);
         await _repository.SaveChangesAsync();
 
@@ -527,7 +528,96 @@ public class ExamService : IExamService
         await CheckCompletenessOfExamSubmissions(examId);
     }
 
-    private Exam EnsureExamExists(EntityByIdSpecification<Exam, Guid> spec)
+    public double GetMaxPoints(Guid examId)
+    {
+        var exam = EnsureExamExists(new ExamWithTasksByIdSpecification(examId));
+        var maxPoints = exam.Tasks.Sum(x => x.MaxPoints);
+        return maxPoints;
+    }
+
+    public async Task SetGradingTable(Guid examId, params GradingTableIntervalLowerBound[] lowerBounds)
+    {
+        var exam = EnsureExamExists(new ExamWithGradingTableById(examId));
+        
+        // remove previously existing grading table
+        if (exam.GradingTable != null)
+        {
+            _repository.Remove(exam.GradingTable);
+        }
+
+        var tasks = _repository.List(new ExamTaskByExamSpecification(examId));
+        var maxPoints = tasks.Sum(x => x.MaxPoints);
+
+        var lowerBoundsOrdered = lowerBounds.OrderBy(x => x.Points).ToArray();
+        var count = lowerBoundsOrdered.Length;
+        if (count < 1)
+        {
+            throw new ArgumentException("Grading table must contain at least one interval.");
+        }
+
+        if (lowerBoundsOrdered[0].Points != 0.0)
+        {
+            throw new ArgumentException("A grading interval starting from 0.0 points must be included.");
+        }
+        
+        var intervals = new List<GradingTableInterval>();
+        for (int i = 0; i < count - 1; i++)
+        {
+            var current = lowerBoundsOrdered[i];
+            if (current.Points > maxPoints)
+            {
+                throw new ArgumentException("A grading interval exceeds the maximum number of points.");
+            }
+            var next = lowerBoundsOrdered[i + 1];
+            if (current == next)
+            {
+                throw new ArgumentException("A grading interval must not be empty.");
+            }
+            var lowerBound = new GradingTableIntervalBound(current.Points, GradingTableIntervalBoundType.Inclusive);
+            var upperBound = new GradingTableIntervalBound(next.Points, GradingTableIntervalBoundType.Exclusive);
+            intervals.Add(new GradingTableInterval(lowerBound, upperBound, current.Grade));
+        }
+
+        // deal with last bound separately
+        var last = lowerBoundsOrdered[count - 1];
+        var lowerBoundLast = new GradingTableIntervalBound(last.Points, GradingTableIntervalBoundType.Inclusive);
+        var upperBoundLast = new GradingTableIntervalBound(maxPoints, GradingTableIntervalBoundType.Inclusive);
+        intervals.Add(new GradingTableInterval(lowerBoundLast, upperBoundLast, last.Grade));
+        
+        var gradingTable = new GradingTable(Guid.NewGuid(), examId)
+        {
+            Intervals = intervals
+        };
+        _repository.Add(gradingTable);
+
+        await _repository.SaveChangesAsync();
+    }
+
+    public async Task PublishExam(Guid examId, DateTime? publishDateTime)
+    {
+        var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
+        if (exam.State == ExamState.Published)
+        {
+            throw new InvalidOperationException("Exam is already published.");
+        }
+
+        //var students = GetStudentsByExam(examId);
+        var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
+
+        if (publishDateTime.HasValue && publishDateTime.Value > DateTime.UtcNow)
+        {
+            var scheduledExamId = Guid.NewGuid();
+            var scheduledExam = new ScheduledExam(scheduledExamId, examId, publishDateTime.Value, false);
+            _repository.Add(scheduledExam);
+            await _publishingService.ScheduleSendEmailToStudent(booklets, exam, publishDateTime.Value);
+        }
+        else
+        {
+            await _publishingService.DoPublishExam(booklets, exam);
+        }
+    }
+
+    private Exam EnsureExamExists(EntityByIdSpecification<Exam> spec)
     {
         var exam = _repository.Find(spec);
         if (exam == null)

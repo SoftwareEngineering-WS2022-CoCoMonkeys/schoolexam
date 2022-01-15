@@ -4,10 +4,9 @@ using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
 
-public class Exam : EntityBase<Guid>
+public class Exam : EntityBase
 {
     public string Title { get; set; }
-    public string Description { get; set; }
     public GradingTable? GradingTable { get; set; }
     public ICollection<ExamTask> Tasks { get; set; }
     public ICollection<Booklet> Booklets { get; set; }
@@ -23,10 +22,9 @@ public class Exam : EntityBase<Guid>
     {
     }
 
-    public Exam(Guid id, string title, string description, DateTime date, Guid creatorId, Topic topic) : this(id)
+    public Exam(Guid id, string title, DateTime date, Guid creatorId, Topic topic) : this(id)
     {
         Title = title;
-        Description = description;
         Date = date.SetKindUtc();
         // due date of exam correction is 14 days after exam date
         DueDate = date.AddDays(14);

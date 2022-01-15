@@ -4,6 +4,7 @@ using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
 
 namespace SchoolExam.Infrastructure.Services;
@@ -21,7 +22,12 @@ public class PersonService : IPersonService
     
     public Person? GetById(Guid id)
     {
-        return _context.Find(new PersonByPersonIdSpecification(id));
+        return _context.Find(new PersonByIdSpecification(id));
+    }
+
+    public IEnumerable<Person> GetAllPersons()
+    {
+        return _context.List<Person>();
     }
 
     public async Task Create(string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress)
@@ -31,6 +37,7 @@ public class PersonService : IPersonService
 
         _context.Add(person);
         await _context.SaveChangesAsync();
+        //return Task<>;
     }
 
     public async Task CreateWithUser(string firstName, string lastName, DateTime dateOfBirth, Address? address,
@@ -48,7 +55,7 @@ public class PersonService : IPersonService
     public async Task Update(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address,
         string emailAddress)
     {
-        var person = EnsurePersonExists(new PersonByPersonIdSpecification(id));
+        var person = EnsurePersonExists(new PersonByIdSpecification(id));
 
         person.FirstName = firstName;
         person.LastName = lastName;
@@ -60,12 +67,12 @@ public class PersonService : IPersonService
 
     public async Task Delete(Guid id)
     {
-        var person = EnsurePersonExists(new PersonByPersonIdSpecification(id));
+        var person = EnsurePersonExists(new PersonByIdSpecification(id));
         _context.Remove(person);
         await _context.SaveChangesAsync();
     }
     
-    private Person EnsurePersonExists(EntityByIdSpecification<Person, Guid> spec)
+    private Person EnsurePersonExists(EntityByIdSpecification<Person> spec)
     {
         var person = _context.Find(spec);
         if (person == null)

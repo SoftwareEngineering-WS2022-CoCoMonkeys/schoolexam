@@ -3,7 +3,7 @@ using SchoolExam.Domain.Entities.ExamAggregate;
 
 namespace SchoolExam.Infrastructure.Specifications;
 
-public class ExamWithBookletsWithPdfFileByIdSpecification : EntityByIdSpecification<Exam, Guid>
+public class ExamWithBookletsWithPdfFileByIdSpecification : EntityByIdSpecification<Exam>
 {
     public ExamWithBookletsWithPdfFileByIdSpecification(Guid id) : base(id)
     {

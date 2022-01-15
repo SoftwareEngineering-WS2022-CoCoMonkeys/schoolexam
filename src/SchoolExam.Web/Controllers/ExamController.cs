@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.TagLayout;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Extensions;
 using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Models.Exam;
 
@@ -33,7 +34,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(Roles = Role.TeacherName)]
     public async Task<IActionResult> Create([FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Create(examWriteModel.Title, examWriteModel.Description, examWriteModel.Date,
+        await _examService.Create(examWriteModel.Title, examWriteModel.Date.SetKindUtc(),
             GetPersonId()!.Value, examWriteModel.Topic);
         return Ok();
     }
@@ -43,7 +44,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> Update(Guid examId, [FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Update(examId, examWriteModel.Title, examWriteModel.Description, examWriteModel.Date);
+        await _examService.Update(examId, examWriteModel.Title, examWriteModel.Date.SetKindUtc());
         return Ok();
     }
 
@@ -123,6 +124,46 @@ public class ExamController : ApiController<ExamController>
             await _examService.MatchManually(examId, manualMatchModel.BookletPageId,
                 manualMatchModel.SubmissionPageId, GetUserId()!.Value);
         }
+
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Publish")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public async Task<IActionResult> PublishExam(Guid examId, [FromBody] PublishExamWriteModel publishExamWriteModel)
+    {
+        await _examService.PublishExam(examId, publishExamWriteModel.PublishingDateTime);
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/SetGradingTable")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public async Task<IActionResult> SetGradingTable(Guid examId,
+        [FromBody] GradingTableWriteModel gradingTableWriteModel)
+    {
+        var maxPoints = _examService.GetMaxPoints(examId);
+
+        double GetPoints(GradingTableLowerBoundModelBase lowerBound)
+        {
+            if (lowerBound is GradingTableLowerBoundPointsModel lowerBoundPoints)
+            {
+                return lowerBoundPoints.Points;
+            }
+
+            if (lowerBound is GradingTableLowerBoundPercentageModel lowerBoundPercentage)
+            {
+                return lowerBoundPercentage.Percentage / 100 * maxPoints;
+            }
+
+            throw new InvalidOperationException("Invalid type for grading table lower bound");
+        }
+
+        var lowerBounds =
+            gradingTableWriteModel.LowerBounds.Select(x => new GradingTableIntervalLowerBound(GetPoints(x), x.Grade));
+
+        await _examService.SetGradingTable(examId, lowerBounds.ToArray());
 
         return Ok();
     }

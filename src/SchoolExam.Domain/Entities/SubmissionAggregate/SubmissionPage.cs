@@ -3,7 +3,7 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 
-public class SubmissionPage : EntityBase<Guid>
+public class SubmissionPage : EntityBase
 {
     public Guid ExamId { get; set; }
     public SubmissionPagePdfFile PdfFile { get; set; }

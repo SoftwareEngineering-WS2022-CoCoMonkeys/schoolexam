@@ -4,7 +4,7 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.SchoolAggregate;
 
-public class School : EntityBase<Guid>
+public class School : EntityBase
 {
     public string Name { get; set; }
     public Address Location { get; set; }

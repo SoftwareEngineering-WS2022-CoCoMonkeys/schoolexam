@@ -64,10 +64,6 @@ namespace SchoolExam.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -83,7 +79,6 @@ namespace SchoolExam.Persistence.Migrations
                         new
                         {
                             Id = new Guid("e5fa7d18-dddd-4969-b22a-12f89ac0b18a"),
-                            Description = "Projektmanagement, etc.",
                             Name = "Sozialwissenschaften 2022",
                             SchoolId = new Guid("04bceee7-a744-48a7-9a0a-eda2d4a142d5")
                         });
@@ -183,15 +178,8 @@ namespace SchoolExam.Persistence.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("GradingTableId")
-                        .HasColumnType("uuid");
 
                     b.Property<int>("State")
                         .HasColumnType("integer");
@@ -204,8 +192,6 @@ namespace SchoolExam.Persistence.Migrations
 
                     b.HasIndex("CreatorId");
 
-                    b.HasIndex("GradingTableId");
-
                     b.ToTable("Exam", (string)null);
 
                     b.HasData(
@@ -214,10 +200,9 @@ namespace SchoolExam.Persistence.Migrations
                             Id = new Guid("4c9be4e7-5507-46b2-9b9e-9746c931ee25"),
                             CreatorId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
                             Date = new DateTime(2022, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "",
                             DueDate = new DateTime(2022, 4, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             State = 0,
-                            Title = ""
+                            Title = "1. Schulaufgabe"
                         });
                 });
 
@@ -240,7 +225,7 @@ namespace SchoolExam.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ExamId")
+                    b.Property<Guid>("ExamId")
                         .HasColumnType("uuid");
 
                     b.Property<double>("MaxPoints")
@@ -263,7 +248,13 @@ namespace SchoolExam.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ExamId")
+                        .IsUnique();
 
                     b.ToTable("GradingTable", (string)null);
                 });
@@ -498,6 +489,12 @@ namespace SchoolExam.Persistence.Migrations
                             Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
                             PersonId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
                             Username = "admin"
+                        },
+                        new
+                        {
+                            Id = new Guid("16771069-c615-4e02-8703-0ff100d1b0b7"),
+                            Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
+                            Username = "admin2"
                         });
                 });
 
@@ -748,10 +745,6 @@ namespace SchoolExam.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.GradingTable", "GradingTable")
-                        .WithMany()
-                        .HasForeignKey("GradingTableId");
-
                     b.OwnsOne("SchoolExam.Domain.ValueObjects.Topic", "Topic", b1 =>
                         {
                             b1.Property<Guid>("ExamId")
@@ -777,8 +770,6 @@ namespace SchoolExam.Persistence.Migrations
                                 });
                         });
 
-                    b.Navigation("GradingTable");
-
                     b.Navigation("Topic")
                         .IsRequired();
                 });
@@ -796,7 +787,9 @@ namespace SchoolExam.Persistence.Migrations
                 {
                     b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", null)
                         .WithMany("Tasks")
-                        .HasForeignKey("ExamId");
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.OwnsOne("SchoolExam.Domain.ValueObjects.ExamPosition", "End", b1 =>
                         {
@@ -849,6 +842,12 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.GradingTable", b =>
                 {
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", null)
+                        .WithOne("GradingTable")
+                        .HasForeignKey("SchoolExam.Domain.Entities.ExamAggregate.GradingTable", "ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.OwnsMany("SchoolExam.Domain.ValueObjects.GradingTableInterval", "Intervals", b1 =>
                         {
                             b1.Property<Guid>("GradingTableId")
@@ -860,8 +859,9 @@ namespace SchoolExam.Persistence.Migrations
 
                             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
 
-                            b1.Property<double>("Grade")
-                                .HasColumnType("double precision")
+                            b1.Property<string>("Grade")
+                                .IsRequired()
+                                .HasColumnType("text")
                                 .HasColumnName("Grade");
 
                             b1.HasKey("GradingTableId", "Id");
@@ -879,8 +879,8 @@ namespace SchoolExam.Persistence.Migrations
                                     b2.Property<int>("GradingTableIntervalId")
                                         .HasColumnType("integer");
 
-                                    b2.Property<int>("Points")
-                                        .HasColumnType("integer")
+                                    b2.Property<double>("Points")
+                                        .HasColumnType("double precision")
                                         .HasColumnName("EndPoints");
 
                                     b2.Property<int>("Type")
@@ -903,8 +903,8 @@ namespace SchoolExam.Persistence.Migrations
                                     b2.Property<int>("GradingTableIntervalId")
                                         .HasColumnType("integer");
 
-                                    b2.Property<int>("Points")
-                                        .HasColumnType("integer")
+                                    b2.Property<double>("Points")
+                                        .HasColumnType("double precision")
                                         .HasColumnName("StartPoints");
 
                                     b2.Property<int>("Type")
@@ -1210,7 +1210,7 @@ namespace SchoolExam.Persistence.Migrations
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.UserAggregate.User", b =>
                 {
-                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Person", null)
+                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Person", "Person")
                         .WithOne()
                         .HasForeignKey("SchoolExam.Domain.Entities.UserAggregate.User", "PersonId");
 
@@ -1236,8 +1236,15 @@ namespace SchoolExam.Persistence.Migrations
                                 {
                                     UserId = new Guid("314ddd2e-62bb-4a29-8517-bb38ef96c897"),
                                     Name = "Teacher"
+                                },
+                                new
+                                {
+                                    UserId = new Guid("16771069-c615-4e02-8703-0ff100d1b0b7"),
+                                    Name = "Administrator"
                                 });
                         });
+
+                    b.Navigation("Person");
 
                     b.Navigation("Role")
                         .IsRequired();
@@ -1381,6 +1388,8 @@ namespace SchoolExam.Persistence.Migrations
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Exam", b =>
                 {
                     b.Navigation("Booklets");
+
+                    b.Navigation("GradingTable");
 
                     b.Navigation("Participants");
 

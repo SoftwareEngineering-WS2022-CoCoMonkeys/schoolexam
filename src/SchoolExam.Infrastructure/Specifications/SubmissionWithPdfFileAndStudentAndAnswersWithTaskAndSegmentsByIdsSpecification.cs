@@ -4,8 +4,7 @@ using SchoolExam.Domain.Entities.SubmissionAggregate;
 namespace SchoolExam.Infrastructure.Specifications;
 
 public class
-    SubmissionWithPdfFileAndStudentAndAnswersWithTaskAndSegmentsByIdsSpecification : EntityByIdsSpecification<Submission
-        , Guid>
+    SubmissionWithPdfFileAndStudentAndAnswersWithTaskAndSegmentsByIdsSpecification : EntityByIdsSpecification<Submission>
 {
     public SubmissionWithPdfFileAndStudentAndAnswersWithTaskAndSegmentsByIdsSpecification(HashSet<Guid> ids) : base(ids)
     {

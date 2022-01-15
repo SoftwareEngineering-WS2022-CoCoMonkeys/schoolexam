@@ -1,30 +1,17 @@
 using SchoolExam.Domain.Base;
 using SchoolExam.Domain.ValueObjects;
-using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate
 {
-    public class GradingTable : EntityBase<Guid>
+    public class GradingTable : EntityBase
     {
-        private readonly ICollection<GradingTableInterval> intervals;
+        public ICollection<GradingTableInterval> Intervals { get; set; }
+        public Guid ExamId { get; set; }
 
-        public IReadOnlyCollection<GradingTableInterval> Intervals => intervals.AsReadOnly();
-
-        public GradingTable(Guid id) : base(id)
+        public GradingTable(Guid id, Guid examId) : base(id)
         {
-            intervals = new List<GradingTableInterval>();
-        }
-
-        public double GetGrade(int points)
-        {
-            return intervals.Single(x => x.Includes(points)).Grade;
-        }
-
-        public void AddInterval(GradingTableInterval interval)
-        {
-            if (intervals.Any(x => x.Overlaps(interval)))
-                throw new ArgumentException();
-            intervals.Add(interval);
+            Intervals = new List<GradingTableInterval>();
+            ExamId = examId;
         }
     }
 }

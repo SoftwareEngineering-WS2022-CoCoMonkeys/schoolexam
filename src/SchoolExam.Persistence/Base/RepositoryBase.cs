@@ -21,19 +21,19 @@ public abstract class RepositoryBase<TContext> : IRepository where TContext : Db
 
     public IEnumerable<TEntity> List<TEntity>(ISpecification<TEntity> spec) where TEntity : class
     {
-        var queryable = GetQueryableFromSpec(spec);
+        var queryable = GetQueryableFromSpec(spec).AsSplitQuery();
 
         return queryable.Where(spec.Criteria).AsEnumerable();
     }
 
     public TEntity? Find<TEntity>(ISpecification<TEntity> spec) where TEntity : class
     {
-        var queryable = GetQueryableFromSpec(spec);
+        var queryable = GetQueryableFromSpec(spec).AsSplitQuery();
         return queryable.SingleOrDefault(spec.Criteria);
     }
 
-    public TEntity? Find<TEntity, TIdentity>(TIdentity id, params string[] includes)
-        where TEntity : class, IEntity<TIdentity>
+    public TEntity? Find<TEntity>(Guid id, params string[] includes)
+        where TEntity : class, IEntity
     {
         var queryable = Context.Set<TEntity>().AsQueryable();
         IQueryable<TEntity> query = includes.Aggregate(queryable, (current, include) => current.Include(include));

@@ -4,7 +4,7 @@ using SchoolExam.Domain.Entities.ExamAggregate;
 
 namespace SchoolExam.Infrastructure.Specifications;
 
-public class ExamWithTaskPdfFileAndParticipantsById : EntityByIdSpecification<Exam, Guid>
+public class ExamWithTaskPdfFileAndParticipantsById : EntityByIdSpecification<Exam>
 {
     public ExamWithTaskPdfFileAndParticipantsById(Guid id) : base(id)
     {

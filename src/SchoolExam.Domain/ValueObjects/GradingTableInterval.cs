@@ -4,13 +4,13 @@ public class GradingTableInterval
 {
     public GradingTableIntervalBound Start { get; }
     public GradingTableIntervalBound End { get; }
-    public double Grade { get; }
+    public string Grade { get; }
 
     public GradingTableInterval()
     {
     }
 
-    public GradingTableInterval(GradingTableIntervalBound start, GradingTableIntervalBound end, double grade)
+    public GradingTableInterval(GradingTableIntervalBound start, GradingTableIntervalBound end, string grade)
     {
         if (start.Type == GradingTableIntervalBoundType.Exclusive &&
             end.Type == GradingTableIntervalBoundType.Exclusive)

@@ -1,10 +1,10 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using SchoolExam.Application.Authentication;
 using SchoolExam.Application.Pdf;
+using SchoolExam.Application.Publishing;
 using SchoolExam.Application.QrCode;
 using SchoolExam.Application.RandomGenerator;
 using SchoolExam.Application.Repository;
@@ -12,6 +12,7 @@ using SchoolExam.Application.Services;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Authentication;
 using SchoolExam.Infrastructure.Pdf;
+using SchoolExam.Infrastructure.Publishing;
 using SchoolExam.Infrastructure.QrCode;
 using SchoolExam.Infrastructure.RandomGenerator;
 using SchoolExam.Infrastructure.Repository;
@@ -29,6 +30,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new ExamParticipantReadModelJsonConverter());
+    options.JsonSerializerOptions.Converters.Add(new GradingTableLowerBoundModelJsonConverter());
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -126,6 +128,7 @@ builder.Services.AddSingleton<Random>();
 builder.Services.AddSingleton<IRandomGenerator, RandomGenerator>();
 builder.Services.AddSingleton<IPdfService, iText7PdfService>();
 builder.Services.AddSingleton<IQrCodeReader, ZXingNetQrCodeReader>();
+builder.Services.AddTransient<IPublishingService, PublishingService>();
 builder.Services.AddTransient<ISchoolExamRepository, SchoolExamRepository>();
 builder.Services.AddTransient<ICourseService, CourseService>();
 builder.Services.AddTransient<IExamService, ExamService>();
