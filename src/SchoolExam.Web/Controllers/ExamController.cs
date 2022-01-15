@@ -145,4 +145,13 @@ public class ExamController : ApiController<ExamController>
 
         return Ok();
     }
+
+    [HttpPost]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Publish")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public async Task<IActionResult> PublishExam(Guid examId, [FromBody] PublishExamWriteModel publishExamWriteModel)
+    {
+        _examService.PublishExam(examId, publishExamWriteModel.PublishingDateTime);
+        return Ok();
+    }
 }

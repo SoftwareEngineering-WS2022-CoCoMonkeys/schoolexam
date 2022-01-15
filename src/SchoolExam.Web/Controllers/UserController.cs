@@ -22,7 +22,7 @@ public class UserController : ApiController<UserController>
     
     [HttpGet]
     [Route($"{{{RouteParameterNames.UserNameParameterName}}}")]
-    [Authorize(PolicyNames.StudentOrTeachesStudentPolicyName)]
+    [Authorize(Roles = Role.AdministratorName)]
     public UserReadModelBase GetUserByUsername(String username)
     {
         var user = _userService.GetByUsername(username);
@@ -31,7 +31,7 @@ public class UserController : ApiController<UserController>
     
     [HttpGet]
     [Route($"{{{RouteParameterNames.UserIdParameterName}}}")]
-    [Authorize(PolicyNames.StudentOrTeachesStudentPolicyName)]
+    [Authorize(Roles = Role.AdministratorName)]
     public UserReadModelBase GetUserById(Guid id)
     {
         var user = _userService.GetById(id);
