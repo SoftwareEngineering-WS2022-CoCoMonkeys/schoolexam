@@ -84,6 +84,15 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpPost]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Clean")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public async Task<IActionResult> Clean(Guid examId)
+    {
+        await _examService.Clean(examId);
+        return Ok();
+    }
+
+    [HttpPost]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/SubmitAndMatch")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> SubmitAndMatch(Guid examId, [FromBody] SubmitAndMatchModel submitAndMatchModel)

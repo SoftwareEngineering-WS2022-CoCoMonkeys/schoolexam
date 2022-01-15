@@ -308,7 +308,7 @@ public class ExamService : IExamService
         return pdfWithTexts;
     }
 
-    private async Task Clean(Guid examId)
+    public async Task Clean(Guid examId)
     {
         var exam = EnsureExamExists(new ExamWithBookletsByIdSpecification(examId));
 
