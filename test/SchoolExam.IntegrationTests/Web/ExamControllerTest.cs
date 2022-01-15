@@ -49,53 +49,53 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
     protected override async void SetUpData()
     {
-        _school = TestEntityFactory.Create<School, Guid>();
-        _course = TestEntityFactory.Create<Course, Guid>();
+        _school = TestEntityFactory.Create<School>();
+        _course = TestEntityFactory.Create<Course>();
         _course.SchoolId = _school.Id;
-        _teacher = TestEntityFactory.Create<Teacher, Guid>();
+        _teacher = TestEntityFactory.Create<Teacher>();
         _teacher.SchoolId = _school.Id;
         var courseTeacher = new CourseTeacher(_course.Id, _teacher.Id);
-        _student = TestEntityFactory.Create<Student, Guid>();
+        _student = TestEntityFactory.Create<Student>();
         _student.SchoolId = _school.Id;
         var courseStudent = new CourseStudent(_course.Id, _student.Id);
-        _otherStudent = TestEntityFactory.Create<Student, Guid>();
+        _otherStudent = TestEntityFactory.Create<Student>();
         _student.SchoolId = _school.Id;
-        _exam = TestEntityFactory.Create<Exam, Guid>();
+        _exam = TestEntityFactory.Create<Exam>();
         _exam.CreatorId = _teacher.Id;
         _exam.State = ExamState.SubmissionReady;
         var examCourse = new ExamCourse(_exam.Id, _course.Id);
         var examStudent = new ExamStudent(_exam.Id, _otherStudent.Id);
-        _taskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
+        _taskPdfFile = TestEntityFactory.Create<TaskPdfFile>();
         _taskPdfFile.ExamId = _exam.Id;
-        _user = TestEntityFactory.Create<User, Guid>();
+        _user = TestEntityFactory.Create<User>();
         _user.PersonId = _teacher.Id;
-        _booklet = TestEntityFactory.Create<Booklet, Guid>();
+        _booklet = TestEntityFactory.Create<Booklet>();
         _booklet.ExamId = _exam.Id;
-        _matchedBookletPage = TestEntityFactory.Create<BookletPage, Guid>();
+        _matchedBookletPage = TestEntityFactory.Create<BookletPage>();
         _matchedBookletPage.BookletId = _booklet.Id;
-        _unmatchedBookletPage = TestEntityFactory.Create<BookletPage, Guid>();
+        _unmatchedBookletPage = TestEntityFactory.Create<BookletPage>();
         _unmatchedBookletPage.BookletId = _booklet.Id;
-        _submission = TestEntityFactory.Create<Submission, Guid>();
+        _submission = TestEntityFactory.Create<Submission>();
         _submission.BookletId = _booklet.Id;
-        _matchedSubmissionPage = TestEntityFactory.Create<SubmissionPage, Guid>();
+        _matchedSubmissionPage = TestEntityFactory.Create<SubmissionPage>();
         _matchedSubmissionPage.ExamId = _exam.Id;
         _matchedSubmissionPage.SubmissionId = _submission.Id;
         _matchedSubmissionPage.BookletPageId = _matchedBookletPage.Id;
-        _unmatchedSubmissionPage = TestEntityFactory.Create<SubmissionPage, Guid>();
+        _unmatchedSubmissionPage = TestEntityFactory.Create<SubmissionPage>();
         _unmatchedSubmissionPage.ExamId = _exam.Id;
         _unmatchedSubmissionPage.SubmissionId = null;
         _unmatchedSubmissionPage.BookletPageId = null;
 
-        _otherExam = TestEntityFactory.Create<Exam, Guid>();
+        _otherExam = TestEntityFactory.Create<Exam>();
         _otherExam.CreatorId = _teacher.Id;
         var otherExamCourse = new ExamCourse(_otherExam.Id, _course.Id);
-        var otherTaskPdfFile = TestEntityFactory.Create<TaskPdfFile, Guid>();
+        var otherTaskPdfFile = TestEntityFactory.Create<TaskPdfFile>();
         otherTaskPdfFile.ExamId = _otherExam.Id;
-        var otherBooklet = TestEntityFactory.Create<Booklet, Guid>();
+        var otherBooklet = TestEntityFactory.Create<Booklet>();
         otherBooklet.ExamId = _otherExam.Id;
-        _otherBookletPage = TestEntityFactory.Create<BookletPage, Guid>();
+        _otherBookletPage = TestEntityFactory.Create<BookletPage>();
         _otherBookletPage.BookletId = otherBooklet.Id;
-        _otherSubmissionPage = TestEntityFactory.Create<SubmissionPage, Guid>();
+        _otherSubmissionPage = TestEntityFactory.Create<SubmissionPage>();
         _otherSubmissionPage.ExamId = _otherExam.Id;
         _otherSubmissionPage.SubmissionId = null;
         _otherSubmissionPage.BookletPageId = null;
@@ -134,12 +134,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
         // add additional exam created by other teacher
         using (var repository = GetSchoolExamRepository())
         {
-            var otherCourse = TestEntityFactory.Create<Course, Guid>();
+            var otherCourse = TestEntityFactory.Create<Course>();
             otherCourse.SchoolId = _school.Id;
-            var otherTeacher = TestEntityFactory.Create<Teacher, Guid>();
+            var otherTeacher = TestEntityFactory.Create<Teacher>();
             otherTeacher.SchoolId = _school.Id;
             var courseTeacher = new CourseTeacher(otherCourse.Id, otherTeacher.Id);
-            var otherExam = TestEntityFactory.Create<Exam, Guid>();
+            var otherExam = TestEntityFactory.Create<Exam>();
             var otherExamCourse = new ExamCourse(otherExam.Id, otherCourse.Id);
             otherExam.CreatorId = otherTeacher.Id;
             otherExam.State = ExamState.Planned;
@@ -210,7 +210,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var newExam = TestEntityFactory.Create<Exam, Guid>();
+        var newExam = TestEntityFactory.Create<Exam>();
 
         var examWriteModel = new ExamWriteModel
             {Title = newExam.Title, Description = newExam.Description, Date = newExam.Date, Topic = newExam.Topic.Name};
@@ -233,7 +233,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var updatedExam = TestEntityFactory.Create<Exam, Guid>();
+        var updatedExam = TestEntityFactory.Create<Exam>();
         updatedExam.Id = _exam.Id;
 
         var examWriteModel = new ExamWriteModel
@@ -299,7 +299,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     {
         await ResetExam();
 
-        var content = TestEntityFactory.Create<TaskPdfFile, Guid>().Content;
+        var content = TestEntityFactory.Create<TaskPdfFile>().Content;
 
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
@@ -391,7 +391,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         using (var repository = GetSchoolExamRepository())
         {
-            var exam = repository.Find<Exam, Guid>(_exam.Id);
+            var exam = repository.Find<Exam>(_exam.Id);
             exam?.State.Should().Be(ExamState.InCorrection);
             var pages = repository.List(new SubmissionPageByExamSpecification(_exam.Id)).ToList();
             pages.Should().HaveCount(4);
@@ -445,7 +445,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         using (var repository = GetSchoolExamRepository())
         {
-            var exam = repository.Find<Exam, Guid>(_exam.Id);
+            var exam = repository.Find<Exam>(_exam.Id);
             exam?.State.Should().Be(ExamState.InCorrection);
             var pages = repository.List(new SubmissionPageByExamSpecification(_exam.Id)).ToList();
             pages.Should().HaveCount(4);
@@ -538,7 +538,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         bookletPages.Count(x => x.SubmissionPage != null).Should().Be(1);
         bookletPages.Single(x => x.SubmissionPage != null).Id.Should().Be(_matchedBookletPage.Id);
 
-        var exam = repository.Find<Exam, Guid>(_exam.Id);
+        var exam = repository.Find<Exam>(_exam.Id);
         exam?.State.Should().Be(ExamState.SubmissionReady);
     }
 
@@ -551,7 +551,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var submissionPdf = TestEntityFactory.Create<SubmissionPagePdfFile, Guid>();
+        var submissionPdf = TestEntityFactory.Create<SubmissionPagePdfFile>();
 
         var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf.Content)};
 
@@ -839,7 +839,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
             repository.Remove(submission);
         }
 
-        var exam = repository.Find<Exam, Guid>(_exam.Id)!;
+        var exam = repository.Find<Exam>(_exam.Id)!;
         exam.State = ExamState.BuildReady;
         repository.Update(exam);
 

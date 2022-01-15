@@ -48,7 +48,7 @@ public class ExamService : IExamService
 
     public Exam? GetById(Guid examId)
     {
-        var result = _repository.Find<Exam, Guid>(examId);
+        var result = _repository.Find<Exam>(examId);
         return result;
     }
 
@@ -74,7 +74,7 @@ public class ExamService : IExamService
 
     public async Task Update(Guid examId, string title, string description, DateTime date)
     {
-        var exam = EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         exam.Title = title;
         exam.Description = description;
         exam.Date = date;
@@ -85,7 +85,7 @@ public class ExamService : IExamService
 
     public async Task Delete(Guid examId)
     {
-        var exam = EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         if (exam.State.HasBeenBuilt())
         {
             throw new InvalidOperationException("An exam that already has been built must not be deleted.");
@@ -267,7 +267,7 @@ public class ExamService : IExamService
 
     public byte[] GetParticipantQrCodePdf<TLayout>(Guid examId) where TLayout : ITagLayout<TLayout>, new()
     {
-        EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
 
         var students = GetStudentsByExam(examId).ToArray();
 
@@ -460,7 +460,7 @@ public class ExamService : IExamService
 
     public IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId)
     {
-        EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         var submissionPages = _repository.List(new SubmissionPageByExamSpecification(examId));
 
         var result = submissionPages.Where(x => !x.IsMatched);
@@ -478,20 +478,20 @@ public class ExamService : IExamService
 
     public async Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId, Guid userId)
     {
-        EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
-        var bookletPage = _repository.Find<BookletPage, Guid>(bookletPageId);
+        EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
+        var bookletPage = _repository.Find<BookletPage>(bookletPageId);
         if (bookletPage == null)
         {
             throw new ArgumentException("Booklet page does not exist.");
         }
 
-        var bookletExamId = _repository.Find<Booklet, Guid>(bookletPage.BookletId)!.ExamId;
+        var bookletExamId = _repository.Find<Booklet>(bookletPage.BookletId)!.ExamId;
         if (!examId.Equals(bookletExamId))
         {
             throw new InvalidOperationException("Booklet page is not part of the exam.");
         }
 
-        var submissionPage = _repository.Find<SubmissionPage, Guid>(submissionPageId);
+        var submissionPage = _repository.Find<SubmissionPage>(submissionPageId);
         if (submissionPage == null)
         {
             throw new ArgumentException("Submission page does not exist.");
@@ -533,7 +533,7 @@ public class ExamService : IExamService
 
     public async Task PublishExam(Guid examId, DateTime? publishDateTime)
     {
-        var exam = EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
+        var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         if (exam.State == ExamState.Published)
         {
             throw new InvalidOperationException("Exam is already published.");
@@ -556,7 +556,7 @@ public class ExamService : IExamService
         }
     }
 
-    private Exam EnsureExamExists(EntityByIdSpecification<Exam, Guid> spec)
+    private Exam EnsureExamExists(EntityByIdSpecification<Exam> spec)
     {
         var exam = _repository.Find(spec);
         if (exam == null)

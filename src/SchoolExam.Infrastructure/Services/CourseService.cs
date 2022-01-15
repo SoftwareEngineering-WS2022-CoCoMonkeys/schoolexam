@@ -24,7 +24,7 @@ public class CourseService : ICourseService
 
     public async Task Create(Guid teacherId, string name, string description, string topic)
     {
-        var teacher = _repository.Find<Teacher, Guid>(teacherId);
+        var teacher = _repository.Find<Teacher>(teacherId);
         var course = new Course(Guid.NewGuid(), name, description, new Topic(topic), teacher.SchoolId);
         var courseTeacher = new CourseTeacher(course.Id, teacherId);
         _repository.Add(course);
@@ -34,7 +34,7 @@ public class CourseService : ICourseService
 
     public async Task Update(Guid courseId, string name, string description, string topic)
     {
-        var course = _repository.Find<Course, Guid>(courseId);
+        var course = _repository.Find<Course>(courseId);
         if (course == null)
         {
             throw new ArgumentException("Course does not exist.");
@@ -47,7 +47,7 @@ public class CourseService : ICourseService
 
     public async Task Delete(Guid courseId)
     {
-        var course = _repository.Find<Course, Guid>(courseId);
+        var course = _repository.Find<Course>(courseId);
         if (course == null)
         {
             throw new ArgumentException("Course does not exist.");

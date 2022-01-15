@@ -1,7 +1,7 @@
 ﻿namespace SchoolExam.Domain.Base
 {
-    public interface IEntity<TIdentity>
+    public interface IEntity
     {
-        TIdentity Id { get; set; }
+        Guid Id { get; set; }
     }
 }

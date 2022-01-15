@@ -4,7 +4,7 @@ using SchoolExam.Domain.Entities.PersonAggregate;
 
 namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 
-public class Submission : EntityBase<Guid>
+public class Submission : EntityBase
 {
     public Guid BookletId { get; set; }
     public Booklet Booklet { get; set; }

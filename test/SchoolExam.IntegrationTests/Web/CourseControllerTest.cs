@@ -25,13 +25,13 @@ public class CourseControllerTest : ApiIntegrationTestBase
     
     protected override async void SetUpData()
     {
-        _school = TestEntityFactory.Create<School, Guid>();
-        _course = TestEntityFactory.Create<Course, Guid>();
+        _school = TestEntityFactory.Create<School>();
+        _course = TestEntityFactory.Create<Course>();
         _course.SchoolId = _school.Id;
-        _teacher = TestEntityFactory.Create<Teacher, Guid>();
+        _teacher = TestEntityFactory.Create<Teacher>();
         _teacher.SchoolId = _school.Id;
         var courseTeacher = new CourseTeacher(_course.Id, _teacher.Id);
-        _student = TestEntityFactory.Create<Student, Guid>();
+        _student = TestEntityFactory.Create<Student>();
         _student.SchoolId = _school.Id;
         var courseStudent = new CourseStudent(_course.Id, _student.Id);
 

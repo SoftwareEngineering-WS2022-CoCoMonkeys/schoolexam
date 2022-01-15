@@ -4,7 +4,7 @@ using SchoolExam.Domain.Entities.ExamAggregate;
 
 namespace SchoolExam.IntegrationTests.Util.Specifications;
 
-public class ExamWithBookletsWithPagesAndPdfFileByIdSpecification : EntityByIdSpecification<Exam, Guid>
+public class ExamWithBookletsWithPagesAndPdfFileByIdSpecification : EntityByIdSpecification<Exam>
 {
     public ExamWithBookletsWithPagesAndPdfFileByIdSpecification(Guid id) : base(id)
     {

@@ -32,8 +32,8 @@ public abstract class RepositoryBase<TContext> : IRepository where TContext : Db
         return queryable.SingleOrDefault(spec.Criteria);
     }
 
-    public TEntity? Find<TEntity, TIdentity>(TIdentity id, params string[] includes)
-        where TEntity : class, IEntity<TIdentity>
+    public TEntity? Find<TEntity>(Guid id, params string[] includes)
+        where TEntity : class, IEntity
     {
         var queryable = Context.Set<TEntity>().AsQueryable();
         IQueryable<TEntity> query = includes.Aggregate(queryable, (current, include) => current.Include(include));

@@ -3,9 +3,9 @@ using SchoolExam.Domain.Entities.UserAggregate;
 
 namespace SchoolExam.Infrastructure.Specifications;
 
-public class UserByUserIdSpecification : EntityByIdSpecification<User, Guid>
+public class UserByIdSpecification : EntityByIdSpecification<User>
 {
-    public UserByUserIdSpecification(Guid id) : base(id)
+    public UserByIdSpecification(Guid id) : base(id)
     {
     }
 }

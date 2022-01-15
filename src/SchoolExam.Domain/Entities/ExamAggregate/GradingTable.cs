@@ -4,7 +4,7 @@ using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate
 {
-    public class GradingTable : EntityBase<Guid>
+    public class GradingTable : EntityBase
     {
         private readonly ICollection<GradingTableInterval> intervals;
 

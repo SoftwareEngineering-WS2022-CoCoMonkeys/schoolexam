@@ -2,10 +2,10 @@ using SchoolExam.Domain.Base;
 
 namespace SchoolExam.Application.Specifications;
 
-public class EntityByIdSpecification<TEntity, TIdentity> : EntitySpecification<TEntity>
-    where TEntity : class, IEntity<TIdentity>
+public class EntityByIdSpecification<TEntity> : EntitySpecification<TEntity>
+    where TEntity : class, IEntity
 {
-    public EntityByIdSpecification(TIdentity id) : base(x => x.Id.Equals(id))
+    public EntityByIdSpecification(Guid id) : base(x => x.Id.Equals(id))
     {
     }
 }

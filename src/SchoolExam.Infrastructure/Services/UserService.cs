@@ -21,7 +21,7 @@ public class UserService : IUserService
 
     public User? GetById(Guid id)
     {
-        return _repository.Find(new UserByUserIdSpecification(id));
+        return _repository.Find(new UserByIdSpecification(id));
     }
     public User? GetByUsername(string username)
     {

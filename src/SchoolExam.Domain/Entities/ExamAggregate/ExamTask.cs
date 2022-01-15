@@ -3,7 +3,7 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
 
-public class ExamTask : EntityBase<Guid>
+public class ExamTask : EntityBase
 {
     public double MaxPoints { get; set; }
     public string Title { get; set; }

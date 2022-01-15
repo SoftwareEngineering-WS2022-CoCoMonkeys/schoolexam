@@ -4,7 +4,7 @@ using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
 
-public class Exam : EntityBase<Guid>
+public class Exam : EntityBase
 {
     public string Title { get; set; }
     public string Description { get; set; }

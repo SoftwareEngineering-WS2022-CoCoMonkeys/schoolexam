@@ -3,7 +3,7 @@ using SchoolExam.Domain.Entities.SubmissionAggregate;
 
 namespace SchoolExam.Infrastructure.Specifications;
 
-public class SubmissionWithAnswersAndPdfFileAndPagesWithPdfFileByIdsSpecification : EntityByIdsSpecification<Submission, Guid>
+public class SubmissionWithAnswersAndPdfFileAndPagesWithPdfFileByIdsSpecification : EntityByIdsSpecification<Submission>
 {
     public SubmissionWithAnswersAndPdfFileAndPagesWithPdfFileByIdsSpecification(HashSet<Guid> ids) : base(ids)
     {

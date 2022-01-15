@@ -3,7 +3,7 @@ using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Domain.Entities.CourseAggregate;
 
-public class Course : EntityBase<Guid>
+public class Course : EntityBase
 {
     public Topic? Topic { get; set; }
     public string Name { get; set; }

@@ -3,7 +3,7 @@ using SchoolExam.Domain.Entities.SubmissionAggregate;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
 
-public class Booklet : EntityBase<Guid>
+public class Booklet : EntityBase
 {
     public Guid ExamId { get; set; }
     public Exam Exam { get; set; }
