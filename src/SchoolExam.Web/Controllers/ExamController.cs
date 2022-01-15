@@ -44,7 +44,8 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> Update(Guid examId, [FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Update(examId, examWriteModel.Title, examWriteModel.Description, examWriteModel.Date);
+        await _examService.Update(examId, examWriteModel.Title, examWriteModel.Description,
+            examWriteModel.Date.SetKindUtc());
         return Ok();
     }
 
