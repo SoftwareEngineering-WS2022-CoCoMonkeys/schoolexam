@@ -14,13 +14,19 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.ToTable("User");
         builder.HasKey(x => x.Id);
         builder.HasOne<Person>().WithOne().HasForeignKey<User>(x => x.PersonId).IsRequired(false);
-        builder.OwnsRole(x => x.Role, new {UserId = SeedIds.BriggiteSchweinebauerUserId, Name = Role.TeacherName});
+        builder.OwnsRole(x => x.Role, new {UserId = SeedIds.BriggiteSchweinebauerUserId, Name = Role.TeacherName}, 
+            new {UserId = SeedIds.AdminId, Name = Role.AdministratorName});
         builder.HasData(new
         {
             Id = SeedIds.BriggiteSchweinebauerUserId,
             Username = "admin",
             Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
             PersonId = SeedIds.BriggiteSchweinebauerId,
+        }, new
+        {
+            Id = SeedIds.AdminId,
+            Username = "admin2",
+            Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2"
         });
     }
 }
