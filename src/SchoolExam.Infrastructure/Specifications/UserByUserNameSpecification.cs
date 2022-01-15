@@ -7,5 +7,6 @@ public class UserByUserNameSpecification: EntitySpecification<User>
 {
     public UserByUserNameSpecification(string username) : base(x => x.Username.Equals(username))
     {
+        AddInclude(x => x.Person);
     }
 }

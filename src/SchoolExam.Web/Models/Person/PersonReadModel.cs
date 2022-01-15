@@ -1,8 +1,8 @@
 ﻿using SchoolExam.Domain.ValueObjects;
 
-namespace SchoolExam.Web.Models.User;
+namespace SchoolExam.Web.Models.Person;
 
-public class PersonReadModelBase
+public class PersonReadModel
 {
     public string Id { get; set; }
     public string FirstName { get; set; }

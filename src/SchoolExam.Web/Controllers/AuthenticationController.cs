@@ -35,6 +35,9 @@ public class AuthenticationController : ApiController<AuthenticationController>
 
         var token = _tokenGenerator.Generate(user);
 
-        return Ok(token);
+        var authenticatedUser = Mapper.Map<AuthenticatedUserModel>(user);
+        var result = new AuthenticationResultModel {Token = token, User = authenticatedUser};
+        
+        return Ok(result);
     }
 }
