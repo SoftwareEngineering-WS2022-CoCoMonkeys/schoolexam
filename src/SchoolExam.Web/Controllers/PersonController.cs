@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Services;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Authorization;
+using SchoolExam.Web.Models.Person;
 using SchoolExam.Web.Models.User;
 
 namespace SchoolExam.Web.Controllers;
@@ -22,19 +23,19 @@ public class PersonController : ApiController<PersonController>
     [HttpGet]
     [Route($"{{{RouteParameterNames.PersonIdParameterName}}}")]
     [Authorize]
-    public PersonReadModelBase GetPersonById(Guid id)
+    public PersonReadModel GetPersonById(Guid id)
     {
         var person = _personService.GetById(id);
-        return Mapper.Map<PersonReadModelBase>(person);
+        return Mapper.Map<PersonReadModel>(person);
     }
     
     [HttpGet]
     [Route($"{{{RouteParameterNames.UserIdParameterName}}}")]
     [Authorize(Roles = Role.AdministratorName)]
-    public List<UserReadModelBase> GetAllPersons()
+    public List<UserReadModel> GetAllPersons()
     {
         var persons = _personService.GetAllPersons();
-        return Mapper.Map<List<UserReadModelBase>>(persons);
+        return Mapper.Map<List<UserReadModel>>(persons);
     }
 
 

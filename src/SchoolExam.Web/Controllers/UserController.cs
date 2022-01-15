@@ -23,28 +23,28 @@ public class UserController : ApiController<UserController>
     [HttpGet]
     [Route($"{{{RouteParameterNames.UserNameParameterName}}}")]
     [Authorize(Roles = Role.AdministratorName)]
-    public UserReadModelBase GetUserByUsername(String username)
+    public UserReadModel GetUserByUsername(String username)
     {
         var user = _userService.GetByUsername(username);
-        return Mapper.Map<UserReadModelBase>(user);
+        return Mapper.Map<UserReadModel>(user);
     }
     
     [HttpGet]
     [Route($"ById/{{{RouteParameterNames.UserIdParameterName}}}")]
     [Authorize(Roles = Role.AdministratorName)]
-    public UserReadModelBase GetUserById(Guid id)
+    public UserReadModel GetUserById(Guid id)
     {
         var user = _userService.GetById(id);
-        return Mapper.Map<UserReadModelBase>(user);
+        return Mapper.Map<UserReadModel>(user);
     }
     
     [HttpGet]
     [Route("GetAllUsers")]
     [Authorize(Roles = Role.AdministratorName)]
-    public List<UserReadModelBase> GetAllUser()
+    public List<UserReadModel> GetAllUser()
     {
         var users = _userService.GetAllUsers();
-        return Mapper.Map<List<UserReadModelBase>>(users);
+        return Mapper.Map<List<UserReadModel>>(users);
     }
     
     

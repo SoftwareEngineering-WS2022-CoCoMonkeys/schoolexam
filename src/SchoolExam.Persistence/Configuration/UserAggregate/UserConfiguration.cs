@@ -13,9 +13,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.ToTable("User");
         builder.HasKey(x => x.Id);
-        builder.HasOne<Person>().WithOne().HasForeignKey<User>(x => x.PersonId).IsRequired(false);
+        builder.HasOne(x => x.Person).WithOne().HasForeignKey<User>(x => x.PersonId).IsRequired(false);
         builder.OwnsRole(x => x.Role, new {UserId = SeedIds.BriggiteSchweinebauerUserId, Name = Role.TeacherName}, 
             new {UserId = SeedIds.AdminId, Name = Role.AdministratorName});
+        
         builder.HasData(new
         {
             Id = SeedIds.BriggiteSchweinebauerUserId,

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.TagLayout;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Extensions;
 using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Models.Exam;
 
@@ -33,7 +34,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(Roles = Role.TeacherName)]
     public async Task<IActionResult> Create([FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Create(examWriteModel.Title, examWriteModel.Date,
+        await _examService.Create(examWriteModel.Title, examWriteModel.Date.SetKindUtc(),
             GetPersonId()!.Value, examWriteModel.Topic);
         return Ok();
     }
@@ -43,7 +44,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> Update(Guid examId, [FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Update(examId, examWriteModel.Title, examWriteModel.Date);
+        await _examService.Update(examId, examWriteModel.Title, examWriteModel.Date.SetKindUtc());
         return Ok();
     }
 
