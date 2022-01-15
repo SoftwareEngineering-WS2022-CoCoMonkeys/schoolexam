@@ -134,30 +134,37 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> PublishExam(Guid examId, [FromBody] PublishExamWriteModel publishExamWriteModel)
     {
-        _examService.PublishExam(examId, publishExamWriteModel.PublishingDateTime);
+        await _examService.PublishExam(examId, publishExamWriteModel.PublishingDateTime);
         return Ok();
     }
 
     [HttpPost]
-    [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/SetGradingTable")]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/SetGradingTable")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> SetGradingTable(Guid examId,
         [FromBody] GradingTableWriteModel gradingTableWriteModel)
     {
-        var lowerBoundsOrdered = gradingTableWriteModel.LowerBounds.OrderBy(x => x.Points).ToArray();
-        var count = lowerBoundsOrdered.Length;
-        for (int i = 0; i < count; i++)
+        var maxPoints = _examService.GetMaxPoints(examId);
+
+        double GetPoints(GradingTableLowerBoundModelBase lowerBound)
         {
-            var current = lowerBoundsOrdered[i];
-            var next = lowerBoundsOrdered[i + 1];
-            var lowerBound = new GradingTableIntervalBound(current.Points, GradingTableIntervalBoundType.Inclusive);
-            var upperBound = new GradingTableIntervalBound(next.Points, GradingTableIntervalBoundType.Exclusive);
-            var interval = new GradingTableInterval(lowerBound, upperBound, current.Grade);
+            if (lowerBound is GradingTableLowerBoundPointsModel lowerBoundPoints)
+            {
+                return lowerBoundPoints.Points;
+            }
+
+            if (lowerBound is GradingTableLowerBoundPercentageModel lowerBoundPercentage)
+            {
+                return lowerBoundPercentage.Percentage / 100 * maxPoints;
+            }
+
+            throw new InvalidOperationException("Invalid type for grading table lower bound");
         }
-        // deal with last bound separately
-        var last = lowerBoundsOrdered[count - 1];
-        var lastLowerBound = new GradingTableIntervalBound(last.Points, GradingTableIntervalBoundType.Inclusive);
-        // includes upper bound var lastUpperBound = new GradingTableIntervalBound()
+
+        var lowerBounds =
+            gradingTableWriteModel.LowerBounds.Select(x => new GradingTableIntervalLowerBound(GetPoints(x), x.Grade));
+
+        await _examService.SetGradingTable(examId, lowerBounds.ToArray());
 
         return Ok();
     }

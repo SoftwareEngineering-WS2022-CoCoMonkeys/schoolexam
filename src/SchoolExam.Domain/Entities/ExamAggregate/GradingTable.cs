@@ -1,6 +1,5 @@
 using SchoolExam.Domain.Base;
 using SchoolExam.Domain.ValueObjects;
-using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Entities.ExamAggregate
 {
@@ -9,9 +8,10 @@ namespace SchoolExam.Domain.Entities.ExamAggregate
         public ICollection<GradingTableInterval> Intervals { get; set; }
         public Guid ExamId { get; set; }
 
-        public GradingTable(Guid id) : base(id)
+        public GradingTable(Guid id, Guid examId) : base(id)
         {
             Intervals = new List<GradingTableInterval>();
+            ExamId = examId;
         }
     }
 }

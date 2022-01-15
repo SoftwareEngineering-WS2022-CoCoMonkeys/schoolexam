@@ -23,6 +23,6 @@ public interface IExamService
     IEnumerable<BookletPage> GetUnmatchedBookletPages(Guid examId);
     Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId, Guid userId);
     Task PublishExam(Guid examId, DateTime? publishDateTime);
-    int GetMaxPoints(Guid examId);
-    Task SetGradingTable(Guid examId, IEnumerable<GradingTableInterval> gradingTableIntervals);
+    double GetMaxPoints(Guid examId);
+    Task SetGradingTable(Guid examId, params GradingTableIntervalLowerBound[] lowerBounds);
 }
