@@ -362,7 +362,6 @@ public class ExamService : IExamService
             .ToDictionary(x => x.BookletId, x => x);
 
         // get participating students
-
         var students = GetStudentsByExam(examId);
         var studentsDict = students.ToDictionary(x => x.QrCode.Data, x => x);
 
@@ -531,6 +530,16 @@ public class ExamService : IExamService
         await CheckCompletenessOfExamSubmissions(examId);
     }
 
+    public int GetMaxPoints(Guid examId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SetGradingTable(Guid examId, IEnumerable<GradingTableInterval> gradingTableIntervals)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task PublishExam(Guid examId, DateTime? publishDateTime)
     {
         var exam = EnsureExamExists(new EntityByIdSpecification<Exam, Guid>(examId));
@@ -648,7 +657,7 @@ public class ExamService : IExamService
         // assign student to submission
         submission.StudentId ??= studentId;
     }
-    
+
     private IEnumerable<Student> GetStudentsByExam(Guid examId)
     {
         var examWithStudents = _repository.Find(new ExamWithParticipantsById(examId))!;
@@ -658,5 +667,4 @@ public class ExamService : IExamService
 
         return students;
     }
-    
 }

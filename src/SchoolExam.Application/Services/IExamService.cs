@@ -1,6 +1,7 @@
 using SchoolExam.Application.TagLayout;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
+using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Application.Services;
 
@@ -21,6 +22,7 @@ public interface IExamService
     IEnumerable<SubmissionPage> GetUnmatchedSubmissionPages(Guid examId);
     IEnumerable<BookletPage> GetUnmatchedBookletPages(Guid examId);
     Task MatchManually(Guid examId, Guid bookletPageId, Guid submissionPageId, Guid userId);
-
     Task PublishExam(Guid examId, DateTime? publishDateTime);
+    int GetMaxPoints(Guid examId);
+    Task SetGradingTable(Guid examId, IEnumerable<GradingTableInterval> gradingTableIntervals);
 }

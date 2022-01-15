@@ -137,4 +137,28 @@ public class ExamController : ApiController<ExamController>
         _examService.PublishExam(examId, publishExamWriteModel.PublishingDateTime);
         return Ok();
     }
+
+    [HttpPost]
+    [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/SetGradingTable")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public async Task<IActionResult> SetGradingTable(Guid examId,
+        [FromBody] GradingTableWriteModel gradingTableWriteModel)
+    {
+        var lowerBoundsOrdered = gradingTableWriteModel.LowerBounds.OrderBy(x => x.Points).ToArray();
+        var count = lowerBoundsOrdered.Length;
+        for (int i = 0; i < count; i++)
+        {
+            var current = lowerBoundsOrdered[i];
+            var next = lowerBoundsOrdered[i + 1];
+            var lowerBound = new GradingTableIntervalBound(current.Points, GradingTableIntervalBoundType.Inclusive);
+            var upperBound = new GradingTableIntervalBound(next.Points, GradingTableIntervalBoundType.Exclusive);
+            var interval = new GradingTableInterval(lowerBound, upperBound, current.Grade);
+        }
+        // deal with last bound separately
+        var last = lowerBoundsOrdered[count - 1];
+        var lastLowerBound = new GradingTableIntervalBound(last.Points, GradingTableIntervalBoundType.Inclusive);
+        // includes upper bound var lastUpperBound = new GradingTableIntervalBound()
+
+        return Ok();
+    }
 }
