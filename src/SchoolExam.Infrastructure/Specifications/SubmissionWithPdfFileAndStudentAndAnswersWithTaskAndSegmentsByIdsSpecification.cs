@@ -4,11 +4,10 @@ using SchoolExam.Domain.Entities.SubmissionAggregate;
 namespace SchoolExam.Infrastructure.Specifications;
 
 public class
-    SubmissionWithPdfFileStudentAndAnswersWithTaskAndSegmentByIdSpecification : EntityByIdSpecification<Submission,
-        Guid>
+    SubmissionWithPdfFileAndStudentAndAnswersWithTaskAndSegmentsByIdsSpecification : EntityByIdsSpecification<Submission
+        , Guid>
 {
-    public SubmissionWithPdfFileStudentAndAnswersWithTaskAndSegmentByIdSpecification(Guid submissionId) :
-        base(submissionId)
+    public SubmissionWithPdfFileAndStudentAndAnswersWithTaskAndSegmentsByIdsSpecification(HashSet<Guid> ids) : base(ids)
     {
         AddInclude(x => x.PdfFile);
         AddInclude(x => x.Student);

@@ -32,7 +32,7 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<BookletPage, UnmatchedBookletPageReadModel>();
 
         CreateMap<Exam, ExamReadModelTeacher>()
-            .ForMember(dst => dst.Status, opt => opt.MapFrom(src => src.State))
+            .ForMember(dst => dst.Status, opt => opt.MapFrom(src => src.State.ToString()))
             .ForMember(dst => dst.Quota, opt => opt.MapFrom(src => src.GetCorrectionProgress()))
             .ForMember(dst => dst.Topic, opt => opt.MapFrom(src => src.Topic.Name));
         CreateMap<ExamTask, ExamTaskReadModel>();
@@ -55,12 +55,14 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<Submission, SubmissionReadModel>()
             .Include<Submission, SubmissionDetailsReadModel>()
             .ForMember(dst => dst.AchievedPoints, opt => opt.MapFrom(src => src.Answers.Sum(x => x.AchievedPoints)))
-            .ForMember(dst => dst.Status, opt => opt.MapFrom(src => GetCorrectionState(src)));
+            .ForMember(dst => dst.Status, opt => opt.MapFrom(src => GetCorrectionState(src).ToString()))
+            .ForMember(dst => dst.IsComplete, opt => opt.MapFrom(src => src.PdfFile != null))
+            .ForMember(dst => dst.IsMatchedToStudent, opt => opt.MapFrom(src => src.Student != null));
         CreateMap<Submission, SubmissionDetailsReadModel>()
             .ForMember(dst => dst.Data,
                 opt => opt.MapFrom(src => src.PdfFile != null ? Convert.ToBase64String(src.PdfFile.Content) : null));
         CreateMap<Answer, AnswerReadModel>()
-            .ForMember(dst => dst.Status, opt => opt.MapFrom(src => GetCorrectionState(src)));
+            .ForMember(dst => dst.Status, opt => opt.MapFrom(src => GetCorrectionState(src).ToString()));
         CreateMap<AnswerSegment, AnswerSegmentReadModel>();
         CreateMap<ExamPosition, SegmentPositionReadModel>();
     }

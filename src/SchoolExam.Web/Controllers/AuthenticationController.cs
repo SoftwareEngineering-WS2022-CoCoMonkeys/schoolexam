@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Authentication;
 using SchoolExam.Application.Services;
-using SchoolExam.Web.Authentication;
+using SchoolExam.Web.Models.Authentication;
 
 namespace SchoolExam.Web.Controllers;
 

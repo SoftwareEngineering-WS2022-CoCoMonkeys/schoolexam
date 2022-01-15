@@ -5,7 +5,7 @@ namespace SchoolExam.Web.Models.Exam;
 public class ExamReadModelTeacher
 {
     public Guid Id { get; set; }
-    public ExamState Status { get; set; }
+    public string Status { get; set; }
     public string Title { get; set; }
     public DateTime Date { get; set; }
     public DateTime DueDate { get; set; }
