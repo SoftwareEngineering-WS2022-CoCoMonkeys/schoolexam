@@ -1,33 +1,30 @@
-﻿using System.Collections;
-using System.Net;
+﻿using System.Net;
 using System.Net.Mail;
 using System.Net.Mime;
-using PdfSharp.Pdf.IO;
-using PdfSharp.Pdf.Security;
+using System.Text;
+using SchoolExam.Application.Pdf;
 using SchoolExam.Application.Publishing;
 using SchoolExam.Application.Repository;
-using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.ValueObjects;
-using PdfReader = iText.Kernel.Pdf.PdfReader;
 
 namespace SchoolExam.Infrastructure.Publishing;
 
 public class PublishingService : IPublishingService
 {
     private readonly ISchoolExamRepository _repository;
-    private Timer timer;
+    private readonly IPdfService _pdfService;
+    private Timer _timer;
     
-    public PublishingService(ISchoolExamRepository repository)
+    public PublishingService(ISchoolExamRepository repository, IPdfService pdfService)
     {
         _repository = repository;
     }
     
-    public bool sendEmailToStudent(Booklet booklet, Exam exam)
+    public bool SendEmailToStudent(Booklet booklet, Exam exam)
     {
-
         var student = booklet.Submission.Student;
         var remarkPdf = booklet.Submission.RemarkPdfFile;
         
@@ -82,55 +79,21 @@ public class PublishingService : IPublishingService
         return true;
     }
 
-    private Attachment GetPublishingExamAttachment(PdfSharp.Pdf.PdfDocument examToBePublishedPdf)
+    private Attachment GetPublishingExamAttachment(byte[] examToBePublishedPdf)
     {
-        
-        // Specify the file to be attached and sent.
-        // This example assumes that a file named Data.xls exists in the
-        // current working directory.
-        MemoryStream stream = new MemoryStream();
-
-        examToBePublishedPdf.Save(stream,false);
-        
+        using var stream = new MemoryStream(examToBePublishedPdf);
         // Create  the file attachment for this email message.
-        Attachment attachment = new Attachment(stream, MediaTypeNames.Application.Octet);
-        // Add time stamp information for the file.
-        ContentDisposition disposition = attachment.ContentDisposition;
-        //disposition.CreationDate = System.IO.File.GetCreationTime(file);
-        //disposition.ModificationDate = System.IO.File.GetLastWriteTime(file);
-        //disposition.ReadDate = System.IO.File.GetLastAccessTime(file);
-        // Add the file attachment to this email message.
-        stream.Close();
+        var attachment = new Attachment(stream, MediaTypeNames.Application.Pdf);
         return attachment;
     }
     
-    private PdfSharp.Pdf.PdfDocument GetExamPdfToBePublished(RemarkPdfFile remarkPdf, Student student)
+    private byte[] GetExamPdfToBePublished(RemarkPdfFile remarkPdf, Student student)
     {
-
-        //Steam pdf byte array and put in new document to add password
-        MemoryStream stream = new MemoryStream(remarkPdf.Content);
-        PdfSharp.Pdf.PdfDocument document = PdfSharp.Pdf.IO.PdfReader.Open(stream, PdfDocumentOpenMode.Modify);
-
-        PdfSecuritySettings securitySettings = document.SecuritySettings;
-
-        // Setting one of the passwords automatically sets the security level to 
-        // PdfDocumentSecurityLevel.Encrypted128Bit.
-        securitySettings.UserPassword  = String.Format($"{student.Id.ToString().Substring(0,12)}");
-        securitySettings.OwnerPassword = String.Format($"{student.Id.ToString()}");
-
-
-
-        // Restrict some rights.
-        /*securitySettings.PermitAccessibilityExtractContent = false;
-        securitySettings.PermitAnnotations = false;
-        securitySettings.PermitAssembleDocument = false;
-        securitySettings.PermitExtractContent = false;
-        securitySettings.PermitFormsFill = true;
-        securitySettings.PermitFullQualityPrint = false;
-        securitySettings.PermitModifyDocument = true;
-        securitySettings.PermitPrint = false;*/
-
-        return document;
+        var userPassword  = $"{student.Id.ToString().Substring(0,12)}";
+        var ownerPassword = $"{student.Id}";
+        var protectedPdf = _pdfService.Protect(remarkPdf.Content, Encoding.UTF8.GetBytes(userPassword),
+            Encoding.UTF8.GetBytes(ownerPassword));
+        return protectedPdf;
     }
 
     public async Task ScheduleSendEmailToStudent(IEnumerable<Booklet>  booklets, Exam exam, DateTime publishDateTime)
@@ -142,9 +105,9 @@ public class PublishingService : IPublishingService
             await DoPublishExam(booklets, exam);
             return;
         }
-        timer = new Timer(x =>
+        _timer = new Timer(async x =>
         {
-            DoPublishExam(booklets, exam);
+            await DoPublishExam(booklets, exam);
         }, null, timeToGo, Timeout.InfiniteTimeSpan);
     }
 
@@ -152,7 +115,7 @@ public class PublishingService : IPublishingService
     {
         foreach(Booklet booklet in booklets)
         {
-           sendEmailToStudent(booklet, exam);
+           SendEmailToStudent(booklet, exam);
                 
         }
         exam.State = ExamState.Published;

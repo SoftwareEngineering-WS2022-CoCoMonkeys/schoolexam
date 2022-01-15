@@ -2,7 +2,7 @@
 
 namespace SchoolExam.Domain.Entities.ExamAggregate;
 
-public class ScheduledExam : EntityBase<Guid>
+public class ScheduledExam : EntityBase
 {
     public Exam Exam { get; set; }
     

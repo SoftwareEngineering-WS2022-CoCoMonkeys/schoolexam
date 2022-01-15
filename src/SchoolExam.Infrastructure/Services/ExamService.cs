@@ -63,10 +63,10 @@ public class ExamService : IExamService
         throw new NotImplementedException();
     }
 
-    public async Task Create(string title,  DateTime date, Guid teacherId, string topic)
+    public async Task Create(string title, DateTime date, Guid teacherId, string topic)
     {
         var examId = Guid.NewGuid();
-        var exam = new Exam(examId, title,date, teacherId, new Topic(topic));
+        var exam = new Exam(examId, title, date, teacherId, new Topic(topic));
 
         _repository.Add(exam);
         await _repository.SaveChangesAsync();
@@ -76,7 +76,6 @@ public class ExamService : IExamService
     {
         var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         exam.Title = title;
-        exam.Description = description;
         exam.Date = date;
 
         _repository.Update(exam);
@@ -159,7 +158,7 @@ public class ExamService : IExamService
                 {
                     throw new InvalidOperationException($"Task with id {taskId} was found in PDF more than once.");
                 }
-                
+
                 // find corresponding end marker
                 var taskEndString = $"task-end-{taskId}";
                 if (!endLinkCandidatesDict.ContainsKey(taskEndString))
@@ -211,7 +210,7 @@ public class ExamService : IExamService
         {
             throw new InvalidOperationException("Exam does not have a task PDF file.");
         }
-        
+
         // clean booklets from previous builds
         if (exam.State.HasBeenBuilt())
         {
@@ -273,7 +272,7 @@ public class ExamService : IExamService
 
         var layout = new TLayout();
         var elements = layout.GetElements().ToArray();
-        
+
         var textHeight = PdfUnitConverter.ConvertMmToPoint(5);
         // width and height are always equal for a QR code
         var qrCodeSize = Math.Min(layout.TagSize.Width, layout.TagSize.Height - textHeight - layout.Padding) -
@@ -281,7 +280,7 @@ public class ExamService : IExamService
         var qrCodeLeft = (layout.TagSize.Width - qrCodeSize) / 2;
         var qrCodeBottom = (layout.TagSize.Height - qrCodeSize - layout.Padding - textHeight) / 2 + layout.Padding +
                            textHeight;
-        
+
         var images = new List<PdfImageRenderInfo>();
         var texts = new List<PdfTextRenderInfo>();
         for (int i = 0; i < students.Length; i++)
@@ -289,12 +288,12 @@ public class ExamService : IExamService
             var student = students[i];
             var qrCode = _qrCodeGenerator.GeneratePngQrCode(student.QrCode.Data);
             var page = i / elements.Length + 1;
-            
+
             var element = elements[i % elements.Length];
             var left = element.Left + qrCodeLeft;
             var bottom = layout.PageSize.Height - element.Top - layout.TagSize.Height + qrCodeBottom;
             images.Add(new PdfImageRenderInfo(page, left, bottom, qrCodeSize, qrCode));
-            
+
             var studentName = $"{student.FirstName} {student.LastName}";
             var leftText = element.Left + layout.Padding;
             var bottomText = layout.PageSize.Height - element.Top - layout.TagSize.Height + layout.Padding;
@@ -304,7 +303,7 @@ public class ExamService : IExamService
         }
 
         var pdf = _pdfService.CreateEmptyPdf(1, layout.PageSize);
-        var pdfWithQrCodes =  _pdfService.RenderImages(pdf, images.ToArray());
+        var pdfWithQrCodes = _pdfService.RenderImages(pdf, images.ToArray());
         var pdfWithTexts = _pdfService.RenderTexts(pdfWithQrCodes, texts.ToArray());
 
         return pdfWithTexts;
@@ -523,7 +522,7 @@ public class ExamService : IExamService
         submissionPage.SubmissionId = submission.Id;
         submissionPage.BookletPageId = bookletPageId;
         submission.UpdatedAt = DateTime.Now.SetKindUtc();
-        
+
         _repository.Update(submissionPage);
         await _repository.SaveChangesAsync();
 
@@ -538,9 +537,10 @@ public class ExamService : IExamService
         {
             throw new InvalidOperationException("Exam is already published.");
         }
+
         //var students = GetStudentsByExam(examId);
         var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
-        
+
         if (publishDateTime.HasValue && publishDateTime.Value > DateTime.UtcNow)
         {
             var scheduledExamId = Guid.NewGuid();
@@ -646,7 +646,7 @@ public class ExamService : IExamService
         // assign student to submission
         submission.StudentId ??= studentId;
     }
-    
+
     private IEnumerable<Student> GetStudentsByExam(Guid examId)
     {
         var examWithStudents = _repository.Find(new ExamWithParticipantsById(examId))!;
@@ -656,5 +656,4 @@ public class ExamService : IExamService
 
         return students;
     }
-    
 }
