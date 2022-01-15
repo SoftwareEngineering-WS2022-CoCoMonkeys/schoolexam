@@ -21,14 +21,14 @@ public abstract class RepositoryBase<TContext> : IRepository where TContext : Db
 
     public IEnumerable<TEntity> List<TEntity>(ISpecification<TEntity> spec) where TEntity : class
     {
-        var queryable = GetQueryableFromSpec(spec);
+        var queryable = GetQueryableFromSpec(spec).AsSplitQuery();
 
         return queryable.Where(spec.Criteria).AsEnumerable();
     }
 
     public TEntity? Find<TEntity>(ISpecification<TEntity> spec) where TEntity : class
     {
-        var queryable = GetQueryableFromSpec(spec);
+        var queryable = GetQueryableFromSpec(spec).AsSplitQuery();
         return queryable.SingleOrDefault(spec.Criteria);
     }
 
