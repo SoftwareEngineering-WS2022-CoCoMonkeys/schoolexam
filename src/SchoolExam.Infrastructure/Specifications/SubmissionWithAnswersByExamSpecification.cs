@@ -7,6 +7,6 @@ public class SubmissionWithAnswersByExamSpecification : EntitySpecification<Subm
 {
     public SubmissionWithAnswersByExamSpecification(Guid examId) : base(x => x.Booklet.ExamId.Equals(examId))
     {
-        AddInclude(x => x.Booklet);
+        AddInclude(x => x.Answers);
     }
 }
