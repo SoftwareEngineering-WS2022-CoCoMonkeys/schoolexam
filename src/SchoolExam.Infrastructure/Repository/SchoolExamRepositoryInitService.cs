@@ -12,6 +12,7 @@ using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SchoolAggregate;
+using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Extensions;
@@ -79,8 +80,21 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
 
     public async Task Init()
     {
-        await _context.Database.EnsureDeletedAsync();
         await _context.Database.MigrateAsync();
+        // clear database tables
+        _context.RemoveRange(_context.Set<SubmissionPage>());
+        _context.RemoveRange(_context.Set<Submission>());
+        _context.RemoveRange(_context.Set<Booklet>());
+        _context.RemoveRange(_context.Set<Exam>());
+        _context.RemoveRange(_context.Set<User>());
+        _context.RemoveRange(_context.Set<Student>());
+        _context.RemoveRange(_context.Set<Teacher>());
+        _context.RemoveRange(_context.Set<LegalGuardian>());
+        _context.RemoveRange(_context.Set<Course>());
+        _context.RemoveRange(_context.Set<School>());
+        await _context.SaveChangesAsync();
+        
+        // fill database tables
         await AddSchools();
         await AddCourses();
         await AddTeachers();
