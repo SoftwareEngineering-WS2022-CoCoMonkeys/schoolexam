@@ -395,7 +395,7 @@ public class iText7PdfService : IPdfService
         var document = new Document(pdfDocument);
 
         // set page size
-        pdfDocument.SetDefaultPageSize(iText.Kernel.Geom.PageSize.A4);
+        pdfDocument.SetDefaultPageSize(new iText.Kernel.Geom.PageSize(pageSize.Width, pageSize.Height));
         // add empty pages
         for (int i = 1; i < pages; i++)
         {
