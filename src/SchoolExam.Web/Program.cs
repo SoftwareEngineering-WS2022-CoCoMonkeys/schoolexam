@@ -141,12 +141,6 @@ builder.Services.AddScoped<ISchoolExamRepositoryInitService, SchoolExamRepositor
 
 var app = builder.Build();
 
-using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
-{
-    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamRepositoryInitService>();
-    await initService!.Init();
-}
-
 // Configure the HTTP request pipeline.
 // swagger also added for production to make development easier
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
@@ -167,6 +161,12 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 app.MapControllers();
 
 app.Run();
+
+using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+{
+    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamRepositoryInitService>();
+    await initService!.Init();
+}
 
 public partial class Program
 {
