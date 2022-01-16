@@ -2,6 +2,7 @@ using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
+using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
@@ -37,7 +38,7 @@ public class CourseService : ICourseService
         var course = _repository.Find<Course>(courseId);
         if (course == null)
         {
-            throw new ArgumentException("Course does not exist.");
+            throw new DomainException("Course does not exist.");
         }
         course.Name = name;
         course.Topic = new Topic(topic);
@@ -49,7 +50,7 @@ public class CourseService : ICourseService
         var course = _repository.Find<Course>(courseId);
         if (course == null)
         {
-            throw new ArgumentException("Course does not exist.");
+            throw new DomainException("Course does not exist.");
         }
 
         _repository.Remove(course);

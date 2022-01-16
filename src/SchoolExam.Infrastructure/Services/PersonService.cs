@@ -2,7 +2,7 @@
 using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Entities.PersonAggregate;
-using SchoolExam.Domain.Entities.UserAggregate;
+using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
@@ -37,7 +37,6 @@ public class PersonService : IPersonService
 
         _context.Add(person);
         await _context.SaveChangesAsync();
-        //return Task<>;
     }
 
     public async Task CreateWithUser(string firstName, string lastName, DateTime dateOfBirth, Address? address,
@@ -77,7 +76,7 @@ public class PersonService : IPersonService
         var person = _context.Find(spec);
         if (person == null)
         {
-            throw new ArgumentException("Person does not exist");
+            throw new DomainException("Person does not exist");
         }
 
         return person;

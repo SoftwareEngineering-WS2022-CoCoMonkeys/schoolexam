@@ -20,6 +20,7 @@ using SchoolExam.Infrastructure.Services;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
 using SchoolExam.Web.Authorization;
+using SchoolExam.Web.ErrorHandling;
 using SchoolExam.Web.Extensions;
 using SchoolExam.Web.Mapping;
 using SchoolExam.Web.Serialization;
@@ -160,6 +161,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseCors("CorsPolicy");
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
 

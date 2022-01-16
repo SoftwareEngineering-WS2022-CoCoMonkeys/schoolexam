@@ -1,3 +1,4 @@
+using System;
 using FluentAssertions;
 using NUnit.Framework;
 using SchoolExam.Domain.ValueObjects;
@@ -12,12 +13,12 @@ public class GradingTableIntervalTest
         // setup first interval
         var start1 = new GradingTableIntervalBound(40, GradingTableIntervalBoundType.Inclusive);
         var end1 = new GradingTableIntervalBound(45, GradingTableIntervalBoundType.Exclusive);
-        var interval1 = new GradingTableInterval(start1, end1, "2.0");
+        var interval1 = new GradingTableInterval(start1, end1, "2.0", GradingTableLowerBoundType.Points, Guid.Empty);
             
         // setup second interval
         var start2 = new GradingTableIntervalBound(42, GradingTableIntervalBoundType.Inclusive);
         var end2 = new GradingTableIntervalBound(47, GradingTableIntervalBoundType.Exclusive);
-        var interval2 = new GradingTableInterval(start2, end2, "1.7");
+        var interval2 = new GradingTableInterval(start2, end2, "1.7", GradingTableLowerBoundType.Points, Guid.Empty);
 
         var result = interval1.Overlaps(interval2);
 

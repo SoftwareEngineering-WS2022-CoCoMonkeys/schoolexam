@@ -1,3 +1,5 @@
+using SchoolExam.Domain.Exceptions;
+
 namespace SchoolExam.Domain.ValueObjects;
 
 public class ExamPosition : IComparable<ExamPosition>
@@ -8,10 +10,10 @@ public class ExamPosition : IComparable<ExamPosition>
     public ExamPosition(int page, double y)
     {
         if (page <= 0)
-            throw new ArgumentException();
+            throw new DomainException("Page must not be lower than 1.");
         Page = page;
         if (y < 0)
-            throw new ArgumentException();
+            throw new DomainException("Y must not be a negative number.");
         Y = y;
     }
 

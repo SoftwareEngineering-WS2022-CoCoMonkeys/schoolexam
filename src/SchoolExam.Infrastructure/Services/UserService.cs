@@ -3,6 +3,7 @@ using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Entities.UserAggregate;
+using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
@@ -67,7 +68,7 @@ public class UserService : IUserService
         var user = _repository.Find(spec);
         if (user == null)
         {
-            throw new ArgumentException("User does not exist");
+            throw new DomainException("User does not exist");
         }
         return user;
     }

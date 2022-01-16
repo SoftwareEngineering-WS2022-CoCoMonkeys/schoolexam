@@ -2,6 +2,7 @@ using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
+using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.Extensions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Extensions;
@@ -58,7 +59,7 @@ public class SubmissionService : ISubmissionService
         var pdfFile = _repository.Find(new SubmissionPdfFileBySubmissionSpecification(submissionId));
         if (pdfFile == null)
         {
-            throw new ArgumentException("There exists no PDF file for the submission.");
+            throw new DomainException("There exists no PDF file for the submission.");
         }
 
         return pdfFile.Content;
@@ -69,7 +70,7 @@ public class SubmissionService : ISubmissionService
         var pdfFile = _repository.Find(new RemarkPdfFileBySubmissionSpecification(submissionId));
         if (pdfFile == null)
         {
-            throw new ArgumentException("There exists no PDF file with remarks for the submission.");
+            throw new DomainException("There exists no PDF file with remarks for the submission.");
         }
 
         return pdfFile.Content;
@@ -80,7 +81,7 @@ public class SubmissionService : ISubmissionService
         var answer = _repository.Find(new AnswerBySubmissionAndTaskSpecification(submissionId, taskId));
         if (answer == null)
         {
-            throw new ArgumentException(
+            throw new DomainException(
                 $"There exists no submission with identifier {submissionId} that contains a task with identifier {taskId}");
         }
 
@@ -88,7 +89,7 @@ public class SubmissionService : ISubmissionService
 
         if (points < 0.0 || points > task.MaxPoints)
         {
-            throw new ArgumentException("Points are not in allowed range between 0 and maximum points.");
+            throw new DomainException("Points are not in allowed range between 0 and maximum points.");
         }
 
         answer.AchievedPoints = points;
@@ -114,7 +115,7 @@ public class SubmissionService : ISubmissionService
         var submission = _repository.Find(new SubmissionWithRemarkPdfByIdSpecification(submissionId));
         if (submission == null)
         {
-            throw new ArgumentException("Submission does not exist.");
+            throw new DomainException("Submission does not exist.");
         }
 
         if (submission.RemarkPdfFile != null)

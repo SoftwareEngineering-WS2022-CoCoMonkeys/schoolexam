@@ -1,4 +1,5 @@
 using SchoolExam.Domain.Entities.ExamAggregate;
+using SchoolExam.Domain.Exceptions;
 
 namespace SchoolExam.Domain.ValueObjects;
 
@@ -20,7 +21,7 @@ public class GradingTableInterval
     {
         if (start.Type == GradingTableIntervalBoundType.Exclusive &&
             end.Type == GradingTableIntervalBoundType.Exclusive)
-            throw new ArgumentException();
+            throw new DomainException("At least one interval bound must be inclusive.");
         Start = start;
         End = end;
         Grade = grade;

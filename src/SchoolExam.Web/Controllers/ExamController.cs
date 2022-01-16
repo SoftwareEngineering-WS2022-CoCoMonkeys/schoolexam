@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.TagLayout;
+using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Extensions;
 using SchoolExam.Web.Authorization;
@@ -177,7 +178,7 @@ public class ExamController : ApiController<ExamController>
                 return lowerBoundPercentage.Percentage / 100.0 * maxPoints;
             }
 
-            throw new InvalidOperationException("Invalid type for grading table lower bound");
+            throw new DomainException("Invalid type for grading table lower bound");
         }
 
         GradingTableLowerBoundType GetType(GradingTableLowerBoundModelBase lowerBound)
@@ -192,7 +193,7 @@ public class ExamController : ApiController<ExamController>
                 return GradingTableLowerBoundType.Percentage;
             }
 
-            throw new InvalidOperationException("Invalid type for grading table lower bound");
+            throw new DomainException("Invalid type for grading table lower bound");
         }
 
         var lowerBounds =

@@ -58,7 +58,8 @@ public class ZXingNetQrCodeReader : IQrCodeReader
                         ? QrCodeAlignmentPatternPosition.TopRight
                         : QrCodeAlignmentPatternPosition.BottomRight;
             default:
-                throw new InvalidOperationException();
+                throw new InvalidOperationException(
+                    "QR code must have exactly three finder patterns and one alignment pattern to find out the orientation");
         }
     }
 }
