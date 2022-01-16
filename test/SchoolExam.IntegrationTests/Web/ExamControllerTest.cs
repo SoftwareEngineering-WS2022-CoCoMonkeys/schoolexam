@@ -284,10 +284,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
         var response = await this.Client.DeleteAsync($"/Exam/{_exam.Id}/Delete");
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("An exam that already has been built must not be deleted.");
 
         using var repository = GetSchoolExamRepository();
@@ -343,10 +342,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             {TaskPdf = Convert.ToBase64String(pdfContent), Tasks = new ExamTaskWriteModel[] { }};
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/UploadTaskPdf", uploadTaskPdfModel);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("The task PDF file of an exam that already has been built cannot be changed.");
     }
 
@@ -485,10 +483,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
         var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("At least one exam booklet must be built.");
     }
 
@@ -508,10 +505,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
         var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("Exam does not have a task PDF file.");
     }
 
@@ -557,10 +553,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf.Content)};
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("Exam is not ready to match submissions.");
     }
 
@@ -572,10 +567,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
         var response = await this.Client.PostAsync($"/Exam/{_exam.Id}/Build", null);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("An exam with existing submission pages must not be cleaned.");
     }
 
@@ -608,9 +602,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var examId = Guid.NewGuid();
 
         var response = await this.Client.GetAsync($"/Exam/{examId}/UnmatchedPages");
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("Exam does not exist.");
     }
 
@@ -659,9 +652,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         };
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/MatchPages", manualMatchesModel);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("The booklet page and/or the submission page have already been matched.");
     }
 
@@ -682,9 +674,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         };
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/MatchPages", manualMatchesModel);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("The booklet page and/or the submission page have already been matched.");
     }
 
@@ -706,9 +697,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         };
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/MatchPages", manualMatchesModel);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("Booklet page does not exist.");
     }
 
@@ -730,9 +720,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         };
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/MatchPages", manualMatchesModel);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("Submission page does not exist.");
     }
 
@@ -753,9 +742,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         };
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/MatchPages", manualMatchesModel);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("Booklet page is not part of the exam.");
     }
 
@@ -776,9 +764,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         };
 
         var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/MatchPages", manualMatchesModel);
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain(nameof(DomainException));
         content.Should().Contain("Submission page is not part of the exam.");
     }
 
