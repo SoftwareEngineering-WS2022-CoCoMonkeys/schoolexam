@@ -74,7 +74,7 @@ public class SubmissionController : ApiController<SubmissionController>
 
     [HttpPost]
     [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/UploadRemark")]
-    [Authorize(PolicyNames.SubmissionsExamCreatorPolicyName)]
+    [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
     public async Task<IActionResult> UploadRemark(Guid submissionId, [FromBody] UploadRemarkModel uploadRemarkModel)
     {
         var remarkPdf = Convert.FromBase64String(uploadRemarkModel.RemarkPdf);
