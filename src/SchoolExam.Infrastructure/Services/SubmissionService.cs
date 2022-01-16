@@ -112,7 +112,7 @@ public class SubmissionService : ISubmissionService
 
         var remarkPdfFile = new RemarkPdfFile(Guid.NewGuid(), $"{submission.Id}_corrected.pdf",
             remarkPdf.LongLength, DateTime.Now.SetKindUtc(), userId, remarkPdf, submissionId);
-        _repository.Add(remarkPdf);
+        _repository.Add(remarkPdfFile);
 
         await _repository.SaveChangesAsync();
     }
