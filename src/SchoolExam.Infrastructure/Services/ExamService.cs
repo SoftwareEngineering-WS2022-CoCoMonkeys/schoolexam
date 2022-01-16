@@ -58,11 +58,6 @@ public class ExamService : IExamService
         return result;
     }
 
-    public IEnumerable<Exam> GetByStudent(Guid studentId)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task Create(string title, DateTime date, Guid teacherId, string topic)
     {
         var examId = Guid.NewGuid();

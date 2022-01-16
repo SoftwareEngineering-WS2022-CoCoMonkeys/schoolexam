@@ -10,7 +10,6 @@ public interface IExamService
 {
     Exam? GetById(Guid examId);
     IEnumerable<Exam> GetByTeacher(Guid teacherId);
-    IEnumerable<Exam> GetByStudent(Guid studentId);
     Task Create(string title, DateTime date, Guid teacherId, string topic);
     Task Update(Guid examId, string title, DateTime date);
     Task Delete(Guid examId);
