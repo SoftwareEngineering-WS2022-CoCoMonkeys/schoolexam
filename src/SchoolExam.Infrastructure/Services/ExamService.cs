@@ -134,6 +134,15 @@ public class ExamService : IExamService
         {
             _repository.Remove(task);
         }
+        
+        // check that maximum points of all tasks are positive
+        foreach (var task in tasks)
+        {
+            if (task.MaxPoints <= 0.0)
+            {
+                throw new ArgumentException("Maximum number of points must be a positive number.");
+            }
+        }
 
         var pdf = exam.TaskPdfFile!.Content;
         var links = _pdfService.GetUriLinkAnnotations(pdf).ToList();

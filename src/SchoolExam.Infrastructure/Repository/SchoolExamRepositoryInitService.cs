@@ -224,13 +224,13 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
             }
 
             // create tasks and task PDF file
-            var taskCount = _random.Next(10);
+            var taskCount = _random.Next(1, 10);
             var taskIds = Enumerable.Range(0, taskCount).Select(_ => Guid.NewGuid()).ToArray();
             var examTasks = new List<ExamTaskInfo>();
             for (int j = 1; j <= taskCount; j++)
             {
                 var taskTitle = $"Aufgabe {j}";
-                var maxPoints = _random.Next(10);
+                var maxPoints = _random.Next(1, 10);
                 var examTask = new ExamTaskInfo(taskIds[j - 1], taskTitle, maxPoints);
                 examTasks.Add(examTask);
             }
