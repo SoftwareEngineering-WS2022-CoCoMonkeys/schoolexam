@@ -2,6 +2,7 @@ using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
+using SchoolExam.Domain.Extensions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Extensions;
 using SchoolExam.Infrastructure.Extensions;
@@ -23,7 +24,7 @@ public class SubmissionService : ISubmissionService
         var result = _repository.Find(new SubmissionWithBookletWithExamByIdSpecification(submissionId));
         return result;
     }
-    
+
     public IEnumerable<Submission> GetByIds(IEnumerable<Guid> ids)
     {
         var result = _repository.List(new SubmissionWithBookletWithExamByIdsSpecification(ids.ToHashSet()));
@@ -82,6 +83,17 @@ public class SubmissionService : ISubmissionService
         answer.AchievedPoints = points;
         answer.State = answer.AchievedPoints.HasValue ? AnswerState.Corrected : AnswerState.Pending;
         _repository.Update(answer);
+
+        var submission = _repository.Find(new SubmissionWithBookletByIdSpecification(answer.SubmissionId))!;
+        var examId = submission.Booklet.ExamId;
+
+        var submissions = _repository.List(new SubmissionWithAnswersByExamSpecification(examId));
+        var exam = _repository.Find<Exam>(examId)!;
+        exam.State = submissions.All(x => x.GetCorrectionState() == CorrectionState.Corrected)
+            ? ExamState.Corrected
+            : ExamState.InCorrection;
+        _repository.Update(exam);
+
         await _repository.SaveChangesAsync();
     }
 
@@ -92,6 +104,7 @@ public class SubmissionService : ISubmissionService
         {
             throw new ArgumentException("Submission does not exist.");
         }
+
         if (submission.RemarkPdfFile != null)
         {
             _repository.Remove(submission.RemarkPdfFile);
