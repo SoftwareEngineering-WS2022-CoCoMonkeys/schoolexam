@@ -89,6 +89,43 @@ public class ExamService : IExamService
         await _repository.SaveChangesAsync();
     }
 
+    public async Task SetParticipants(Guid examId, IEnumerable<Guid> courseIds, IEnumerable<Guid> studentIds)
+    {
+        var exam = EnsureExamExists(new ExamWithParticipantsById(examId));
+        
+        if (exam.State.HasBeenBuilt())
+        {
+            throw new InvalidOperationException(
+                "The participants of an exam that already has been built cannot be changed.");
+        }
+        
+        // delete previously existing course participants
+        foreach (var examCourse in exam.Participants.OfType<ExamCourse>())
+        {
+            _repository.Remove(examCourse);
+        }
+
+        foreach (var examStudent in exam.Participants.OfType<ExamStudent>())
+        {
+            _repository.Remove(examStudent);
+        }
+        
+        // add participants
+        foreach (var courseId in courseIds)
+        {
+            var examCourse = new ExamCourse(examId, courseId);
+            _repository.Add(examCourse);
+        }
+
+        foreach (var studentId in studentIds)
+        {
+            var examStudent = new ExamStudent(examId, studentId);
+            _repository.Add(examStudent);
+        }
+
+        await _repository.SaveChangesAsync();
+    }
+
     public async Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content)
     {
         var exam = EnsureExamExists(new ExamWithTaskPdfFileByIdSpecification(examId));

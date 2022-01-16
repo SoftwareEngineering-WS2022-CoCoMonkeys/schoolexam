@@ -55,11 +55,9 @@ public class SchoolExamMappingProfile : Profile
             .ForMember(dst => dst.Id, opt => opt.MapFrom(src => src.ParticipantId))
             .ForMember(dst => dst.DisplayName,
                 opt => opt.MapFrom(src => $"{src.Student.FirstName} {src.Student.LastName}"));
-
-
+        
         CreateMap<ExamTaskWriteModel, ExamTaskInfo>();
         
-
         CreateMap<Submission, SubmissionReadModel>()
             .Include<Submission, SubmissionDetailsReadModel>()
             .ForMember(dst => dst.AchievedPoints, opt => opt.MapFrom(src => src.Answers.Sum(x => x.AchievedPoints)))

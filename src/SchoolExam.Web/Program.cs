@@ -31,6 +31,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new ExamParticipantReadModelJsonConverter());
     options.JsonSerializerOptions.Converters.Add(new GradingTableLowerBoundModelJsonConverter());
+    options.JsonSerializerOptions.Converters.Add(new SetParticipantsModelJsonConverter());
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

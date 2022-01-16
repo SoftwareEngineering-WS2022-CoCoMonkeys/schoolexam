@@ -58,6 +58,17 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpPost]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/SetParticipants")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public async Task<IActionResult> SetParticipants(Guid examId, [FromBody] SetParticipantsModel setParticipantsModel)
+    {
+        var courseIds = setParticipantsModel.Participants.OfType<ExamCourseWriteModel>().Select(x => x.Id);
+        var studentIds = setParticipantsModel.Participants.OfType<ExamStudentWriteModel>().Select(x => x.Id);
+        await _examService.SetParticipants(examId, courseIds, studentIds);
+        return Ok();
+    }
+
+    [HttpPost]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/UploadTaskPdf")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> UploadTaskPdf(Guid examId, [FromBody] UploadTaskPdfModel uploadTaskPdfModel)
