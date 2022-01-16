@@ -620,7 +620,7 @@ public class ExamService : IExamService
             throw new ArgumentException("A grading interval starting from 0.0 points must be included.");
         }
 
-        var intervals = new List<GradingTableInterval>();
+        var gradingTableId = Guid.NewGuid();
         for (int i = 0; i < count - 1; i++)
         {
             var current = lowerBoundsOrdered[i];
@@ -637,25 +637,24 @@ public class ExamService : IExamService
 
             var lowerBound = new GradingTableIntervalBound(current.Points, GradingTableIntervalBoundType.Inclusive);
             var upperBound = new GradingTableIntervalBound(next.Points, GradingTableIntervalBoundType.Exclusive);
-            intervals.Add(new GradingTableInterval(lowerBound, upperBound, current.Grade));
+            _repository.Add(new GradingTableInterval(lowerBound, upperBound, current.Grade, current.Type,
+                gradingTableId));
         }
 
         // deal with last bound separately
         var last = lowerBoundsOrdered[count - 1];
         var lowerBoundLast = new GradingTableIntervalBound(last.Points, GradingTableIntervalBoundType.Inclusive);
         var upperBoundLast = new GradingTableIntervalBound(maxPoints, GradingTableIntervalBoundType.Inclusive);
-        intervals.Add(new GradingTableInterval(lowerBoundLast, upperBoundLast, last.Grade));
+        _repository.Add(new GradingTableInterval(lowerBoundLast, upperBoundLast, last.Grade, last.Type,
+            gradingTableId));
 
-        var gradingTable = new GradingTable(Guid.NewGuid(), examId)
-        {
-            Intervals = intervals
-        };
+        var gradingTable = new GradingTable(gradingTableId, examId);
         _repository.Add(gradingTable);
 
         await _repository.SaveChangesAsync();
     }
 
-    public async Task PublishExam(Guid examId, DateTime? publishDateTime)
+    public async Task Publish(Guid examId, DateTime? publishDateTime)
     {
         var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         if (exam.State == ExamState.Published)
@@ -663,7 +662,11 @@ public class ExamService : IExamService
             throw new InvalidOperationException("Exam is already published.");
         }
 
-        //var students = GetStudentsByExam(examId);
+        if (exam.State != ExamState.Corrected)
+        {
+            throw new InvalidOperationException("Correction of exam must be completed before publishing exam.");
+        }
+        
         var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
 
         if (publishDateTime.HasValue && publishDateTime.Value > DateTime.UtcNow)

@@ -12,7 +12,6 @@ using SchoolExam.Web.Models.Authentication;
 using SchoolExam.Web.Models.Course;
 using SchoolExam.Web.Models.Exam;
 using SchoolExam.Web.Models.Submission;
-using SchoolExam.Web.Models.User;
 
 namespace SchoolExam.Web.Mapping;
 
@@ -75,6 +74,23 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<User, AuthenticatedUserModel>()
             .ForMember(dst => dst.Role, opt => opt.MapFrom(src => src.Role.Name));
         CreateMap<Person, AuthenticatedPersonModel>();
+
+        CreateMap<GradingTable, GradingTableReadModel>()
+            .ForMember(dst => dst.LowerBounds, opt => opt.MapFrom(src => src.Intervals));
+        CreateMap<GradingTableInterval, GradingTableLowerBoundModelBase>().ConstructUsing((src, context) =>
+        {
+            switch (src.Type)
+            {
+                case GradingTableLowerBoundType.Points:
+                    return new GradingTableLowerBoundPointsModel {Grade = src.Grade, Points = src.Start.Points};
+                case GradingTableLowerBoundType.Percentage:
+                    var maxPoints = src.GradingTable.Intervals.Max(x => x.End.Points);
+                    var percentage = src.Start.Points / maxPoints * 100.0;
+                    return new GradingTableLowerBoundPercentageModel {Grade = src.Grade, Percentage = percentage};
+                default:
+                    throw new AutoMapperMappingException("Invalid grading table lower bound type.");
+            }
+        });
     }
 
     private CorrectionState GetCorrectionState(Answer answer)

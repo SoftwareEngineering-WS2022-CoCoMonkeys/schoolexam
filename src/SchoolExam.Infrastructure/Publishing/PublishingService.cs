@@ -21,17 +21,18 @@ public class PublishingService : IPublishingService
     public PublishingService(ISchoolExamRepository repository, IPdfService pdfService)
     {
         _repository = repository;
+        _pdfService = pdfService;
     }
     
     public bool SendEmailToStudent(Booklet booklet, Exam exam)
     {
-        var student = booklet.Submission.Student;
-        var remarkPdf = booklet.Submission.RemarkPdfFile;
+        var student = booklet.Submission!.Student;
+        var remarkPdf = booklet.Submission.RemarkPdfFile!;
         
         // Create a message and set up the recipients.
         var mailSubject =
             string.Format(
-                $"Deine Note in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} {exam.Topic} ");
+                $"Deine Note in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} {exam.Topic.Name} ");
         var mailLine1 = string.Format($"Hallo {student.FirstName}!");
         var mailLine2 =
             string.Format(

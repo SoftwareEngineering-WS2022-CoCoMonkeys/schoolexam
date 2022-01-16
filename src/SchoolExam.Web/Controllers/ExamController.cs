@@ -151,9 +151,9 @@ public class ExamController : ApiController<ExamController>
     [HttpPost]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Publish")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> PublishExam(Guid examId, [FromBody] PublishExamWriteModel publishExamWriteModel)
+    public async Task<IActionResult> Publish(Guid examId, [FromBody] PublishExamWriteModel publishExamWriteModel)
     {
-        await _examService.PublishExam(examId, publishExamWriteModel.PublishingDateTime);
+        await _examService.Publish(examId, publishExamWriteModel.PublishingDateTime);
         return Ok();
     }
 
@@ -174,14 +174,30 @@ public class ExamController : ApiController<ExamController>
 
             if (lowerBound is GradingTableLowerBoundPercentageModel lowerBoundPercentage)
             {
-                return lowerBoundPercentage.Percentage / 100 * maxPoints;
+                return lowerBoundPercentage.Percentage / 100.0 * maxPoints;
+            }
+
+            throw new InvalidOperationException("Invalid type for grading table lower bound");
+        }
+
+        GradingTableLowerBoundType GetType(GradingTableLowerBoundModelBase lowerBound)
+        {
+            if (lowerBound is GradingTableLowerBoundPointsModel)
+            {
+                return GradingTableLowerBoundType.Points;
+            }
+
+            if (lowerBound is GradingTableLowerBoundPercentageModel)
+            {
+                return GradingTableLowerBoundType.Percentage;
             }
 
             throw new InvalidOperationException("Invalid type for grading table lower bound");
         }
 
         var lowerBounds =
-            gradingTableWriteModel.LowerBounds.Select(x => new GradingTableIntervalLowerBound(GetPoints(x), x.Grade));
+            gradingTableWriteModel.LowerBounds.Select(x =>
+                new GradingTableIntervalLowerBound(GetPoints(x), GetType(x), x.Grade));
 
         await _examService.SetGradingTable(examId, lowerBounds.ToArray());
 

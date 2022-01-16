@@ -1,3 +1,5 @@
+using SchoolExam.Domain.Entities.ExamAggregate;
+
 namespace SchoolExam.Domain.ValueObjects;
 
 public class GradingTableInterval
@@ -5,12 +7,16 @@ public class GradingTableInterval
     public GradingTableIntervalBound Start { get; }
     public GradingTableIntervalBound End { get; }
     public string Grade { get; }
+    public GradingTableLowerBoundType Type { get; }
+    public GradingTable GradingTable { get; set; }
+    public Guid GradingTableId { get; set; }
 
     public GradingTableInterval()
     {
     }
 
-    public GradingTableInterval(GradingTableIntervalBound start, GradingTableIntervalBound end, string grade)
+    public GradingTableInterval(GradingTableIntervalBound start, GradingTableIntervalBound end, string grade,
+        GradingTableLowerBoundType type, Guid gradingTableId)
     {
         if (start.Type == GradingTableIntervalBoundType.Exclusive &&
             end.Type == GradingTableIntervalBoundType.Exclusive)
@@ -18,6 +24,8 @@ public class GradingTableInterval
         Start = start;
         End = end;
         Grade = grade;
+        Type = type;
+        GradingTableId = gradingTableId;
     }
 
     public bool Includes(int points)
