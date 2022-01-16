@@ -22,7 +22,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
     private Course _course = null!;
     private Teacher _teacher = null!;
     private Student _student = null!;
-    
+
     protected override async void SetUpData()
     {
         _school = TestEntityFactory.Create<School>();
@@ -50,10 +50,10 @@ public class CourseControllerTest : ApiIntegrationTestBase
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()));
-        
+
         var response = await this.Client.GetAsync($"/Course/{_course.Id}/TeacherView");
         response.EnsureSuccessStatusCode();
-        
+
         var result = await response.Content.ReadAsStringAsync();
         var courseResult = JsonConvert.DeserializeObject<CourseReadModelTeacher?>(result);
 
@@ -62,7 +62,14 @@ public class CourseControllerTest : ApiIntegrationTestBase
         var expectedCourseDto = new CourseReadModelTeacher
         {
             Id = _course.Id.ToString(), Name = _course.Name,
-            Topic = _course.Topic?.Name, StudentCount = 1
+            Topic = _course.Topic?.Name, Students = new[]
+            {
+                new CourseStudentReadModel
+                {
+                    Id = _student.Id, FirstName = _student.FirstName, LastName = _student.LastName,
+                    EmailAddress = _student.EmailAddress, DateOfBirth = _student.DateOfBirth
+                }
+            }
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
     }
@@ -72,21 +79,21 @@ public class CourseControllerTest : ApiIntegrationTestBase
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
             new Claim(CustomClaimTypes.PersonId, Guid.NewGuid().ToString()));
-        
+
         var response = await this.Client.GetAsync($"/Course/{_course.Id}/TeacherView");
-        
+
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
-    
+
     [Test]
     public async Task CourseController_GetByIdStudentView_CourseStudent_Success()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Student),
             new Claim(CustomClaimTypes.PersonId, _student.Id.ToString()));
-        
+
         var response = await this.Client.GetAsync($"/Course/{_course.Id}/StudentView");
         response.EnsureSuccessStatusCode();
-        
+
         var result = await response.Content.ReadAsStringAsync();
         var courseResult = JsonConvert.DeserializeObject<CourseReadModelStudent?>(result);
 
@@ -99,15 +106,15 @@ public class CourseControllerTest : ApiIntegrationTestBase
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
     }
-    
+
     [Test]
     public async Task CourseController_GetByIdStudentView_NoCourseStudent_Unauthorized()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Student),
             new Claim(CustomClaimTypes.PersonId, Guid.NewGuid().ToString()));
-        
+
         var response = await this.Client.GetAsync($"/Course/{_course.Id}/StudentView");
-        
+
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

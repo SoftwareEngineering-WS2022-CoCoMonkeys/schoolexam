@@ -27,7 +27,8 @@ public class SchoolExamMappingProfile : Profile
             .ForMember(dst => dst.Topic, opt => opt.MapFrom(src => src.Topic!.Name));
         CreateMap<Course, CourseReadModelStudent>();
         CreateMap<Course, CourseReadModelTeacher>()
-            .ForMember(dst => dst.StudentCount, opt => opt.MapFrom(src => src.Students.Count));
+            .ForMember(dst => dst.Students, opt => opt.MapFrom(src => src.Students.Select(x => x.Student)));
+        CreateMap<Student, CourseStudentReadModel>();
 
         CreateMap<SubmissionPage, UnmatchedSubmissionPageReadModel>()
             .ForMember(dst => dst.Size, opt => opt.MapFrom(src => src.PdfFile.Size))
