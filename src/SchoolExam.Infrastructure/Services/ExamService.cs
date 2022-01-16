@@ -8,6 +8,7 @@ using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Application.TagLayout;
+using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
@@ -58,11 +59,6 @@ public class ExamService : IExamService
         return result;
     }
 
-    public IEnumerable<Exam> GetByStudent(Guid studentId)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task Create(string title, DateTime date, Guid teacherId, string topic)
     {
         var examId = Guid.NewGuid();
@@ -91,6 +87,58 @@ public class ExamService : IExamService
         }
 
         _repository.Remove(exam);
+        await _repository.SaveChangesAsync();
+    }
+
+    public async Task SetParticipants(Guid examId, IEnumerable<Guid> courseIds, IEnumerable<Guid> studentIds)
+    {
+        var exam = EnsureExamExists(new ExamWithParticipantsById(examId));
+        
+        if (exam.State.HasBeenBuilt())
+        {
+            throw new InvalidOperationException(
+                "The participants of an exam that already has been built cannot be changed.");
+        }
+
+        var courseIdsSet = courseIds.ToHashSet();
+        var examCourses = _repository.List<Course>(courseIdsSet);
+        var studentIdsSet = studentIds.ToHashSet();
+        var examStudents = _repository.List<Student>(studentIdsSet);
+
+        if (examCourses.Count() != courseIdsSet.Count)
+        {
+            throw new ArgumentException("Course does not exist.");
+        }
+        
+        if (examStudents.Count() != studentIdsSet.Count)
+        {
+            throw new ArgumentException("Student does not exist.");
+        }
+        
+        // delete previously existing course participants
+        foreach (var examCourse in exam.Participants.OfType<ExamCourse>())
+        {
+            _repository.Remove(examCourse);
+        }
+
+        foreach (var examStudent in exam.Participants.OfType<ExamStudent>())
+        {
+            _repository.Remove(examStudent);
+        }
+
+        // add participants
+        foreach (var courseId in courseIdsSet)
+        {
+            var examCourse = new ExamCourse(examId, courseId);
+            _repository.Add(examCourse);
+        }
+
+        foreach (var studentId in studentIdsSet)
+        {
+            var examStudent = new ExamStudent(examId, studentId);
+            _repository.Add(examStudent);
+        }
+
         await _repository.SaveChangesAsync();
     }
 
