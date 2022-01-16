@@ -12,6 +12,5 @@ public class CourseStudentConfiguration : IEntityTypeConfiguration<CourseStudent
         builder.HasKey(x => new {x.CourseId, x.StudentId});
         builder.HasOne(x => x.Course).WithMany(x => x.Students).HasForeignKey(x => x.CourseId);
         builder.HasOne(x => x.Student).WithMany(x => x.Courses).HasForeignKey(x => x.StudentId);
-        builder.HasData(new CourseStudent(SeedIds.SozialwissenschaftenCourseId, SeedIds.AmiraJabbarId));
     }
 }

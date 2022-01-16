@@ -16,6 +16,6 @@ public class SubmissionPageConfiguration : IEntityTypeConfiguration<SubmissionPa
         builder.HasOne<Exam>().WithMany().HasForeignKey(x => x.ExamId);
         builder.HasOne<BookletPage>().WithOne(x => x.SubmissionPage)
             .HasForeignKey<SubmissionPage>(x => x.BookletPageId);
-        builder.OwnsQrCode(x => x.StudentQrCode);
+        builder.OwnsQrCode(x => x.StudentQrCode, false);
     }
 }

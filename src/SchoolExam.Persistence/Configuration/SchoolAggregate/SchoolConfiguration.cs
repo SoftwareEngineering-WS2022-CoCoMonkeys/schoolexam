@@ -12,17 +12,6 @@ public class SchoolConfiguration : IEntityTypeConfiguration<School>
     {
         builder.ToTable("School");
         builder.HasKey(x => x.Id);
-
-        builder.HasData(new School(SeedIds.GymnasiumDiedorfId, "Schmuttertal-Gymnasium Diedorf", null));
-
-        builder.OwnsAddress(x => x.Location, true, new
-        {
-            SchoolId = SeedIds.GymnasiumDiedorfId,
-            StreetName = "Schmetterlingsplatz",
-            StreetNumber = "1",
-            PostCode = "86420",
-            City = "Diedorf",
-            Country = "Deutschland"
-        });
+        builder.OwnsAddress(x => x.Location, true);
     }
 }

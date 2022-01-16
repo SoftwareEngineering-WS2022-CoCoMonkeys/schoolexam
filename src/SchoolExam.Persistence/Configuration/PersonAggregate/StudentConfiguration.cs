@@ -9,7 +9,6 @@ public class StudentConfiguration : IEntityTypeConfiguration<Student>
 {
     public void Configure(EntityTypeBuilder<Student> builder)
     {
-        builder.OwnsQrCode(x => x.QrCode,
-            new {StudentId = SeedIds.AmiraJabbarId, Data = "d18b19227701139f25eb4f205f785995"});
+        builder.OwnsQrCode(x => x.QrCode);
     }
 }

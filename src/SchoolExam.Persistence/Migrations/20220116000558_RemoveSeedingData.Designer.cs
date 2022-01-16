@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SchoolExam.Persistence.DataContext;
@@ -11,9 +12,10 @@ using SchoolExam.Persistence.DataContext;
 namespace SchoolExam.Persistence.Migrations
 {
     [DbContext(typeof(SchoolExamDbContext))]
-    partial class SchoolExamDataContextModelSnapshot : ModelSnapshot
+    [Migration("20220116000558_RemoveSeedingData")]
+    partial class RemoveSeedingData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1069,7 +1071,8 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.HasKey("SubmissionPageId");
 
-                            b1.HasIndex("Data");
+                            b1.HasIndex("Data")
+                                .IsUnique();
 
                             b1.ToTable("SubmissionPage");
 

@@ -10,6 +10,5 @@ public class ExamCourseConfiguration : IEntityTypeConfiguration<ExamCourse>
     {
         builder.ToTable("ExamCourse");
         builder.HasOne(x => x.Course).WithMany().HasForeignKey(x => x.ParticipantId);
-        builder.HasData(new ExamCourse(SeedIds.ProjektmanagementExamId, SeedIds.SozialwissenschaftenCourseId));
     }
 }

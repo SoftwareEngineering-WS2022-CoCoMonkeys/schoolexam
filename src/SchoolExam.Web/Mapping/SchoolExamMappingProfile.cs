@@ -5,6 +5,7 @@ using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
+using SchoolExam.Domain.Extensions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Models.Authentication;
 using SchoolExam.Web.Models.Course;
@@ -60,7 +61,7 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<Submission, SubmissionReadModel>()
             .Include<Submission, SubmissionDetailsReadModel>()
             .ForMember(dst => dst.AchievedPoints, opt => opt.MapFrom(src => src.Answers.Sum(x => x.AchievedPoints)))
-            .ForMember(dst => dst.Status, opt => opt.MapFrom(src => GetCorrectionState(src).ToString()))
+            .ForMember(dst => dst.Status, opt => opt.MapFrom(src => src.GetCorrectionState().ToString()))
             .ForMember(dst => dst.IsComplete, opt => opt.MapFrom(src => src.PdfFile != null))
             .ForMember(dst => dst.IsMatchedToStudent, opt => opt.MapFrom(src => src.Student != null));
         CreateMap<Submission, SubmissionDetailsReadModel>()
@@ -74,25 +75,6 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<User, AuthenticatedUserModel>()
             .ForMember(dst => dst.Role, opt => opt.MapFrom(src => src.Role.Name));
         CreateMap<Person, AuthenticatedPersonModel>();
-    }
-
-    private CorrectionState GetCorrectionState(Submission submission)
-    {
-        var countCorrected = submission.Answers.Count(x => x.State == AnswerState.Corrected);
-        var countPending = submission.Answers.Count(x => x.State == AnswerState.Pending);
-        var count = submission.Answers.Count;
-
-        if (count == countPending)
-        {
-            return CorrectionState.Pending;
-        }
-
-        if (count == countCorrected)
-        {
-            return CorrectionState.Corrected;
-        }
-
-        return CorrectionState.InProgress;
     }
 
     private CorrectionState GetCorrectionState(Answer answer)

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Persistence.Extensions;
 
-namespace SchoolExam.Persistence.Configuration.ExamAggregate;
+namespace SchoolExam.Persistence.Configuration.SubmissionAggregate;
 
 public class AnswerSegmentConfiguration : IEntityTypeConfiguration<AnswerSegment>
 {
