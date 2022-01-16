@@ -8,12 +8,16 @@ namespace SchoolExam.Persistence.Extensions;
 public static class QrCodeExtensions
 {
     public static EntityTypeBuilder<TEntity> OwnsQrCode<TEntity>(this EntityTypeBuilder<TEntity> builder,
-        Expression<Func<TEntity, QrCode?>> navigationExpression, params object[] data) where TEntity : class
+        Expression<Func<TEntity, QrCode?>> navigationExpression, bool isUnique = true, params object[] data) where TEntity : class
     {
         return builder.OwnsOne(navigationExpression, x =>
         {
             x.Property(q => q.Data).HasColumnName("QrCodeData");
-            x.HasIndex(q => q.Data).IsUnique();
+            var indexBuilder = x.HasIndex(q => q.Data);
+            if (isUnique)
+            {
+                indexBuilder.IsUnique();
+            }
             x.HasData(data);
         });
     }
