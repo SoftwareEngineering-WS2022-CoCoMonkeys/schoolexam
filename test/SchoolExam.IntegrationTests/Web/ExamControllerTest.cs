@@ -295,41 +295,6 @@ public class ExamControllerTest : ApiIntegrationTestBase
     }
 
     [Test]
-    public async Task ExamController_UploadTaskPdf_ExamCreator_Success()
-    {
-        await ResetExam();
-
-        var content = TestEntityFactory.Create<TaskPdfFile>().Content;
-
-        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
-            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
-            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-
-        var uploadTaskPdfModel = new UploadTaskPdfModel
-            {TaskPdf = Convert.ToBase64String(content), Tasks = new ExamTaskWriteModel[] { }};
-
-        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/UploadTaskPdf", uploadTaskPdfModel);
-        response.EnsureSuccessStatusCode();
-
-        using var repository = GetSchoolExamRepository();
-        var exam = repository.Find(new ExamWithTaskPdfFileByIdSpecification(_exam.Id));
-        exam?.State.Should().Be(ExamState.BuildReady);
-        var taskPdfFile = exam?.TaskPdfFile;
-
-        var expectedTaskPdfFile =
-            new TaskPdfFile(Guid.Empty, $"{_exam.Id}.pdf", content.Length, DateTime.Now, _user.Id, content, _exam.Id);
-
-        taskPdfFile.Should().NotBeNull();
-        using (new AssertionScope())
-        {
-            taskPdfFile!.Id.Should().NotBeEmpty();
-            taskPdfFile.Should().BeEquivalentTo(expectedTaskPdfFile,
-                opts => opts.Excluding(x => x.Id).Excluding(x => x.UploadedAt).Excluding(x => x.Size)
-                    .Excluding(x => x.Content));
-        }
-    }
-
-    [Test]
     public async Task ExamController_UploadTaskPdf_ExamBuiltPreviously_ThrowsException()
     {
         var pdfContent = Encoding.UTF8.GetBytes("This is a test exam.");
@@ -495,7 +460,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         await ResetExam();
         using (var repository = GetSchoolExamRepository())
         {
-            var exam = repository.Find(new ExamWithTaskPdfFileByIdSpecification(_exam.Id))!;
+            var exam = repository.Find(new ExamWithTaskPdfFileAndGradingTableByIdSpecification(_exam.Id))!;
             repository.Remove(exam.TaskPdfFile!);
             await repository.SaveChangesAsync();
         }

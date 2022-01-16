@@ -76,9 +76,8 @@ public class ExamController : ApiController<ExamController>
     {
         var pdf = Convert.FromBase64String(uploadTaskPdfModel.TaskPdf);
 
-        await _examService.SetTaskPdfFile(examId, GetUserId()!.Value, pdf);
         var tasks = Mapper.Map<IEnumerable<ExamTaskInfo>>(uploadTaskPdfModel.Tasks).ToArray();
-        await _examService.FindTasks(examId, GetUserId()!.Value, tasks);
+        await _examService.SetTaskPdfFile(examId, GetUserId()!.Value, pdf, tasks);
 
         return Ok();
     }

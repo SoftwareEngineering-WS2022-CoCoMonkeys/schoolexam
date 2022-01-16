@@ -143,9 +143,9 @@ public class ExamService : IExamService
         await _repository.SaveChangesAsync();
     }
 
-    public async Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content)
+    public async Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content, params ExamTaskInfo[] tasks)
     {
-        var exam = EnsureExamExists(new ExamWithTaskPdfFileByIdSpecification(examId));
+        var exam = EnsureExamExists(new ExamWithTaskPdfFileAndGradingTableByIdSpecification(examId));
 
         if (exam.State.HasBeenBuilt())
         {
@@ -157,6 +157,18 @@ public class ExamService : IExamService
         {
             _repository.Remove(exam.TaskPdfFile);
         }
+        
+        // remove previously existing grading table since points might not be valid anymore
+        if (exam.GradingTable != null)
+        {
+            _repository.Remove(exam.GradingTable);
+        }
+        
+        // make sure that the exam has at least one task
+        if (tasks.Length < 1)
+        {
+            throw new DomainException("An exam must contain at least one task.");
+        }
 
         var taskPdfFile =
             new TaskPdfFile(Guid.NewGuid(), $"{examId.ToString()}.pdf", content.LongLength, DateTime.Now, userId,
@@ -165,16 +177,15 @@ public class ExamService : IExamService
         exam.State = ExamState.BuildReady;
         _repository.Update(exam);
         _repository.Add(taskPdfFile);
+
+        FindTasks(examId, userId, content, tasks);
+
         await _repository.SaveChangesAsync();
     }
 
-    public async Task FindTasks(Guid examId, Guid userId, params ExamTaskInfo[] tasks)
+    private void FindTasks(Guid examId, Guid userId, byte[] taskPdf, params ExamTaskInfo[] tasks)
     {
         var exam = EnsureExamExists(new ExamWithTaskPdfFileAndTasksByIdSpecification(examId));
-        if (exam.TaskPdfFile == null)
-        {
-            throw new DomainException("Exam does not have a task PDF.");
-        }
 
         // reset existing exam tasks
         var currentExamTasks = exam.Tasks;
@@ -192,7 +203,7 @@ public class ExamService : IExamService
             }
         }
 
-        var pdf = exam.TaskPdfFile!.Content;
+        var pdf = taskPdf;
         var links = _pdfService.GetUriLinkAnnotations(pdf).ToList();
         var tasksDict = tasks.ToDictionary(x => x.Id, x => x);
         var startLinkCandidates = links.Where(x => Regex.IsMatch(x.Uri, $"^task-start-{_guidRegex}$"));
@@ -243,13 +254,11 @@ public class ExamService : IExamService
         }
 
         var pdfWithoutTaskLinks = _pdfService.RemoveUriLinkAnnotations(pdf, matchedLinks.ToArray());
-        _repository.Remove(exam.TaskPdfFile);
+        _repository.Remove(exam.TaskPdfFile!);
         var newTaskPdfFile = new TaskPdfFile(Guid.NewGuid(), $"{examId}.pdf", pdfWithoutTaskLinks.LongLength,
             DateTime.Now, userId, pdfWithoutTaskLinks, examId);
         _repository.Add(newTaskPdfFile);
         _repository.Update(exam);
-
-        await _repository.SaveChangesAsync();
     }
 
     public async Task<int> Build(Guid examId, Guid userId)
@@ -598,6 +607,10 @@ public class ExamService : IExamService
     public async Task SetGradingTable(Guid examId, params GradingTableIntervalLowerBound[] lowerBounds)
     {
         var exam = EnsureExamExists(new ExamWithGradingTableById(examId));
+        if (exam.State is ExamState.Planned)
+        {
+            throw new DomainException("An exam without a task PDF file cannot have a grading table.");
+        }
 
         // remove previously existing grading table
         if (exam.GradingTable != null)

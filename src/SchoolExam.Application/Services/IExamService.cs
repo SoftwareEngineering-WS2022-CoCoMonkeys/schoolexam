@@ -1,8 +1,6 @@
 using SchoolExam.Application.TagLayout;
 using SchoolExam.Domain.Entities.ExamAggregate;
-using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
-using SchoolExam.Domain.ValueObjects;
 
 namespace SchoolExam.Application.Services;
 
@@ -14,8 +12,7 @@ public interface IExamService
     Task Update(Guid examId, string title, DateTime date);
     Task Delete(Guid examId);
     Task SetParticipants(Guid examId, IEnumerable<Guid> courseIds, IEnumerable<Guid> studentIds);
-    Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content);
-    Task FindTasks(Guid examId, Guid userId, params ExamTaskInfo[] tasks);
+    Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content, params ExamTaskInfo[] tasks);
     Task<int> Build(Guid examId, Guid userId);
     Task Clean(Guid examId);
     byte[] GetParticipantQrCodePdf<TLayout>(Guid examId) where TLayout : ITagLayout<TLayout>, new();

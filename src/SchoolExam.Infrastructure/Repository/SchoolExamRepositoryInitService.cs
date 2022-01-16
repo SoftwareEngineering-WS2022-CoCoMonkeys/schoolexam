@@ -236,8 +236,7 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
             }
 
             var taskPdfFile = CreateTaskPdfFile(taskIds.ToArray());
-            await _examService.SetTaskPdfFile(examId, _brigitteSchweinebauerUserId, taskPdfFile);
-            await _examService.FindTasks(examId, _brigitteSchweinebauerUserId, examTasks.ToArray());
+            await _examService.SetTaskPdfFile(examId, _brigitteSchweinebauerUserId, taskPdfFile, examTasks.ToArray());
 
             if (state == ExamState.BuildReady)
             {
