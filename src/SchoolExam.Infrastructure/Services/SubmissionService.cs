@@ -82,6 +82,7 @@ public class SubmissionService : ISubmissionService
 
         answer.AchievedPoints = points;
         answer.State = answer.AchievedPoints.HasValue ? AnswerState.Corrected : AnswerState.Pending;
+        answer.UpdatedAt = DateTime.Now.SetKindUtc();
         _repository.Update(answer);
 
         var submission = _repository.Find(new SubmissionWithBookletByIdSpecification(answer.SubmissionId))!;

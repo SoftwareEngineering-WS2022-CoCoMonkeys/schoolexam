@@ -12,17 +12,20 @@ public class Answer : EntityBase
     public ExamTask Task { get; set; }
     public Guid SubmissionId { get; set; }
     public ICollection<AnswerSegment> Segments { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     protected Answer(Guid id) : base(id)
     {
     }
 
-    public Answer(Guid id, Guid taskId, Guid submissionId, AnswerState state, double? achievedPoints) : base(id)
+    public Answer(Guid id, Guid taskId, Guid submissionId, AnswerState state, double? achievedPoints,
+        DateTime updatedAt) : base(id)
     {
         TaskId = taskId;
         SubmissionId = submissionId;
         State = state;
         AchievedPoints = achievedPoints;
+        UpdatedAt = updatedAt;
         Segments = new List<AnswerSegment>();
     }
 }

@@ -670,7 +670,8 @@ public class ExamService : IExamService
             // add answers for all tasks to submission
             foreach (var task in exam.Tasks)
             {
-                var answer = new Answer(Guid.NewGuid(), task.Id, submission.Id, AnswerState.Pending, null);
+                var answer = new Answer(Guid.NewGuid(), task.Id, submission.Id, AnswerState.Pending, null,
+                    DateTime.Now.SetKindUtc());
                 var defaultSegmentAnswer = new AnswerSegment(Guid.NewGuid(),
                     new ExamPosition(task.Start.Page, task.Start.Y), new ExamPosition(task.End.Page, task.End.Y),
                     answer.Id);
