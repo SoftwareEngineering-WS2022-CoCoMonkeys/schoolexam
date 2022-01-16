@@ -7,6 +7,7 @@ using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Domain.Extensions;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Persistence.Extensions;
 using SchoolExam.Web.Models.Authentication;
 using SchoolExam.Web.Models.Course;
 using SchoolExam.Web.Models.Exam;

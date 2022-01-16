@@ -35,14 +35,4 @@ public class Exam : EntityBase
         Participants = new List<ExamParticipant>();
         State = ExamState.Planned;
     }
-
-    public double? GetCorrectionProgress()
-    {
-        var submissions = Booklets.Where(x => x.Submission != null).Select(x => x.Submission!).ToList();
-        var submissionCount = submissions.Count;
-        var taskCount = Tasks.Count;
-        var answerCount = submissions.Sum(x => x.Answers.Count);
-
-        return submissionCount != 0 && taskCount != 0 ? (double) answerCount / (submissionCount * taskCount) : null;
-    }
 }
