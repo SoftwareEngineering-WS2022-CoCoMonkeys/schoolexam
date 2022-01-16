@@ -63,6 +63,17 @@ public class SubmissionService : ISubmissionService
 
         return pdfFile.Content;
     }
+    
+    public byte[] GetRemarkPdf(Guid submissionId)
+    {
+        var pdfFile = _repository.Find(new RemarkPdfFileBySubmissionSpecification(submissionId));
+        if (pdfFile == null)
+        {
+            throw new ArgumentException("There exists no PDF file with remarks for the submission.");
+        }
+
+        return pdfFile.Content;
+    }
 
     public async Task SetPoints(Guid submissionId, Guid taskId, double? points)
     {

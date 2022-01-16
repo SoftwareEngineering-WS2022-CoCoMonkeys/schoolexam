@@ -61,6 +61,16 @@ public class SubmissionController : ApiController<SubmissionController>
 
         return File(pdf, MediaTypeNames.Application.Pdf);
     }
+    
+    [HttpGet]
+    [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/DownloadRemark")]
+    [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
+    public IActionResult DownloadSubmissionRemark(Guid submissionId)
+    {
+        var pdf = _submissionService.GetRemarkPdf(submissionId);
+
+        return File(pdf, MediaTypeNames.Application.Pdf);
+    }
 
     [HttpPost]
     [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/SetPoints")]
