@@ -161,7 +161,7 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
             var firstName = _firstNames[_random.Next(countFirstNames)];
             var lastName = _lastNames[_random.Next(countLastNames)];
             var dateOfBirth = CreateRandomDate(_minYear, _maxYear);
-            var emailAddress = $"{firstName}.{lastName}@schoolexam.de";
+            var emailAddress = "switcherlapp.97@gmail.com"; // $"{firstName}.{lastName}@schoolexam.de";
             var qrCode = _randomGenerator.GenerateHexString(32);
             return new Student(Guid.NewGuid(), firstName, lastName, dateOfBirth, new Address("", "", "", "", ""),
                 emailAddress, qrCode, _gymnasiumDiedorfId);
@@ -217,7 +217,7 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
         {
             var examId = examIds[i];
             var states = Enum.GetValues(typeof(ExamState));
-            var state = (ExamState) (states.GetValue(_random.Next(states.Length - 1)) ?? 0);
+            var state = (ExamState) (states.GetValue(_random.Next(states.Length)) ?? 0);
             if (state == ExamState.Planned)
             {
                 continue;
@@ -285,7 +285,7 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
                 foreach (var examTask in examTasks)
                 {
                     var isCorrected = _random.Next(2) == 0;
-                    if (isCorrected || state is ExamState.Corrected)
+                    if (isCorrected || state is ExamState.Corrected or ExamState.Published)
                     {
                         await _submissionService.SetPoints(submission.Id, examTask.Id,
                             Math.Round(_random.NextDouble() * examTask.MaxPoints));
@@ -297,8 +297,20 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
             {
                 continue;
             }
-            
-             // TODO published
+
+            submissions = _submissionService.GetByExam(examId);
+
+            // foreach (var submission in submissions)
+            // {
+            //     var pdf = submission.PdfFile!;
+            //     var remarkPdfFile = new RemarkPdfFile(Guid.NewGuid(), $"{submission.Id}.pdf", pdf.Size,
+            //         DateTime.Now.SetKindUtc(), _brigitteSchweinebauerUserId, pdf.Content, submission.Id);
+            //     _context.Add(remarkPdfFile);
+            // }
+            //
+            // await _context.SaveChangesAsync();
+
+            // await _examService.Publish(examId, DateTime.Now.AddDays(-1));
         }
     }
 

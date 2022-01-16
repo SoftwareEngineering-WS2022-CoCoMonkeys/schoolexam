@@ -2,6 +2,7 @@
 using System.Net.Mail;
 using System.Net.Mime;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using SchoolExam.Application.Pdf;
 using SchoolExam.Application.Publishing;
 using SchoolExam.Application.Repository;
@@ -17,11 +18,13 @@ public class PublishingService : IPublishingService
     private readonly ISchoolExamRepository _repository;
     private readonly IPdfService _pdfService;
     private Timer _timer;
-    
-    public PublishingService(ISchoolExamRepository repository, IPdfService pdfService)
+    private readonly ILogger<PublishingService> _logger;
+
+    public PublishingService(ISchoolExamRepository repository, IPdfService pdfService, ILogger<PublishingService> logger)
     {
         _repository = repository;
         _pdfService = pdfService;
+        _logger = logger;
     }
     
     public bool SendEmailToStudent(Booklet booklet, Exam exam)
@@ -72,8 +75,7 @@ public class PublishingService : IPublishingService
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Exception caught in CreateMessageWithAttachment(): {0}",
-                ex.ToString());
+            _logger.LogInformation($"Exception caught in CreateMessageWithAttachment(): {ex}");
         }
 
         attachment.Dispose();
