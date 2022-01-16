@@ -62,12 +62,4 @@ public class CourseService : ICourseService
         var result = courseTeachers.Select(x => x.Course);
         return result;
     }
-
-    public IEnumerable<Course> GetByStudent(Guid studentId)
-    {
-        // TODO
-        // return _context.Courses.Where(x => x.Students.Select( => x.StudentId).ToHashSet().Contains(studentId))
-        //     .AsEnumerable();
-        throw new NotImplementedException();
-    }
 }

@@ -9,5 +9,4 @@ public interface ICourseService
     Task Update(Guid courseId, string name, string topic);
     Task Delete(Guid courseId);
     IEnumerable<Course> GetByTeacher(Guid teacherId);
-    IEnumerable<Course> GetByStudent(Guid studentId);
 }
