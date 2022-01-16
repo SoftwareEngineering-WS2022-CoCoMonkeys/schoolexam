@@ -142,9 +142,9 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
     {
         var userBrigitte = new User(_brigitteSchweinebauerUserId, "brigitte",
             "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2", Role.Teacher, _brigitteSchweinebauerId);
-        var userAdmin = new User(_adminUserId, "admin", "2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
-            Role.Administrator, null);
         _context.Add(userBrigitte);
+        var userAdmin = new User(_adminUserId, "admin", "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
+            Role.Administrator, null);
         _context.Add(userAdmin);
 
         await _context.SaveChangesAsync();
