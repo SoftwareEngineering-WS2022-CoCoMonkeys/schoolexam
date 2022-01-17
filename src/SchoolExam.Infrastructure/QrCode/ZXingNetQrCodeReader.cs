@@ -28,7 +28,8 @@ public class ZXingNetQrCodeReader : IQrCodeReader
     public IEnumerable<QrCodeParseInfo> ReadQrCodes(byte[] image, RotationMatrix rotationMatrix)
     {
         using var bitmap = SKBitmap.Decode(image);
-        var result = _reader.DecodeMultiple(bitmap).Where(IsValidQrCode);
+        var decoded = _reader.DecodeMultiple(bitmap);
+        var result = decoded?.Where(IsValidQrCode) ?? Enumerable.Empty<Result>();
         return result.Select(x => new QrCodeParseInfo(GetOrientation(x, rotationMatrix), x.Text));
     }
 
