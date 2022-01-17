@@ -25,7 +25,6 @@ public class SchoolExamDbContext : DbContextBase
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new SchoolConfiguration());
-        modelBuilder.ApplyConfiguration(new SchoolTeacherConfiguration());
 
         modelBuilder.ApplyConfiguration(new FileBaseConfiguration());
 

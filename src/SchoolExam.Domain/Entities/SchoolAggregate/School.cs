@@ -8,7 +8,7 @@ public class School : EntityBase
 {
     public string Name { get; set; }
     public Address Location { get; set; }
-    public ICollection<SchoolTeacher> Teachers { get; set; }
+    public ICollection<Teacher> Teachers { get; set; }
 
     protected School(Guid id) : base(id) 
     {
@@ -18,6 +18,6 @@ public class School : EntityBase
     {
         Name = name;
         Location = location;
-        Teachers = new List<SchoolTeacher>();
+        Teachers = new List<Teacher>();
     }
 }
