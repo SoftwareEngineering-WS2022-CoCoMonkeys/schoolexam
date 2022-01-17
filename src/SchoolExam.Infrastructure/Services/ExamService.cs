@@ -60,13 +60,15 @@ public class ExamService : IExamService
         return result;
     }
 
-    public async Task Create(string title, DateTime date, Guid teacherId, string topic)
+    public async Task<Guid> Create(string title, DateTime date, Guid teacherId, string topic)
     {
         var examId = Guid.NewGuid();
         var exam = new Exam(examId, title, date, teacherId, new Topic(topic));
 
         _repository.Add(exam);
         await _repository.SaveChangesAsync();
+
+        return examId;
     }
 
     public async Task Update(Guid examId, string title, DateTime date)

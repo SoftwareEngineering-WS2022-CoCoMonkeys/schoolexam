@@ -7,6 +7,7 @@ using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Extensions;
 using SchoolExam.Web.Authorization;
+using SchoolExam.Web.Models;
 using SchoolExam.Web.Models.Exam;
 
 namespace SchoolExam.Web.Controllers;
@@ -33,11 +34,12 @@ public class ExamController : ApiController<ExamController>
     [HttpPost]
     [Route($"Create")]
     [Authorize(Roles = Role.TeacherName)]
-    public async Task<IActionResult> Create([FromBody] ExamWriteModel examWriteModel)
+    public async Task<IdReadModel> Create([FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Create(examWriteModel.Title, examWriteModel.Date.SetKindUtc(),
+        var examId = await _examService.Create(examWriteModel.Title, examWriteModel.Date.SetKindUtc(),
             GetPersonId()!.Value, examWriteModel.Topic);
-        return Ok();
+        var idReadModel = new IdReadModel {Id = examId};
+        return idReadModel;
     }
 
     [HttpPut]
