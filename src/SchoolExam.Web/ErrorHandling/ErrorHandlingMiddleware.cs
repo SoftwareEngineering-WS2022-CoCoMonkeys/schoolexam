@@ -9,10 +9,12 @@ namespace SchoolExam.Web.ErrorHandling;
 public class ErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<ErrorHandlingMiddleware> _logger;
 
-    public ErrorHandlingMiddleware(RequestDelegate next)
+    public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
     
     public async Task Invoke(HttpContext context)
@@ -36,6 +38,7 @@ public class ErrorHandlingMiddleware
                     break;
             }
 
+            _logger.LogError(exception, "A domain exception occurred.");
             var result = JsonSerializer.Serialize(new ErrorReadModel {Message = exception.Message});
             await response.WriteAsync(result);
         }
