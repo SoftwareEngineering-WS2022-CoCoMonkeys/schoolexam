@@ -2,6 +2,7 @@
 using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Entities.PersonAggregate;
+using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Extensions;
@@ -30,16 +31,17 @@ public class PersonService : IPersonService
         return _context.List<Person>();
     }
 
-    public async Task Create(string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress)
+    public async Task<Person> Create(string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress)
     {
         var personId = Guid.NewGuid();
         var person = new Person(personId, firstName, lastName, dateOfBirth, address, emailAddress);
 
         _context.Add(person);
         await _context.SaveChangesAsync();
+        return person;
     }
 
-    public async Task CreateWithUser(string firstName, string lastName, DateTime dateOfBirth, Address? address,
+    public async Task<User> CreateWithUser(string firstName, string lastName, DateTime dateOfBirth, Address? address,
         string emailAddress, string username, string password, Role role)
     {
         var personId = Guid.NewGuid();
@@ -48,10 +50,12 @@ public class PersonService : IPersonService
         _context.Add(person);
         await _context.SaveChangesAsync();
 
-        await _userService.Create(username, password, role, personId);
+        var user = await _userService.Create(username, password, role, personId);
+
+        return user;
     }
 
-    public async Task Update(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address,
+    public async Task<Person> Update(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address,
         string emailAddress)
     {
         var person = EnsurePersonExists(new PersonByIdSpecification(id));
@@ -62,6 +66,7 @@ public class PersonService : IPersonService
         person.Address = address;
         person.EmailAddress = emailAddress;
         await _context.SaveChangesAsync();
+        return person;
     }
 
     public async Task Delete(Guid id)

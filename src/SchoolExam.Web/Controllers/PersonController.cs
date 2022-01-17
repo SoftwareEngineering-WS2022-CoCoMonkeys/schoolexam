@@ -23,19 +23,19 @@ public class PersonController : ApiController<PersonController>
     [HttpGet]
     [Route($"{{{RouteParameterNames.PersonIdParameterName}}}")]
     [Authorize]
-    public PersonReadModel GetPersonById(Guid id)
+    public PersonReadModel GetPersonById(Guid personId)
     {
-        var person = _personService.GetById(id);
+        var person = _personService.GetById(personId);
         return Mapper.Map<PersonReadModel>(person);
     }
     
     [HttpGet]
-    [Route($"{{{RouteParameterNames.UserIdParameterName}}}")]
+    [Route("GetAllPersons")]
     [Authorize(Roles = Role.AdministratorName)]
-    public List<UserReadModel> GetAllPersons()
+    public List<PersonReadModel> GetAllPersons()
     {
         var persons = _personService.GetAllPersons();
-        return Mapper.Map<List<UserReadModel>>(persons);
+        return Mapper.Map<List<PersonReadModel>>(persons);
     }
 
 
@@ -46,9 +46,9 @@ public class PersonController : ApiController<PersonController>
     [Authorize(Roles = Role.AdministratorName)]
     public async Task<IActionResult> Create([FromBody] PersonWriteModel personWriteModel)
     {
-        await _personService.Create(personWriteModel.FirstName,  personWriteModel.LastName, personWriteModel.DateOfBirth, 
+        var person = await _personService.Create(personWriteModel.FirstName,  personWriteModel.LastName, personWriteModel.DateOfBirth, 
             personWriteModel.Address, personWriteModel.EmailAddress);
-        return Ok();
+        return Ok(Mapper.Map<PersonReadModel>(person));
     }
     
     [HttpPost]
@@ -56,20 +56,20 @@ public class PersonController : ApiController<PersonController>
     [Authorize(Roles = Role.AdministratorName)]
     public async Task<IActionResult> CreateWithUser([FromBody] PersonWriteWithUserModel personWriteWithUserModel)
     {
-        await _personService.CreateWithUser(personWriteWithUserModel.FirstName,  personWriteWithUserModel.LastName, personWriteWithUserModel.DateOfBirth, 
+        var userWithPerson = await _personService.CreateWithUser(personWriteWithUserModel.FirstName,  personWriteWithUserModel.LastName, personWriteWithUserModel.DateOfBirth, 
             personWriteWithUserModel.Address, personWriteWithUserModel.EmailAddress, personWriteWithUserModel.Username, 
-            personWriteWithUserModel.Password, Mapper.Map<Role>(personWriteWithUserModel.Role));
-        return Ok();
+            personWriteWithUserModel.Password, new Role(personWriteWithUserModel.Role));
+        return Ok(Mapper.Map<UserWithPersonReadModel>(userWithPerson));
     }
     
     [HttpPut]
     [Route($"{{{RouteParameterNames.PersonIdParameterName}}}/Update")]
     [Authorize(Roles = Role.AdministratorName)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] PersonWriteModel personWriteModel)
+    public async Task<IActionResult> Update(Guid personId, [FromBody] PersonWriteModel personWriteModel)
     {
-        await _personService.Update(id,personWriteModel.FirstName,  personWriteModel.LastName, personWriteModel.DateOfBirth, 
+        var person = await _personService.Update(personId,personWriteModel.FirstName,  personWriteModel.LastName, personWriteModel.DateOfBirth, 
             personWriteModel.Address, personWriteModel.EmailAddress);
-        return Ok();
+        return Ok(Mapper.Map<PersonReadModel>(person));
     }
 
     [HttpDelete]

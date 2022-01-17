@@ -13,7 +13,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.ToTable("User");
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Username).IsRequired();
+        builder.HasIndex("Username").IsUnique();
         builder.HasOne(x => x.Person).WithOne().HasForeignKey<User>(x => x.PersonId).IsRequired(false);
         builder.OwnsRole(x => x.Role);
-    }
+    }   
 }

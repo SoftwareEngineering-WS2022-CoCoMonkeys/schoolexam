@@ -1,4 +1,5 @@
 ﻿using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Web.Models.User;
 
 namespace SchoolExam.Web.Models.Person;
 
@@ -10,4 +11,5 @@ public class PersonReadModel
     public DateTime DateOfBirth { get; set; }
     public Address? Address { get; set; }
     public string EmailAddress { get; set; }
+    
 }

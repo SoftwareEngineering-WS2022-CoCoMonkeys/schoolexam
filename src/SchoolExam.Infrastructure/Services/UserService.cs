@@ -35,17 +35,18 @@ public class UserService : IUserService
         return _repository.List<User>();
     }
 
-    public async Task Create(string username, string password, Role role, Guid? personId)
+    public async Task<User> Create(string username, string password, Role role, Guid? personId)
     {
         var userId = Guid.NewGuid();
         
         var user = new User(userId, username,_passwordHasher.HashPassword(password), role, personId);
 
         _repository.Add(user);
-        await _repository.SaveChangesAsync();
+         await _repository.SaveChangesAsync();
+         return user;
     }
 
-    public async Task Update( string username, string password, Role role, Guid? personId)
+    public async Task<User> Update( string username, string password, Role role, Guid? personId)
     {
         var user = EnsureUserExists(new UserByUserNameSpecification(username));
  
@@ -54,6 +55,7 @@ public class UserService : IUserService
         user.Role = role;
         user.PersonId = personId;
         await _repository.SaveChangesAsync();
+        return user;
     }
 
     public async Task Delete(String username)
