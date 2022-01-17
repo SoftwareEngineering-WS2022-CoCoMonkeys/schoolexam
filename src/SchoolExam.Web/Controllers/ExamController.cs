@@ -103,18 +103,6 @@ public class ExamController : ApiController<ExamController>
         return Ok();
     }
 
-    [HttpPost]
-    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/SubmitAndMatch")]
-    [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> SubmitAndMatch(Guid examId, [FromBody] SubmitAndMatchModel submitAndMatchModel)
-    {
-        var pdf = Convert.FromBase64String(submitAndMatchModel.Pdf);
-
-        await _examService.Match(examId, pdf, GetUserId()!.Value);
-
-        return Ok();
-    }
-
     [HttpGet]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/UnmatchedPages")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]

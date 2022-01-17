@@ -27,6 +27,7 @@ using SchoolExam.IntegrationTests.Util;
 using SchoolExam.IntegrationTests.Util.Extensions;
 using SchoolExam.IntegrationTests.Util.Specifications;
 using SchoolExam.Web.Models.Exam;
+using SchoolExam.Web.Models.Submission;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace SchoolExam.IntegrationTests.Web;
@@ -348,9 +349,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf)};
+        var uploadSubmissionsModel = new UploadSubmissionsModel {Pdf = Convert.ToBase64String(submissionPdf)};
 
-        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
+        var response = await this.Client.PostAsJsonAsync($"/Submission/Upload/{_exam.Id}", uploadSubmissionsModel);
         response.EnsureSuccessStatusCode();
 
         using (var repository = GetSchoolExamRepository())
@@ -401,9 +402,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf)};
+        var uploadSubmissionsModel = new UploadSubmissionsModel {Pdf = Convert.ToBase64String(submissionPdf)};
 
-        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
+        var response = await this.Client.PostAsJsonAsync($"/Submission/Upload/{_exam.Id}", uploadSubmissionsModel);
 
         response.EnsureSuccessStatusCode();
 
@@ -483,9 +484,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
             new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
             new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
 
-        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(_booklet.PdfFile.Content)};
+        var uploadSubmissionsModel = new UploadSubmissionsModel {Pdf = Convert.ToBase64String(_booklet.PdfFile.Content)};
 
-        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
+        var response = await this.Client.PostAsJsonAsync($"/Submission/Upload/{_exam.Id}", uploadSubmissionsModel);
         response.EnsureSuccessStatusCode();
 
         using var repository = GetSchoolExamRepository();
@@ -515,9 +516,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var submissionPdf = TestEntityFactory.Create<SubmissionPagePdfFile>();
 
-        var submitAndMatchModel = new SubmitAndMatchModel {Pdf = Convert.ToBase64String(submissionPdf.Content)};
+        var uploadSubmissionsModel = new UploadSubmissionsModel {Pdf = Convert.ToBase64String(submissionPdf.Content)};
 
-        var response = await this.Client.PostAsJsonAsync($"/Exam/{_exam.Id}/SubmitAndMatch", submitAndMatchModel);
+        var response = await this.Client.PostAsJsonAsync($"/Submission/Upload/{_exam.Id}", uploadSubmissionsModel);
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var content = await response.Content.ReadAsStringAsync();

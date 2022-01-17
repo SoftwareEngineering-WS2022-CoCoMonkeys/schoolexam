@@ -11,11 +11,25 @@ namespace SchoolExam.Web.Controllers;
 public class SubmissionController : ApiController<SubmissionController>
 {
     private readonly ISubmissionService _submissionService;
+    private readonly IExamService _examService;
 
     public SubmissionController(ILogger<SubmissionController> logger, IMapper mapper,
-        ISubmissionService submissionService) : base(logger, mapper)
+        ISubmissionService submissionService, IExamService examService) : base(logger, mapper)
     {
         _submissionService = submissionService;
+        _examService = examService;
+    }
+    
+    [HttpPost]
+    [Route($"Upload/{{{RouteParameterNames.ExamIdParameterName}}}")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public async Task<IActionResult> SubmitAndMatch(Guid examId, [FromBody] UploadSubmissionsModel uploadSubmissionsModel)
+    {
+        var pdf = Convert.FromBase64String(uploadSubmissionsModel.Pdf);
+
+        await _examService.Match(examId, pdf, GetUserId()!.Value);
+
+        return Ok();
     }
 
     [HttpGet]
