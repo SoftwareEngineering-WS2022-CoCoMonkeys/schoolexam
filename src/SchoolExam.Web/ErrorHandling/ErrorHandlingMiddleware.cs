@@ -34,8 +34,7 @@ public class ErrorHandlingMiddleware
                     response.StatusCode = (int) HttpStatusCode.BadRequest;
                     break;
                 default:
-                    response.StatusCode = (int) HttpStatusCode.InternalServerError;
-                    break;
+                    throw;
             }
 
             _logger.LogError(exception, "A domain exception occurred.");
