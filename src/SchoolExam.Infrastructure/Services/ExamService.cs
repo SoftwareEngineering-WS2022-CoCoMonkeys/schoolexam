@@ -733,8 +733,7 @@ public class ExamService : IExamService
         // prepare outline to be added to all complete submission PDFs
         var outlineElements = exam.Tasks.Select(x => new PdfOutlineInfo(x.Title, x.Start.Page, (float) x.Start.Y))
             .ToArray();
-
-        // TODO: make sure that nothing has been corrected before deleting anything
+        
         foreach (var booklet in booklets)
         {
             var submission = updatedSubmissionsDict[booklet.Id];
