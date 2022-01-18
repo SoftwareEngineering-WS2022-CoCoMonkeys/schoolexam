@@ -2,7 +2,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using SchoolExam.Application.Pdf;
 
-namespace SchoolExam.ModuleTests.Infrastructure;
+namespace SchoolExam.ModuleTests.Application;
 
 [TestFixture]
 public class RotationMatrixTest

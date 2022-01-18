@@ -7,6 +7,10 @@ public class Size
 
     public Size(float width, float height)
     {
+        if (width < 0 || height < 0)
+        {
+            throw new ArgumentException("Width and height of size must be positive.");
+        }
         Width = width;
         Height = height;
     }
