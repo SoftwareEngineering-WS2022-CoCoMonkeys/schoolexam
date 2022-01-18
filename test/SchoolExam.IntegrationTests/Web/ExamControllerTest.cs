@@ -38,6 +38,7 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace SchoolExam.IntegrationTests.Web;
 
+[TestFixture]
 public class ExamControllerTest : ApiIntegrationTestBase
 {
     private School _school = null!;

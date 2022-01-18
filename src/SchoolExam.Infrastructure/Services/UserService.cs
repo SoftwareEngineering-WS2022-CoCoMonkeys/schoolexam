@@ -46,14 +46,15 @@ public class UserService : IUserService
          return user;
     }
 
-    public async Task<User> Update( string username, string password, Role role, Guid? personId)
+    public async Task<User> Update(string username, string newUsername, string password, Role role, Guid? personId)
     {
         var user = EnsureUserExists(new UserByUserNameSpecification(username));
  
-        user.Username = username;
+        user.Username = newUsername;
         user.Password = _passwordHasher.HashPassword(password);
         user.Role = role;
         user.PersonId = personId;
+        
         await _repository.SaveChangesAsync();
         return user;
     }
