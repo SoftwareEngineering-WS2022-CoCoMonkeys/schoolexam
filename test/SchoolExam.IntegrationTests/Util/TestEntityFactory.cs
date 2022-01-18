@@ -22,6 +22,7 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     ITestEntityFactory<Teacher>,
     ITestEntityFactory<Student>,
     ITestEntityFactory<Exam>,
+    ITestEntityFactory<ExamTask>,
     ITestEntityFactory<User>,
     ITestEntityFactory<TaskPdfFile>,
     ITestEntityFactory<Submission>,
@@ -43,7 +44,8 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
         _fixture.Customize<Teacher>(opts => opts.Without(x => x.Courses));
         _fixture.Customize<Exam>(opts =>
             opts.With(x => x.State, ExamState.Planned).Without(x => x.Booklets).Without(x => x.Tasks)
-                .Without(x => x.GradingTable).Without(x => x.TaskPdfFile).Without(x => x.Participants));
+                .Without(x => x.Participants));
+        _fixture.Customize<GradingTableInterval>(opts => opts.Without(x => x.GradingTable));
         _fixture.Customize<TaskPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<Booklet>(opts => opts.Without(x => x.Pages).Without(x => x.Exam));
         _fixture.Customize<BookletPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
@@ -86,6 +88,11 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     public Exam Create()
     {
         return _fixture.Create<Exam>();
+    }
+    
+    ExamTask ITestEntityFactory<ExamTask>.Create()
+    {
+        return _fixture.Create<ExamTask>();
     }
 
     User ITestEntityFactory<User>.Create()
