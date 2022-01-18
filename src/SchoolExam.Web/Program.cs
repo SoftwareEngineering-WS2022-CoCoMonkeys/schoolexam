@@ -160,7 +160,6 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
 
-app.Run();
 
 using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
 {
@@ -168,6 +167,7 @@ using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>(
     await initService!.Init();
 }
 
+app.Run();
 public partial class Program
 {
 }

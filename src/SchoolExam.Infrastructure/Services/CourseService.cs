@@ -35,16 +35,23 @@ public class CourseService : ICourseService
 
     public async Task Update(Guid courseId, string name, string topic)
     {
-        var course = _repository.Find<Course>(courseId);
-        if (course == null)
-        {
-            throw new DomainException("Course does not exist.");
-        }
+        var course = EnsureExamExists(courseId);
         course.Name = name;
         course.Topic = new Topic(topic);
         await _repository.SaveChangesAsync();
     }
 
+    public async Task AddStudents(Guid courseId, List<Guid> students)
+    {
+        var course = EnsureExamExists(courseId);
+        foreach (var studentId in students)
+        {
+           var courseStudent = new CourseStudent(courseId, studentId);
+           course.Students.Add(courseStudent); 
+        }
+        await _repository.SaveChangesAsync();
+    }
+    
     public async Task Delete(Guid courseId)
     {
         var course = _repository.Find<Course>(courseId);
@@ -62,5 +69,16 @@ public class CourseService : ICourseService
         var courseTeachers = _repository.List(new CourseTeacherByTeacherSpecification(teacherId));
         var result = courseTeachers.Select(x => x.Course);
         return result;
+    }
+    
+    private Course EnsureExamExists(Guid courseId)
+    {
+        var course = _repository.Find<Course>(courseId);
+        if (course == null)
+        {
+            throw new DomainException("Course does not exist.");
+        }
+
+        return course;
     }
 }

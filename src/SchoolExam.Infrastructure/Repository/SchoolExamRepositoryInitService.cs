@@ -40,7 +40,7 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
     private static string[] _firstNames => new[]
     {
         "Matteo", "Emilia", "Noah", "Hannah", "Leon", "Mia", "Finn", "Emma", "Elias", "Sophia", "Paul", "Mila", "Ben",
-        "Lina", "Luca", "Ella", "Emil", "Lea", "Louis", "Marie"
+        "Lina", "Lucas", "Ella", "Emil", "Lea", "Louis", "Marie"
     };
 
     private static string[] _lastNames => new[]
@@ -296,18 +296,18 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
             {
                 continue;
             }
-
+            
             submissions = _submissionService.GetByExam(examId);
 
-            // foreach (var submission in submissions)
-            // {
-            //     var pdf = submission.PdfFile!;
-            //     var remarkPdfFile = new RemarkPdfFile(Guid.NewGuid(), $"{submission.Id}.pdf", pdf.Size,
-            //         DateTime.Now.SetKindUtc(), _brigitteSchweinebauerUserId, pdf.Content, submission.Id);
-            //     _context.Add(remarkPdfFile);
-            // }
-            //
-            // await _context.SaveChangesAsync();
+            foreach (var submission in submissions)
+            {
+                var pdf = submission.PdfFile!;
+                var remarkPdfFile = new RemarkPdfFile(Guid.NewGuid(), $"{submission.Id}.pdf", pdf.Size,
+                    DateTime.Now.SetKindUtc(), _brigitteSchweinebauerUserId, pdf.Content, submission.Id);
+                _context.Add(remarkPdfFile);
+            }
+            
+            await _context.SaveChangesAsync();
 
             // await _examService.Publish(examId, DateTime.Now.AddDays(-1));
         }
@@ -317,9 +317,9 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
     {
         DateTimeOffset minDate = new DateTime(minYear, 1, 1);
         DateTimeOffset maxDate = new DateTime(maxYear, 12, 31);
-        long min = minDate.UtcTicks;
-        long max = maxDate.UtcTicks;
-        long date = min + _random.NextInt64(max - min);
+        var min = minDate.UtcTicks;
+        var max = maxDate.UtcTicks;
+        var date = min + _random.NextInt64(max - min);
         return new DateTimeOffset(date, TimeSpan.Zero).DateTime.SetKindUtc();
     }
 

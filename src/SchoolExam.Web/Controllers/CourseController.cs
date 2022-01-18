@@ -2,9 +2,11 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Services;
+using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Authorization;
 using SchoolExam.Web.Models.Course;
+using SchoolExam.Web.Models.Person;
 
 namespace SchoolExam.Web.Controllers;
 
@@ -38,6 +40,15 @@ public class CourseController : ApiController<CourseController>
         return Ok();
     }
 
+    [HttpPut]
+    [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/AddStudents")]
+    [Authorize(PolicyNames.CourseTeacherPolicyName)]
+    public async Task<IActionResult> AddStudents(Guid courseId, [FromBody] List<Guid> students)
+    {
+        await _courseService.AddStudents(courseId, students);
+        return Ok();
+    }
+    
     [HttpDelete]
     [Route($"{{{RouteParameterNames.CourseIdParameterName}}}/Delete")]
     [Authorize(PolicyNames.CourseTeacherPolicyName)]

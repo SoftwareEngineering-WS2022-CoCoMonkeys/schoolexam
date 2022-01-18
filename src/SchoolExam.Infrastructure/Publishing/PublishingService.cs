@@ -58,6 +58,8 @@ public class PublishingService : IPublishingService
         var attachment = GetPublishingExamAttachment(examToBePublishedPdf);
         message.Attachments.Add(attachment);
 
+        //MailKit.
+        
         //Send the message.
         SmtpClient client = new SmtpClient
         {
