@@ -83,15 +83,8 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<User, UserWithPersonReadModel>();
         
         CreateMap<Person, AuthenticatedPersonModel>();
-        CreateMap<Person, PersonReadModel>()
-            .ForMember(dst => dst.Id, opt => opt.MapFrom(src => src.Id))
-            .ForMember(dst => dst.EmailAddress, opt => opt.MapFrom(src => src.EmailAddress))
-            .ForMember(dst => dst.FirstName, opt => opt.MapFrom(src => src.FirstName))
-            .ForMember(dst => dst.LastName, opt => opt.MapFrom(src => src.LastName))
-            .ForMember(dst => dst.Address, opt => opt.MapFrom(src => src.Address))
-            .ForMember(dst => dst.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth));
-            
-        
+        CreateMap<Person, PersonReadModel>();
+        CreateMap<Address, Address>();
 
         CreateMap<GradingTable, GradingTableReadModel>()
             .ForMember(dst => dst.LowerBounds, opt => opt.MapFrom(src => src.Intervals));
