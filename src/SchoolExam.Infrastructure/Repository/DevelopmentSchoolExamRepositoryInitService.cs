@@ -279,10 +279,11 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
             var submissionPdf = _pdfService.Merge(submissionPdfs);
             await _examService.Match(examId, submissionPdf, _brigitteSchweinebauerUserId);
 
+            var exam = _context.Set<Exam>().Include(x => x.Tasks).Single(x => x.Id.Equals(examId));
             var submissions = _submissionService.GetByExam(examId);
             foreach (var submission in submissions)
             {
-                foreach (var examTask in examTasks)
+                foreach (var examTask in exam.Tasks)
                 {
                     var isCorrected = _random.Next(2) == 0;
                     if (isCorrected || state is ExamState.Corrected or ExamState.Published)
