@@ -23,7 +23,7 @@ public class SubmissionController : ApiController<SubmissionController>
     [HttpPost]
     [Route($"Upload/{{{RouteParameterNames.ExamIdParameterName}}}")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> SubmitAndMatch(Guid examId, [FromBody] UploadSubmissionsModel uploadSubmissionsModel)
+    public async Task<IActionResult> Upload(Guid examId, [FromBody] UploadSubmissionsModel uploadSubmissionsModel)
     {
         var pdf = Convert.FromBase64String(uploadSubmissionsModel.Pdf);
 

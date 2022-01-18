@@ -1093,7 +1093,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     
 
     [Test]
-    public async Task ExamController_BuildAndMatch_ExamCreator_Success()
+    public async Task ExamController_BuildAndSubmit_ExamCreator_Success()
     {
         // remove submission pages such that a rebuild is possible
         using (var repository = GetSchoolExamRepository())
@@ -1171,7 +1171,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     }
 
     [Test]
-    public async Task ExamController_BuildAndMatch_ConcatSameSubmissionPdfTwice_Success()
+    public async Task ExamController_BuildAndSubmit_ConcatSameSubmissionPdfTwice_Success()
     {
         await ResetExam();
 
@@ -1225,7 +1225,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
     }
     
     [Test]
-    public async Task ExamController_BuildAndMatch_StudentsMatchedToSameBooklet_ThrowsException()
+    public async Task ExamController_BuildAndSubmit_StudentsMatchedToSameBooklet_ThrowsException()
     {
         await ResetExam();
 
@@ -1333,55 +1333,6 @@ public class ExamControllerTest : ApiIntegrationTestBase
 
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain("Exam does not have a task PDF file.");
-    }
-
-    [Test]
-    public async Task ExamController_Match_AutomaticMatchingFails_Success()
-    {
-        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
-            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
-            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-
-        var uploadSubmissionsModel = new UploadSubmissionsModel
-            {Pdf = Convert.ToBase64String(_booklet.PdfFile.Content)};
-
-        var response = await Client.PostAsJsonAsync($"/Submission/Upload/{_exam.Id}", uploadSubmissionsModel);
-        response.EnsureSuccessStatusCode();
-
-        using var repository = GetSchoolExamRepository();
-        var submissionPages = repository.List(new SubmissionPageByExamSpecification(_exam.Id)).ToList();
-        submissionPages.Should().HaveCount(4);
-        submissionPages.Count(x => x.SubmissionId.HasValue).Should().Be(1);
-        submissionPages.Single(x => x.SubmissionId.HasValue).Id.Should().Be(_matchedSubmissionPage.Id);
-
-        var bookletPages = repository.List(new BookletWithPagesByExamSpecification(_exam.Id)).SelectMany(x => x.Pages)
-            .ToList();
-        bookletPages.Should().HaveCount(2);
-        bookletPages.Count(x => x.SubmissionPage != null).Should().Be(1);
-        bookletPages.Single(x => x.SubmissionPage != null).Id.Should().Be(_matchedBookletPage.Id);
-
-        var exam = repository.Find<Exam>(_exam.Id);
-        exam?.State.Should().Be(ExamState.SubmissionReady);
-    }
-
-    [Test]
-    public async Task ExamController_Match_ExamNotBuiltPreviously_ThrowsException()
-    {
-        await ResetExam();
-
-        SetClaims(new Claim(ClaimTypes.Role, Role.Teacher),
-            new Claim(CustomClaimTypes.PersonId, _teacher.Id.ToString()),
-            new Claim(CustomClaimTypes.UserId, _user.Id.ToString()));
-
-        var submissionPdf = TestEntityFactory.Create<SubmissionPagePdfFile>();
-
-        var uploadSubmissionsModel = new UploadSubmissionsModel {Pdf = Convert.ToBase64String(submissionPdf.Content)};
-
-        var response = await Client.PostAsJsonAsync($"/Submission/Upload/{_exam.Id}", uploadSubmissionsModel);
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-
-        var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain("Exam is not ready to match submissions.");
     }
 
     [Test]

@@ -28,6 +28,8 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     ITestEntityFactory<Submission>,
     ITestEntityFactory<SubmissionPagePdfFile>,
     ITestEntityFactory<SubmissionPage>,
+    ITestEntityFactory<Answer>,
+    ITestEntityFactory<AnswerSegment>,
     ITestEntityFactory<Booklet>,
     ITestEntityFactory<BookletPage>,
     ITestEntityFactory<BookletPdfFile>
@@ -49,9 +51,11 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
         _fixture.Customize<TaskPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<Booklet>(opts => opts.Without(x => x.Pages).Without(x => x.Exam));
         _fixture.Customize<BookletPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
-        _fixture.Customize<Submission>(opts => opts.Without(x => x.Pages).Without(x => x.Booklet));
+        _fixture.Customize<Submission>(opts =>
+            opts.Without(x => x.Pages).Without(x => x.Booklet).Without(x => x.Answers).Without(x => x.Student));
         _fixture.Customize<SubmissionPagePdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<BookletPage>(opts => opts.Without(x => x.SubmissionPage));
+        _fixture.Customize<Answer>(opts => opts.Without(x => x.Task));
     }
 
     public TEntity Create<TEntity>() where TEntity : IEntity
@@ -89,7 +93,7 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     {
         return _fixture.Create<Exam>();
     }
-    
+
     ExamTask ITestEntityFactory<ExamTask>.Create()
     {
         return _fixture.Create<ExamTask>();
@@ -133,6 +137,16 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     BookletPdfFile ITestEntityFactory<BookletPdfFile>.Create()
     {
         return _fixture.Create<BookletPdfFile>();
+    }
+    
+    Answer ITestEntityFactory<Answer>.Create()
+    {
+        return _fixture.Create<Answer>();
+    }
+
+    AnswerSegment ITestEntityFactory<AnswerSegment>.Create()
+    {
+        return _fixture.Create<AnswerSegment>();
     }
 
     private byte[] CreatePdfFile()
