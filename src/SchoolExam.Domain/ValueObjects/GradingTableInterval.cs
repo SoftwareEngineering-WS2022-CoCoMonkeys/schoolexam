@@ -29,7 +29,7 @@ public class GradingTableInterval
         GradingTableId = gradingTableId;
     }
 
-    public bool Includes(int points)
+    public bool Includes(double points)
     {
         bool greater = Start.Type == GradingTableIntervalBoundType.Exclusive
             ? points > Start.Points
