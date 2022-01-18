@@ -84,7 +84,8 @@ public class SchoolExamMappingProfile : Profile
         
         CreateMap<Person, AuthenticatedPersonModel>();
         CreateMap<Person, PersonReadModel>();
-        CreateMap<Address, Address>();
+        CreateMap<Address, AddressReadModel>();
+        CreateMap<AddressWriteModel, Address>();
 
         CreateMap<GradingTable, GradingTableReadModel>()
             .ForMember(dst => dst.LowerBounds, opt => opt.MapFrom(src => src.Intervals));
