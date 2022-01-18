@@ -13,7 +13,7 @@ public interface IUserService
 
     Task<User> Create(string username, string password, Role role, Guid? personId);
 
-    Task<User> Update( string username, string password, Role role, Guid? personId);
+    Task<User> Update( string username, string newUsername, string password, Role role, Guid? personId);
 
     Task Delete(String userName);
 

@@ -26,6 +26,7 @@ using SchoolExam.Web.Models.Submission;
 
 namespace SchoolExam.IntegrationTests.Web;
 
+[TestFixture]
 public class SubmissionControllerTest : ApiIntegrationTestBase
 {
     private School _school = null!;
