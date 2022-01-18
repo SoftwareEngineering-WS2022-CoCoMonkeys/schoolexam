@@ -2,6 +2,8 @@ namespace SchoolExam.Domain.ValueObjects;
 
 public class GradingTableIntervalBound : IComparable<GradingTableIntervalBound>
 {
+    private const double Tolerance = 1e-6;
+    
     public double Points { get; }
     public GradingTableIntervalBoundType Type { get; }
 
@@ -17,7 +19,7 @@ public class GradingTableIntervalBound : IComparable<GradingTableIntervalBound>
             throw new ArgumentException();
         if (Equals(other))
             return 0;
-        if (Points == other.Points)
+        if (Math.Abs(Points - other.Points) < Tolerance)
             return Type == GradingTableIntervalBoundType.Inclusive ? 1 : -1;
         return Points.CompareTo(other.Points);
     }
@@ -28,7 +30,7 @@ public class GradingTableIntervalBound : IComparable<GradingTableIntervalBound>
             return false;
         if (obj is not GradingTableIntervalBound other)
             return false;
-        return Points == other.Points && Type == other.Type;
+        return Math.Abs(Points - other.Points) < Tolerance && Type == other.Type;
     }
 
     public override int GetHashCode()
