@@ -3,6 +3,7 @@ using System.Net.Mail;
 using System.Net.Mime;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using MimeKit;
 using SchoolExam.Application.Pdf;
 using SchoolExam.Application.Publishing;
 using SchoolExam.Application.Repository;
@@ -36,10 +37,10 @@ public class PublishingService : IPublishingService
         var mailSubject =
             string.Format(
                 $"Deine Note in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} {exam.Topic.Name} ");
-        var mailLine1 = string.Format($"Hallo {student.FirstName}!");
+        var mailLine1 = string.Format($"Hallo {student.FirstName} {student.LastName} !");
         var mailLine2 =
             string.Format(
-                $"Deine Prüfung in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} wurde gerade veröffentlicht!");
+                $"Dein Prüfungsergebnis in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} wurde gerade veröffentlicht!");
         var mailLine3 =
             string.Format("Du findest deine Note sowie die korrigierte Prüfung in der PDF-Datei im Anhang!");
         var mailLine4 =
@@ -47,33 +48,38 @@ public class PublishingService : IPublishingService
                 "Diese Mail wurde automatisch von SchoolExam erstellt. Bitte wende dich bei Fragen an deine Lehrkraft.");
 
         MailMessage message = new MailMessage(
-            "schoolexam@mail01.rootitup.de",
+            "schoolexam@rootitup.de",
             student.EmailAddress,
             mailSubject,
             string.Format($"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}"));
 
+        var messageMailKit = new MimeMessage();
+        messageMailKit.From.Add(new MailboxAddress("SchoolExam", "schoolexam@rootitup.de"));
+
+        messageMailKit.To.Add(new MailboxAddress($"{student.FirstName} {student.LastName}", student.EmailAddress));
+
+        messageMailKit.Subject = mailSubject;
+        messageMailKit.Body = new TextPart("html") { Text = string.Format($"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}")};
 
         var examToBePublishedPdf = GetExamPdfToBePublished(remarkPdf, student);
             
-        var attachment = GetPublishingExamAttachment(examToBePublishedPdf);
+        using var stream = new MemoryStream(examToBePublishedPdf);
+        // Create  the file attachment for this email message.
+        var attachment = new Attachment(stream,
+            $"Prüfungskorrektur_{student.FirstName}_{exam.Title}_{exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year}.pdf");//MediaTypeNames.Application.Pdf);
         message.Attachments.Add(attachment);
 
-        //MailKit.
+        using MailKit.Net.Smtp.SmtpClient mailKitClient = new MailKit.Net.Smtp.SmtpClient();
+        mailKitClient.Connect("mail01.rootitup.de", 587, false);
         
-        //Send the message.
-        SmtpClient client = new SmtpClient
-        {
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            EnableSsl = true,
-            Host = "mail01.rootitup.de",
-            Port = 587,
-            Credentials = new NetworkCredential("schoolexam", "DiesesPasswortIstSehrSicher12345#")
-        };
-
+        // Note: since we don't have an OAuth2 token, disable the XOAUTH2 authentication mechanism.
+        mailKitClient.AuthenticationMechanisms.Remove("XOAUTH2");
+        
+        mailKitClient.Authenticate("schoolexam", "DiesesPasswortIstSehrSicher12345#");
+        
         try
         {
-            client.Send(message);
+           mailKitClient.Send(messageMailKit);
         }
         catch (Exception ex)
         {
@@ -82,14 +88,6 @@ public class PublishingService : IPublishingService
 
         attachment.Dispose();
         return true;
-    }
-
-    private Attachment GetPublishingExamAttachment(byte[] examToBePublishedPdf)
-    {
-        using var stream = new MemoryStream(examToBePublishedPdf);
-        // Create  the file attachment for this email message.
-        var attachment = new Attachment(stream, MediaTypeNames.Application.Pdf);
-        return attachment;
     }
     
     private byte[] GetExamPdfToBePublished(RemarkPdfFile remarkPdf, Student student)

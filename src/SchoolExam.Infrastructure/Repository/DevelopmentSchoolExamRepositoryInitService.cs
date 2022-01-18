@@ -161,7 +161,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
             var firstName = _firstNames[_random.Next(countFirstNames)];
             var lastName = _lastNames[_random.Next(countLastNames)];
             var dateOfBirth = CreateRandomDate(_minYear, _maxYear);
-            var emailAddress = "switcherlapp.97@gmail.com"; // $"{firstName}.{lastName}@schoolexam.de";
+            var emailAddress = "schoolexam@trash-mail.com"; // $"{firstName}.{lastName}@schoolexam.de";
             var qrCode = _randomGenerator.GenerateHexString(32);
             return new Student(Guid.NewGuid(), firstName, lastName, dateOfBirth, new Address("", "", "", "", ""),
                 emailAddress, qrCode, _gymnasiumDiedorfId);
@@ -293,7 +293,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
                 }
             }
 
-            if (state is ExamState.InCorrection or ExamState.Corrected)
+            if (state is ExamState.InCorrection)
             {
                 continue;
             }
