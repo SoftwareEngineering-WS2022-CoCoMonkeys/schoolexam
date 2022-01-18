@@ -269,7 +269,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var examWriteModel = new ExamWriteModel
             {Title = newExam.Title, Date = newExam.Date, Topic = newExam.Topic.Name};
 
-        var response = await Client.PostAsJsonAsync($"/Exam/Create", examWriteModel);
+        var response = await Client.PostAsJsonAsync("/Exam/Create", examWriteModel);
         response.EnsureSuccessStatusCode();
 
         using var repository = GetSchoolExamRepository();
