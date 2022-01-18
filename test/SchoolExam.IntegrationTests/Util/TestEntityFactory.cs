@@ -56,6 +56,7 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
         _fixture.Customize<SubmissionPagePdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<BookletPage>(opts => opts.Without(x => x.SubmissionPage));
         _fixture.Customize<Answer>(opts => opts.Without(x => x.Task));
+        _fixture.Customize<RemarkPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
     }
 
     public TEntity Create<TEntity>() where TEntity : IEntity
