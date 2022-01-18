@@ -20,7 +20,7 @@ using SchoolExam.Persistence.DataContext;
 
 namespace SchoolExam.Infrastructure.Repository;
 
-public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
+public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
 {
     private Guid _gymnasiumDiedorfId = Guid.Parse("ae6c71b1-9bb8-4272-812d-7268ac419242"),
         _brigitteSchweinebauerId = Guid.Parse("0e40059f-967a-404e-915c-c4c862e471ef"),
@@ -67,7 +67,7 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
     private static int _minYear = 2004;
     private static int _maxYear = 2008;
 
-    public SchoolExamRepositoryInitService(SchoolExamDbContext context, IExamService examService,
+    public DevelopmentSchoolExamRepositoryInitService(SchoolExamDbContext context, IExamService examService,
         ISubmissionService submissionService, IPdfService pdfService, IQrCodeGenerator qrCodeGenerator)
     {
         _context = context;
@@ -218,6 +218,7 @@ public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
             var examId = examIds[i];
             var states = Enum.GetValues(typeof(ExamState));
             var state = (ExamState) (states.GetValue(_random.Next(states.Length)) ?? 0);
+            // var state = ExamState.Published;
             if (state == ExamState.Planned)
             {
                 continue;

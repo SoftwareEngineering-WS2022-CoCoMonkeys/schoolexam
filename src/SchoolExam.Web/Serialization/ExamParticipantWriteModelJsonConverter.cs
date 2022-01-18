@@ -2,7 +2,7 @@ using SchoolExam.Web.Models.Exam;
 
 namespace SchoolExam.Web.Serialization;
 
-public class SetParticipantsModelJsonConverter : DerivedTypeJsonConverter<ExamParticipantWriteModel>
+public class ExamParticipantWriteModelJsonConverter : DerivedTypeJsonConverter<ExamParticipantWriteModel>
 {
     protected override string TypeToName(Type type)
     {
