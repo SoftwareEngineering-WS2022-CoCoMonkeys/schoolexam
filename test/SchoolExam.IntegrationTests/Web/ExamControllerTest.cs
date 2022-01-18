@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Equivalency;
+using iText.IO.Image;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Action;
 using iText.Layout;
@@ -94,6 +95,8 @@ public class ExamControllerTest : ApiIntegrationTestBase
         _unmatchedBookletPage.BookletId = _booklet.Id;
         _submission = TestEntityFactory.Create<Submission>();
         _submission.BookletId = _booklet.Id;
+        var answer = TestEntityFactory.Create<Answer>();
+        answer.SubmissionId = _submission.Id;
         _matchedSubmissionPage = TestEntityFactory.Create<SubmissionPage>();
         _matchedSubmissionPage.ExamId = _exam.Id;
         _matchedSubmissionPage.SubmissionId = _submission.Id;
@@ -137,6 +140,7 @@ public class ExamControllerTest : ApiIntegrationTestBase
         repository.Add(_matchedBookletPage);
         repository.Add(_unmatchedBookletPage);
         repository.Add(_submission);
+        repository.Add(answer);
         repository.Add(_matchedSubmissionPage);
         repository.Add(_unmatchedSubmissionPage);
 
@@ -1095,9 +1099,14 @@ public class ExamControllerTest : ApiIntegrationTestBase
     [Test]
     public async Task ExamController_BuildAndSubmit_ExamCreator_Success()
     {
-        // remove submission pages such that a rebuild is possible
         using (var repository = GetSchoolExamRepository())
         {
+            // use task PDF file that contains QR code placeholders
+            var taskPdfFile = TestEntityFactory.Create<TaskPdfFile>();
+            taskPdfFile.Content = CreateTaskPdfFile(new[] {Guid.NewGuid(), Guid.NewGuid()});
+            taskPdfFile.ExamId = _exam.Id;
+            
+            // remove submission pages such that a rebuild is possible
             foreach (var submission in repository.List<Submission>())
             {
                 repository.Remove(submission);
@@ -1107,6 +1116,11 @@ public class ExamControllerTest : ApiIntegrationTestBase
             {
                 repository.Remove(submissionPage);
             }
+            
+            var exam = repository.Find(new ExamWithTaskPdfFileAndTasksByIdSpecification(_exam.Id))!;
+            repository.Remove(exam.TaskPdfFile!);
+            repository.Add(taskPdfFile);
+
             await repository.SaveChangesAsync();
         }
 
@@ -1617,6 +1631,9 @@ public class ExamControllerTest : ApiIntegrationTestBase
         var pdf = new PdfDocument(writer);
         var document = new Document(pdf);
 
+        var qrCodeGenerator = GetRequiredService<IQrCodeGenerator>();
+        var qrCodePlaceholder = qrCodeGenerator.GeneratePngQrCode("QR code placeholder");
+
         for (int i = 0; i < taskIds.Length; i++)
         {
             var taskId = taskIds[i];
@@ -1627,6 +1644,12 @@ public class ExamControllerTest : ApiIntegrationTestBase
             var actionEnd = PdfAction.CreateURI($"task-end-{taskId}");
             var linkEnd = new Link("End", actionEnd);
             document.Add(new Paragraph().Add(linkEnd));
+
+            var actionQrCode = PdfAction.CreateURI("http://pageQrCode");
+            var imageData = ImageDataFactory.CreatePng(qrCodePlaceholder);
+            var image = new Image(imageData).SetWidth(50).SetHeight(50).SetAction(actionQrCode);
+            document.Add(image);
+            
             if (i < taskIds.Length - 1)
             {
                 document.Add(new AreaBreak());
