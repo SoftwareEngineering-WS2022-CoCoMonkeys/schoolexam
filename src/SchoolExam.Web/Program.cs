@@ -141,13 +141,14 @@ builder.Services.AddTransient<ISubmissionService, SubmissionService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IPersonService, PersonService>();
 
-if (builder.Environment.IsDevelopment())
+if (builder.Environment.IsDevelopment() || builder.Environment.IsProduction())
 {
-    builder.Services.AddScoped<ISchoolExamRepositoryInitService, DevelopmentSchoolExamRepositoryInitService>();   
-} else if (builder.Environment.IsProduction())
-{
-    builder.Services.AddScoped<ISchoolExamRepositoryInitService, ProductionSchoolExamRepositoryInitService>();
+    builder.Services.AddScoped<ISchoolExamRepositoryInitService, DevelopmentSchoolExamRepositoryInitService>();
 }
+// } else if (builder.Environment.IsProduction())
+// {
+//     builder.Services.AddScoped<ISchoolExamRepositoryInitService, ProductionSchoolExamRepositoryInitService>();
+// }
 
 var app = builder.Build();
 
