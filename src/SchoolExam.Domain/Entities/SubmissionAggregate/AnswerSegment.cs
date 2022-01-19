@@ -5,8 +5,8 @@ namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 
 public class AnswerSegment : EntityBase
 {
-    public ExamPosition Start { get; set; }
-    public ExamPosition End { get; set; }
+    public ExamPosition Start { get; set; } = null!;
+    public ExamPosition End { get; set; } = null!;
     public Guid AnswerId { get; set; }
 
     protected AnswerSegment(Guid id) : base(id)

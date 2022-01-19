@@ -22,7 +22,7 @@ namespace SchoolExam.Infrastructure.Repository;
 
 public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
 {
-    private Guid _gymnasiumDiedorfId = Guid.Parse("ae6c71b1-9bb8-4272-812d-7268ac419242"),
+    private readonly Guid _gymnasiumDiedorfId = Guid.Parse("ae6c71b1-9bb8-4272-812d-7268ac419242"),
         _brigitteSchweinebauerId = Guid.Parse("0e40059f-967a-404e-915c-c4c862e471ef"),
         _brigitteSchweinebauerUserId = Guid.Parse("baa9a10f-eb07-4bf3-8438-48adaa44f6c0"),
         _adminUserId = Guid.Parse("26bb9bc0-0610-4fb9-bdb5-05fef1243863"),
@@ -100,7 +100,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
         await AddTeachers();
         await AddUsers();
         var studentIds = await AddStudents();
-        await AddExams(studentIds);
+        await AddExams(studentIds.ToArray());
         await _context.SaveChangesAsync();
     }
 
@@ -109,6 +109,8 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
         var school = new School(_gymnasiumDiedorfId, "Schmuttertal-Gymnasium Diedorf",
             new Address("Schmetterlingsplatz", "1", "86420", "Diedorf", "Deutschland"));
         _context.Add(school);
+
+        await _context.SaveChangesAsync();
     }
 
     private async Task AddCourses()
@@ -119,6 +121,8 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
         var courseNaturwissenschaften = new Course(_naturwissenschaftenCourseId, "Naturwissenschaften",
             new Topic("Physik"), _gymnasiumDiedorfId);
         _context.Add(courseNaturwissenschaften);
+
+        await _context.SaveChangesAsync();
     }
 
     private async Task AddTeachers()
@@ -181,7 +185,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
         return students.Select(x => x.Id);
     }
 
-    private async Task AddExams(IEnumerable<Guid> studentIds)
+    private async Task AddExams(Guid[] studentIds)
     {
         var count = 10;
         var countTitles = _examTitles.Length;

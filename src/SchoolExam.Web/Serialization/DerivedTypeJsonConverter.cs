@@ -49,10 +49,13 @@ public abstract class DerivedTypeJsonConverter<TBase> : JsonConverter<TBase>
 	public override TBase Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
 		// get the $type value by parsing the JSON string into a JsonDocument
-		JsonDocument jsonDocument = JsonDocument.ParseValue(ref reader);
+		var jsonDocument = JsonDocument.ParseValue(ref reader);
 		jsonDocument.RootElement.TryGetProperty(TypePropertyName, out JsonElement typeNameElement);
-		string typeName = (typeNameElement.ValueKind == JsonValueKind.String) ? typeNameElement.GetString() : null;
-		if (string.IsNullOrWhiteSpace(typeName)) throw new InvalidOperationException($"Missing or invalid value for {TypePropertyName} (base type {typeof(TBase).FullName}).");
+		var typeName = typeNameElement.ValueKind == JsonValueKind.String ? typeNameElement.GetString() : null;
+		if (string.IsNullOrWhiteSpace(typeName))
+		{
+			throw new InvalidOperationException($"Missing or invalid value for {TypePropertyName} (base type {typeof(TBase).FullName}).");
+		}
 
 		// get the JSON text that was read by the JsonDocument
 		string json;
@@ -65,7 +68,7 @@ public abstract class DerivedTypeJsonConverter<TBase> : JsonConverter<TBase>
 
 		// deserialize the JSON to the type specified by $type
 		try {
-			return (TBase)JsonSerializer.Deserialize(json, NameToType(typeName), options);
+			return (TBase) JsonSerializer.Deserialize(json, NameToType(typeName), options)!;
 		}
 		catch (Exception ex) {
 			throw new InvalidOperationException("Invalid JSON in request.", ex);
@@ -76,7 +79,7 @@ public abstract class DerivedTypeJsonConverter<TBase> : JsonConverter<TBase>
 	{
 		// create an ExpandoObject from the value to serialize so we can dynamically add a $type property to it
 		ExpandoObject expando = ToExpandoObject(value);
-		expando.TryAdd(TypePropertyName, TypeToName(value.GetType()));
+		expando.TryAdd(TypePropertyName, TypeToName(value!.GetType()));
 
 		// serialize the expando
 		JsonSerializer.Serialize(writer, expando, options);
@@ -87,7 +90,7 @@ public abstract class DerivedTypeJsonConverter<TBase> : JsonConverter<TBase>
 	/// </summary>
 	/// <param name="obj"></param>
 	/// <returns></returns>
-	private static ExpandoObject ToExpandoObject(object obj)
+	private static ExpandoObject ToExpandoObject(object? obj)
 	{
 		var expando = new ExpandoObject();
 		if (obj != null) {

@@ -17,7 +17,7 @@ namespace SchoolExam.IntegrationTests.Util;
 
 public abstract class ApiIntegrationTestBase
 {
-    protected HttpClient Client { get; private set; }
+    protected HttpClient Client { get; private set; } = null!;
     protected ISchoolExamTestEntityFactory TestEntityFactory { get; }
 
     private readonly WebApplicationFactory<Program> _factory;
@@ -39,7 +39,7 @@ public abstract class ApiIntegrationTestBase
                             options.DefaultScheme = TestAuthenticationHandler.AuthenticationScheme;
                         })
                         .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(
-                            TestAuthenticationHandler.AuthenticationScheme, options => { });
+                            TestAuthenticationHandler.AuthenticationScheme, _ => { });
                 })
                 .ConfigureTestServices(ConfigureTestServices);
         });

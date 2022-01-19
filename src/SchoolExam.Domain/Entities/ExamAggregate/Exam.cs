@@ -6,7 +6,7 @@ namespace SchoolExam.Domain.Entities.ExamAggregate;
 
 public class Exam : EntityBase
 {
-    public string Title { get; set; }
+    public string Title { get; set; } = null!;
     public GradingTable? GradingTable { get; set; }
     public ICollection<ExamTask> Tasks { get; set; }
     public ICollection<Booklet> Booklets { get; set; }
@@ -16,10 +16,13 @@ public class Exam : EntityBase
     public Guid CreatorId { get; set; }
     public TaskPdfFile? TaskPdfFile { get; set; }
     public ExamState State { get; set; }
-    public Topic Topic { get; set; }
+    public Topic Topic { get; set; } = null!;
 
     protected Exam(Guid id) : base(id)
     {
+        Tasks = new List<ExamTask>();
+        Booklets = new List<Booklet>();
+        Participants = new List<ExamParticipant>();
     }
 
     public Exam(Guid id, string title, DateTime date, Guid creatorId, Topic topic) : this(id)
@@ -30,9 +33,6 @@ public class Exam : EntityBase
         DueDate = date.AddDays(14);
         CreatorId = creatorId;
         Topic = topic;
-        Tasks = new List<ExamTask>();
-        Booklets = new List<Booklet>();
-        Participants = new List<ExamParticipant>();
         State = ExamState.Planned;
     }
 }

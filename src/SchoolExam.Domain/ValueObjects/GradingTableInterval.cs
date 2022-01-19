@@ -5,11 +5,11 @@ namespace SchoolExam.Domain.ValueObjects;
 
 public class GradingTableInterval
 {
-    public GradingTableIntervalBound Start { get; set; }
-    public GradingTableIntervalBound End { get; set; }
-    public string Grade { get; set; }
+    public GradingTableIntervalBound Start { get; set; } = null!;
+    public GradingTableIntervalBound End { get; set; } = null!;
+    public string Grade { get; set; } = null!;
     public GradingTableLowerBoundType Type { get; set; }
-    public GradingTable GradingTable { get; set; }
+    public GradingTable GradingTable { get; set; } = null!;
     public Guid GradingTableId { get; set; }
 
     public GradingTableInterval()

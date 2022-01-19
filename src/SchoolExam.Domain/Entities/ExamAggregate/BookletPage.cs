@@ -8,7 +8,7 @@ public class BookletPage : EntityBase
 {
     public int Page { get; set; }
     public Guid BookletId { get; set; }
-    public QrCode QrCode { get; set; }
+    public QrCode QrCode { get; set; } = null!;
     public SubmissionPage? SubmissionPage { get; set; }
     public bool IsMatched => SubmissionPage != null;
         

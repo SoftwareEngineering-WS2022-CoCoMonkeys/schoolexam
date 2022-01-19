@@ -1,6 +1,4 @@
-﻿using System.Net;
-using System.Net.Mail;
-using System.Net.Mime;
+﻿using System.Net.Mail;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using MimeKit;
@@ -18,7 +16,7 @@ public class PublishingService : IPublishingService
 {
     private readonly ISchoolExamRepository _repository;
     private readonly IPdfService _pdfService;
-    private Timer _timer;
+    private Timer _timer = null!;
     private readonly ILogger<PublishingService> _logger;
 
     public PublishingService(ISchoolExamRepository repository, IPdfService pdfService, ILogger<PublishingService> logger)
@@ -31,27 +29,23 @@ public class PublishingService : IPublishingService
     public bool SendEmailToStudent(Booklet booklet, Exam exam)
     {
         var student = booklet.Submission!.Student;
+        if (student == null)
+        {
+            return false;
+        }
         var remarkPdf = booklet.Submission.RemarkPdfFile!;
         
         // Create a message and set up the recipients.
         var mailSubject =
-            string.Format(
-                $"Deine Note in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} {exam.Topic.Name} ");
-        var mailLine1 = string.Format($"Hallo {student.FirstName} {student.LastName} !");
-        var mailLine2 =
-            string.Format(
-                $"Dein Prüfungsergebnis in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} wurde gerade veröffentlicht!");
-        var mailLine3 =
-            string.Format("Du findest deine Note sowie die korrigierte Prüfung in der PDF-Datei im Anhang!");
+            $"Deine Note in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} {exam.Topic.Name}";
+        var mailLine1 = $"Hallo {student.FirstName} {student.LastName}!";
+        var mailLine2 = $"Dein Prüfungsergebnis in {exam.Title} am {exam.Date:dd.MM.yyyy} wurde gerade veröffentlicht!";
+        var mailLine3 = "Du findest deine Note sowie die korrigierte Prüfung in der PDF-Datei im Anhang!";
         var mailLine4 =
-            string.Format(
-                "Diese Mail wurde automatisch von SchoolExam erstellt. Bitte wende dich bei Fragen an deine Lehrkraft.");
+            "Diese Mail wurde automatisch von SchoolExam erstellt. Bitte wende dich bei Fragen an deine Lehrkraft.";
 
-        MailMessage message = new MailMessage(
-            "schoolexam@rootitup.de",
-            student.EmailAddress,
-            mailSubject,
-            string.Format($"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}"));
+        var message = new MailMessage("schoolexam@rootitup.de", student.EmailAddress, mailSubject,
+            $"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}");
 
         var messageMailKit = new MimeMessage();
         messageMailKit.From.Add(new MailboxAddress("SchoolExam", "schoolexam@rootitup.de"));
@@ -108,7 +102,7 @@ public class PublishingService : IPublishingService
             await DoPublishExam(booklets, exam);
             return;
         }
-        _timer = new Timer(async x =>
+        _timer = new Timer(async _ =>
         {
             await DoPublishExam(booklets, exam);
         }, null, timeToGo, Timeout.InfiniteTimeSpan);
