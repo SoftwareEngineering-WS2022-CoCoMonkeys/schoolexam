@@ -91,11 +91,18 @@ public class ExamTaskService : ExamServiceBase, IExamTaskService
         // check if there are duplicate markers
         if (linkCandidates.Select(x => x.Uri).Distinct().Count() != linkCandidates.Count)
         {
-            var task = linkCandidates.GroupBy(x => x.Uri).First(x => x.Count() > 1);
-            throw new DomainException($"Task marker with text {task.Key} was found in PDF more than once.");
+            var duplicateLinks = linkCandidates.GroupBy(x => x.Uri).Where(x => x.Count() > 1).ToList();
+            foreach (var duplicate in duplicateLinks)
+            {
+                if (duplicate.Select(x => new {x.Bottom, x.Top, x.Page, x.Uri}).Distinct().Count() > 1)
+                {
+                    throw new DomainException($"Task marker with text {duplicate.Key} was found in PDF more than once.");
+                }
+            }
         }
 
-        var endLinkCandidatesDict = endLinkCandidates.ToDictionary(x => x.Uri, x => x);
+        var endLinkCandidatesDict = endLinkCandidates.DistinctBy(x => new {x.Bottom, x.Top, x.Page, x.Uri})
+            .ToDictionary(x => x.Uri, x => x);
 
         var matchedLinks = new List<PdfUriLinkAnnotationInfo>();
         var matchedTaskIds = new HashSet<Guid>();

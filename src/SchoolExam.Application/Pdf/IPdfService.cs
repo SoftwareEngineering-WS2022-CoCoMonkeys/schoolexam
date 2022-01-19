@@ -18,4 +18,5 @@ public interface IPdfService
     DateTime GetModificationDate(byte[] pdf);
     byte[] Protect(byte[] pdf, byte[] userPassword, byte[] ownerPassword);
     byte[] CreateEmptyPdf(int pages, PageSize pageSize);
+    byte[] CreatePdfWithText(string text);
 }

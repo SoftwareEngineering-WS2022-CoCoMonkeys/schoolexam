@@ -10,7 +10,7 @@ namespace SchoolExam.Infrastructure.QrCode;
 public class ZXingNetQrCodeReader : IQrCodeReader
 {
     private readonly BarcodeReader _reader;
-    
+
     public ZXingNetQrCodeReader()
     {
         _reader = new BarcodeReader
@@ -20,7 +20,7 @@ public class ZXingNetQrCodeReader : IQrCodeReader
                 TryHarder = true, PureBarcode = false, PossibleFormats = new List<BarcodeFormat>
                 {
                     BarcodeFormat.QR_CODE
-                }
+                }, 
             }
         };
     }
@@ -28,6 +28,23 @@ public class ZXingNetQrCodeReader : IQrCodeReader
     public IEnumerable<QrCodeParseInfo> ReadQrCodes(byte[] image, RotationMatrix rotationMatrix)
     {
         using var bitmap = SKBitmap.Decode(image);
+        using var topLeftBitmap = new SKBitmap();
+        using var bottomLeftBitmap = new SKBitmap();
+        using var bottomRightBitmap = new SKBitmap();
+        using var topRightBitmap = new SKBitmap();
+        int height = bitmap.Height, width = bitmap.Width;
+        bitmap.ExtractSubset(topLeftBitmap, SKRectI.Create(0, 0, width / 2, height / 2));
+        bitmap.ExtractSubset(bottomLeftBitmap, SKRectI.Create(0, height / 2, width / 2, height / 2));
+        bitmap.ExtractSubset(bottomRightBitmap, SKRectI.Create(width / 2, height / 2, width / 2, height / 2));
+        bitmap.ExtractSubset(topRightBitmap, SKRectI.Create(width / 2, 0, width / 2, height / 2));
+
+        var bitmaps = new[] {bitmap, topLeftBitmap, bottomLeftBitmap, bottomRightBitmap, topRightBitmap};
+
+        return bitmaps.SelectMany(x => ReadQrCodes(x, rotationMatrix)).ToList();
+    }
+
+    private IEnumerable<QrCodeParseInfo> ReadQrCodes(SKBitmap bitmap, RotationMatrix rotationMatrix)
+    {
         var decoded = _reader.DecodeMultiple(bitmap);
         var result = decoded?.Where(IsValidQrCode) ?? Enumerable.Empty<Result>();
         return result.Select(x => new QrCodeParseInfo(GetOrientation(x, rotationMatrix), x.Text));

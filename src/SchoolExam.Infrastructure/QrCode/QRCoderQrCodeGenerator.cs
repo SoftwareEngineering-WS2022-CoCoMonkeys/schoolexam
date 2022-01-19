@@ -7,7 +7,7 @@ namespace SchoolExam.Infrastructure.QrCode;
 public class QRCoderQrCodeGenerator : IQrCodeGenerator
 {
     private readonly QRCodeGenerator _qrCodeGenerator;
-    private readonly int _pixelsPerModule = 5;
+    private readonly int _pixelsPerModule = 20;
     
     public QRCoderQrCodeGenerator()
     {
