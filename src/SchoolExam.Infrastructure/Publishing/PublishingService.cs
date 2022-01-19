@@ -56,15 +56,21 @@ public class PublishingService : IPublishingService
         messageMailKit.From.Add(new MailboxAddress("SchoolExam", "schoolexam@rootitup.de"));
         messageMailKit.To.Add(new MailboxAddress($"{student.FirstName} {student.LastName}", student.EmailAddress));
         messageMailKit.Subject = mailSubject;
-        messageMailKit.Body = new TextPart("html") { Text = string.Format($"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}")};
 
         var examToBePublishedPdf = GetExamPdfToBePublished(remarkPdf, student);
             
         using var stream = new MemoryStream(examToBePublishedPdf);
         // Create  the file attachment for this email message.
-        var attachment = new Attachment(stream,
-            $"Prüfungskorrektur_{student.FirstName}_{exam.Title}_{exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year}.pdf");//MediaTypeNames.Application.Pdf);
-        message.Attachments.Add(attachment);
+        var attachment = new MimePart ("pdf") {
+            Content = new MimeContent (stream),
+            ContentDisposition = new ContentDisposition (ContentDisposition.Attachment),
+            FileName = $"Prüfungskorrektur_{student.FirstName}_{exam.Title}_{exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year}.pdf"
+        };
+   
+        var multipart = new Multipart("mixed");
+        multipart.Add(new TextPart("html") { Text = string.Format($"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}")});
+        multipart.Add(attachment);
+        messageMailKit.Body = multipart;
 
         using MailKit.Net.Smtp.SmtpClient mailKitClient = new MailKit.Net.Smtp.SmtpClient();
         mailKitClient.Connect("mail01.rootitup.de", 587, false);
@@ -83,7 +89,6 @@ public class PublishingService : IPublishingService
             _logger.LogInformation($"Exception caught in CreateMessageWithAttachment(): {ex}");
         }
 
-        attachment.Dispose();
         return true;
     }
     
@@ -109,11 +114,7 @@ public class PublishingService : IPublishingService
         {
             await DoPublishExam(examId);
         }
-<<<<<<< HEAD
         else
-=======
-        _timer = new Timer(async _ =>
->>>>>>> 799d9938f3a2f32d7d2c2654efe2ff3d89f712c6
         {
             _timer = new Timer(async x =>
             {

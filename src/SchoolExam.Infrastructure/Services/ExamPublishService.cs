@@ -31,18 +31,16 @@ public class ExamPublishService : ExamServiceBase, IExamPublishService
             throw new DomainException("Correction of exam must be completed before publishing exam.");
         }
 
-        var booklets = Repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
-
         if (publishDateTime.HasValue && publishDateTime.Value > DateTime.UtcNow)
         {
             var scheduledExamId = Guid.NewGuid();
             var scheduledExam = new ScheduledExam(scheduledExamId, examId, publishDateTime.Value, false);
             Repository.Add(scheduledExam);
-            await _publishingService.ScheduleSendEmailToStudent(booklets, exam, publishDateTime.Value);
+            await _publishingService.ScheduleSendEmailToStudent(examId, publishDateTime.Value);
         }
         else
         {
-            await _publishingService.DoPublishExam(booklets, exam);
+            await _publishingService.DoPublishExam(examId);
         }
     }
 }
