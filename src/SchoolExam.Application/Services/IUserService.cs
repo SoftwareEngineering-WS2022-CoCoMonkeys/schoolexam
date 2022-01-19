@@ -12,6 +12,8 @@ public interface IUserService
     IEnumerable<User> GetAllUsers();
 
     Task<User> Create(string username, string password, Role role, Guid? personId);
+    
+    Task<User> CreateFromPerson(Guid personId, string username, string password);
 
     Task<User> Update( string username, string newUsername, string password, Role role, Guid? personId);
 

@@ -14,7 +14,7 @@ public class Student : Person
     {
     }
 
-    public Student(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address,
+    public Student(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address? address,
         string emailAddress, QrCode qrCode, Guid schoolId) : base(id, firstName, lastName, dateOfBirth, address, emailAddress)
     {
         QrCode = qrCode;

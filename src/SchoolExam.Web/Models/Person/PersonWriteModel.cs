@@ -1,6 +1,4 @@
-﻿using SchoolExam.Domain.ValueObjects;
-
-namespace SchoolExam.Web.Models.Person;
+﻿namespace SchoolExam.Web.Models.Person;
 
 public class PersonWriteModel
 {
