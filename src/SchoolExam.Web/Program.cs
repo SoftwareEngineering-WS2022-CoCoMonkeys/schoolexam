@@ -36,10 +36,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.UseAllOfForInheritance();
-});
+builder.Services.AddSwaggerGen(options => { options.UseAllOfForInheritance(); });
 builder.Services.AddAutoMapper(config => { config.AddProfile<SchoolExamMappingProfile>(); });
 
 var key = Base64UrlEncoder.DecodeBytes("gLGtlGNQw8n7iHxUFjuDmHFcPRDUteRROdqhbhCstxEOIiit6kBT6exFo0Lm5uR");
@@ -82,7 +79,7 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(Role.Teacher);
         policy.AddRequirement<ExamCreatorAuthorizationRequirement>();
     });
-    
+
     // SubmissionController authorization policies
     options.AddPolicy(PolicyNames.SubmissionExamCreatorPolicyName, policy =>
     {
@@ -148,13 +145,7 @@ builder.Services.AddTransient<IExamPublishService, ExamPublishService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IPersonService, PersonService>();
 
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddScoped<ISchoolExamRepositoryInitService, DevelopmentSchoolExamRepositoryInitService>();
-} else if (builder.Environment.IsProduction())
-{
-    builder.Services.AddScoped<ISchoolExamRepositoryInitService, ProductionSchoolExamRepositoryInitService>();
-}
+builder.Services.AddScoped<ISchoolExamRepositoryInitService, SchoolExamRepositoryInitService>();
 
 var app = builder.Build();
 
@@ -177,11 +168,10 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
 
-if (resetDatabase.HasValue && resetDatabase.Value)
+using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
 {
-    using var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
     var initService = serviceScope.ServiceProvider.GetService<ISchoolExamRepositoryInitService>();
-    await initService!.Init();
+    await initService!.Init(resetDatabase ?? false);   
 }
 
 app.Run();
