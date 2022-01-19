@@ -294,7 +294,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
                 }
             }
 
-            if (state is ExamState.InCorrection or ExamState.Corrected)
+            if (state is ExamState.InCorrection)
             {
                 continue;
             }

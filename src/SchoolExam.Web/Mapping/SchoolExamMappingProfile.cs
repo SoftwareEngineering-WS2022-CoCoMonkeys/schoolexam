@@ -76,22 +76,14 @@ public class SchoolExamMappingProfile : Profile
         CreateMap<User, AuthenticatedUserModel>()
             .ForMember(dst => dst.Role, opt => opt.MapFrom(src => src.Role.Name));
         CreateMap<User, UserReadModel>()
-            .ForMember(dst => dst.Id, opt => opt.MapFrom(src => src.Id))
-            .ForMember(dst => dst.Role, opt => opt.MapFrom(src => src.Role))
-            .ForMember(dst => dst.PersonId, opt => opt.MapFrom(src => src.PersonId))
-            .ForMember(dst => dst.UserName, opt => opt.MapFrom(src => src.Username));
-        CreateMap<User, UserWithPersonReadModel>();
+            .ForMember(dst => dst.Role, opt => opt.MapFrom(src => src.Role.Name));
+        CreateMap<User, PersonWithUserReadModel>();
         
         CreateMap<Person, AuthenticatedPersonModel>();
-        CreateMap<Person, PersonReadModel>()
-            .ForMember(dst => dst.Id, opt => opt.MapFrom(src => src.Id))
-            .ForMember(dst => dst.EmailAddress, opt => opt.MapFrom(src => src.EmailAddress))
-            .ForMember(dst => dst.FirstName, opt => opt.MapFrom(src => src.FirstName))
-            .ForMember(dst => dst.LastName, opt => opt.MapFrom(src => src.LastName))
-            .ForMember(dst => dst.Address, opt => opt.MapFrom(src => src.Address))
-            .ForMember(dst => dst.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth));
-            
-        
+        CreateMap<Person, PersonReadModel>();
+        CreateMap<Person, PersonWithUserReadModel>();
+        CreateMap<Address, AddressReadModel>();
+        CreateMap<AddressWriteModel, Address>();
 
         CreateMap<GradingTable, GradingTableReadModel>()
             .ForMember(dst => dst.LowerBounds, opt => opt.MapFrom(src => src.Intervals));

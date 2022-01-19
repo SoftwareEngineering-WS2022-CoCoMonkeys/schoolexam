@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SchoolExam.Persistence.DataContext;
@@ -11,9 +12,10 @@ using SchoolExam.Persistence.DataContext;
 namespace SchoolExam.Persistence.Migrations
 {
     [DbContext(typeof(SchoolExamDbContext))]
-    partial class SchoolExamDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220118122931_ScheduleExam")]
+    partial class ScheduleExam
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1101,7 +1103,7 @@ namespace SchoolExam.Persistence.Migrations
             modelBuilder.Entity("SchoolExam.Domain.Entities.UserAggregate.User", b =>
                 {
                     b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Person", "Person")
-                        .WithOne("User")
+                        .WithOne()
                         .HasForeignKey("SchoolExam.Domain.Entities.UserAggregate.User", "PersonId");
 
                     b.OwnsOne("SchoolExam.Domain.ValueObjects.Role", "Role", b1 =>
@@ -1276,11 +1278,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("TaskPdfFile");
 
                     b.Navigation("Tasks");
-                });
-
-            modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Person", b =>
-                {
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.School", b =>

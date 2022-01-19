@@ -5,10 +5,10 @@ namespace SchoolExam.Domain.ValueObjects;
 
 public class GradingTableInterval
 {
-    public GradingTableIntervalBound Start { get; }
-    public GradingTableIntervalBound End { get; }
-    public string Grade { get; }
-    public GradingTableLowerBoundType Type { get; }
+    public GradingTableIntervalBound Start { get; set; }
+    public GradingTableIntervalBound End { get; set; }
+    public string Grade { get; set; }
+    public GradingTableLowerBoundType Type { get; set; }
     public GradingTable GradingTable { get; set; }
     public Guid GradingTableId { get; set; }
 
@@ -29,7 +29,7 @@ public class GradingTableInterval
         GradingTableId = gradingTableId;
     }
 
-    public bool Includes(int points)
+    public bool Includes(double points)
     {
         bool greater = Start.Type == GradingTableIntervalBoundType.Exclusive
             ? points > Start.Points

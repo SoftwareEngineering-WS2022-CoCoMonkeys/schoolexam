@@ -1,17 +1,18 @@
 using SchoolExam.Domain.Base;
+using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Extensions;
 
 namespace SchoolExam.Domain.Entities.PersonAggregate;
 
-public class Person : EntityBase
+public abstract class Person : EntityBase
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public DateTime DateOfBirth { get; set; }
     public Address? Address { get; set; }
     public string EmailAddress { get; set; }
-        
+    public User? User { get; set; }
 
     protected Person(Guid id) : base(id)
     {

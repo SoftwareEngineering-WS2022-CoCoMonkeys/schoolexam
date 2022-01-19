@@ -208,9 +208,17 @@ public class ExamService : IExamService
         var pdf = taskPdf;
         var links = _pdfService.GetUriLinkAnnotations(pdf).ToList();
         var tasksDict = tasks.ToDictionary(x => x.Id, x => x);
-        var startLinkCandidates = links.Where(x => Regex.IsMatch(x.Uri, $"^task-start-{_guidRegex}$"));
-        var endLinkCandidatesDict = links.Where(x => Regex.IsMatch(x.Uri, $"^task-end-{_guidRegex}$"))
-            .ToDictionary(x => x.Uri, x => x);
+        
+        var startLinkCandidates = links.Where(x => Regex.IsMatch(x.Uri, $"^task-start-{_guidRegex}$")).ToList();
+        var endLinkCandidates = links.Where(x => Regex.IsMatch(x.Uri, $"^task-end-{_guidRegex}$")).ToList();
+        var linkCandidates = startLinkCandidates.Union(endLinkCandidates).ToList();
+        // check if there are duplicate markers
+        if (linkCandidates.Select(x => x.Uri).Distinct().Count() != linkCandidates.Count)
+        {
+            var task = linkCandidates.GroupBy(x => x.Uri).First(x => x.Count() > 1);
+            throw new DomainException($"Task marker with text {task.Key} was found in PDF more than once.");
+        }
+        var endLinkCandidatesDict = endLinkCandidates.ToDictionary(x => x.Uri, x => x);
 
         var matchedLinks = new List<PdfUriLinkAnnotationInfo>();
         var matchedTaskIds = new HashSet<Guid>();
@@ -223,12 +231,6 @@ public class ExamService : IExamService
             // check if the exam has a task with the extracted identifier
             if (tasksDict.ContainsKey(taskId))
             {
-                // check if tasked occurs in multiple markers
-                if (matchedTaskIds.Contains(taskId))
-                {
-                    throw new DomainException($"Task with id {taskId} was found in PDF more than once.");
-                }
-
                 // find corresponding end marker
                 var taskEndString = $"task-end-{taskId}";
                 if (!endLinkCandidatesDict.ContainsKey(taskEndString))
@@ -636,16 +638,21 @@ public class ExamService : IExamService
         }
 
         var gradingTableId = Guid.NewGuid();
-        for (int i = 0; i < count - 1; i++)
+        for (int i = 0; i < count; i++)
         {
             var current = lowerBoundsOrdered[i];
             if (current.Points > maxPoints)
             {
                 throw new DomainException("A grading interval exceeds the maximum number of points.");
             }
+            
+            if (i == count - 1)
+            {
+                break;
+            }
 
             var next = lowerBoundsOrdered[i + 1];
-            if (current == next)
+            if (current.Points == next.Points)
             {
                 throw new DomainException("A grading interval must not be empty.");
             }
@@ -726,8 +733,7 @@ public class ExamService : IExamService
         // prepare outline to be added to all complete submission PDFs
         var outlineElements = exam.Tasks.Select(x => new PdfOutlineInfo(x.Title, x.Start.Page, (float) x.Start.Y))
             .ToArray();
-
-        // TODO: make sure that nothing has been corrected before deleting anything
+        
         foreach (var booklet in booklets)
         {
             var submission = updatedSubmissionsDict[booklet.Id];
@@ -784,7 +790,7 @@ public class ExamService : IExamService
         if (submission.StudentId.HasValue && studentId.HasValue && !studentId.Equals(submission.StudentId))
         {
             throw new DomainException(
-                $"Submission cannot be assigned to student with identifier {studentId} because it was previously assigned to student with identifier {submission.StudentId.Value}");
+                $"Submission cannot be assigned to student with identifier {studentId} because it was previously assigned to student with identifier {submission.StudentId.Value}.");
         }
 
         // assign student to submission
