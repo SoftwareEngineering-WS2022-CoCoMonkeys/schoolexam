@@ -406,4 +406,22 @@ public class iText7PdfService : IPdfService
         var result = stream.ToArray();
         return result;
     }
+
+    public byte[] CreatePdfWithText(string text)
+    {
+        var stream = new MemoryStream();
+        var writer = new PdfWriter(stream);
+        var pdf = new PdfDocument(writer);
+        var document = new Document(pdf);
+
+        var pdfText = new Text(text);
+        var paragraph = new Paragraph(pdfText);
+        document.Add(paragraph);
+
+        document.Close();
+
+        var result = stream.ToArray();
+
+        return result;
+    }
 }

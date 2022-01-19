@@ -8,9 +8,8 @@ using SchoolExam.Application.Publishing;
 using SchoolExam.Application.Repository;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Entities.ExamAggregate;
-using SchoolExam.Domain.Entities.PersonAggregate;
-using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
 
 namespace SchoolExam.Infrastructure.Publishing;
@@ -23,25 +22,25 @@ public class PublishingService : IPublishingService
     private readonly ILogger<PublishingService> _logger;
     private readonly IServiceScopeFactory _factory;
 
-    public PublishingService(ISchoolExamRepository repository, IPdfService pdfService, ILogger<PublishingService> logger, IServiceScopeFactory factory)
+    public PublishingService(ISchoolExamRepository repository, IPdfService pdfService,
+        ILogger<PublishingService> logger, IServiceScopeFactory factory)
     {
         _repository = repository;
         _pdfService = pdfService;
         _logger = logger;
         _factory = factory;
     }
-    
-    public bool SendEmailToStudent(Booklet booklet, Exam exam)
+
+    private bool SendEmailToStudent(Booklet booklet, Exam exam)
     {
         var student = booklet.Submission!.Student;
         if (student == null)
         {
             return false;
         }
-        var remarkPdf = booklet.Submission.RemarkPdfFile!;
-        
-        
-        
+
+        var remarkPdf = booklet.Submission.RemarkPdfFile!.Content;
+
         // Create a message and set up the recipients.
         var mailSubject =
             $"Deine Note in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} {exam.Topic.Name}";
@@ -58,11 +57,18 @@ public class PublishingService : IPublishingService
 
         var body = new TextPart("plain") {Text = $"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}"};
 
-        var examToBePublishedPdf = GetExamPdfToBePublished(remarkPdf, student);
+        var gradePagePdf = GenerateGradePdf(booklet.Id);
+        var mergedPdf = _pdfService.Merge(gradePagePdf, remarkPdf);
+
+        // protect PDF
+        var userPassword = "schoolexam";
+        var ownerPassword = "schoolexam";
+        var protectedPdf = _pdfService.Protect(mergedPdf, Encoding.UTF8.GetBytes(userPassword),
+            Encoding.UTF8.GetBytes(ownerPassword));
 
         var attachment = new MimePart("application", "pdf")
         {
-            Content = new MimeContent(new MemoryStream(examToBePublishedPdf)),
+            Content = new MimeContent(new MemoryStream(protectedPdf)),
             ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
             ContentTransferEncoding = ContentEncoding.Base64,
             FileName = $"Prüfungskorrektur_{student.LastName}_{exam.Title}_{exam.Date:dd.MM.yyyy}.pdf"
@@ -75,15 +81,15 @@ public class PublishingService : IPublishingService
 
         using SmtpClient mailKitClient = new SmtpClient();
         mailKitClient.Connect("mail01.rootitup.de", 587, false);
-        
+
         // Note: since we don't have an OAuth2 token, disable the XOAUTH2 authentication mechanism.
         mailKitClient.AuthenticationMechanisms.Remove("XOAUTH2");
-        
+
         mailKitClient.Authenticate("schoolexam", "DiesesPasswortIstSehrSicher12345#");
-        
+
         try
         {
-           mailKitClient.Send(messageMailKit);
+            mailKitClient.Send(messageMailKit);
         }
         catch (Exception ex)
         {
@@ -92,23 +98,14 @@ public class PublishingService : IPublishingService
 
         return true;
     }
-    
-    private byte[] GetExamPdfToBePublished(RemarkPdfFile remarkPdf, Student student)
-    {
-        var userPassword  = $"{student.Id.ToString().Substring(0,12)}";
-        var ownerPassword = $"{student.Id}";
-        var protectedPdf = _pdfService.Protect(remarkPdf.Content, Encoding.UTF8.GetBytes(userPassword),
-            Encoding.UTF8.GetBytes(ownerPassword));
-        return protectedPdf;
-    }
 
-    public async Task ScheduleSendEmailToStudent( Guid examId, DateTime publishDateTime)
+    public async Task ScheduleSendEmailToStudent(Guid examId, DateTime publishDateTime)
     {
         var scheduledExamId = Guid.NewGuid();
         var scheduledExam = new ScheduledExam(scheduledExamId, examId, publishDateTime, false);
         _repository.Add(scheduledExam);
         await _repository.SaveChangesAsync();
-        
+
         DateTime current = DateTime.Now;
         TimeSpan timeToGo = publishDateTime - current;
         if (timeToGo < TimeSpan.Zero)
@@ -135,14 +132,33 @@ public class PublishingService : IPublishingService
     {
         var exam = _repository.Find(new EntityByIdSpecification<Exam>(examId))!;
         var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
-        foreach(Booklet booklet in booklets)
+        foreach (Booklet booklet in booklets)
         {
-           SendEmailToStudent(booklet, exam);
-                
+            SendEmailToStudent(booklet, exam);
         }
+
         exam.State = ExamState.Published;
         _repository.Update(exam);
         await _repository.SaveChangesAsync();
     }
-    
+
+    private byte[] GenerateGradePdf(Guid bookletId)
+    {
+        var booklet = _repository.Find<Booklet>(bookletId)!;
+        var submission = _repository.Find(new SubmissionWithAnswersByBookletSpecification(bookletId))!;
+        var examId = booklet.ExamId;
+        var exam = _repository.Find(new ExamWithGradingTableAndTasksById(examId))!;
+        var maxPoints = exam.Tasks.Sum(x => x.MaxPoints);
+        var achievedPoints = submission.Answers.Sum(x => x.AchievedPoints!.Value);
+        var interval = exam.GradingTable!.Intervals.Single(x => x.Includes(achievedPoints));
+        var grade = interval.Grade;
+
+        var pointsText = $"Erzielte Punkte: {achievedPoints}/{maxPoints}";
+        var pointsInterval =
+            $"Note: \"{grade}\" im Intervall {(interval.Start.Type == GradingTableIntervalBoundType.Exclusive ? "(" : "[")}{interval.Start.Points};{interval.End.Points}{(interval.End.Type == GradingTableIntervalBoundType.Exclusive ? ")" : "]")}";
+
+        var pdf = _pdfService.CreatePdfWithText($"{pointsText}\n{pointsInterval}");
+
+        return pdf;
+    }
 }
