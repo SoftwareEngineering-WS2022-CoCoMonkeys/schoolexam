@@ -74,14 +74,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Course", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("e5fa7d18-dddd-4969-b22a-12f89ac0b18a"),
-                            Name = "Sozialwissenschaften 2022",
-                            SchoolId = new Guid("04bceee7-a744-48a7-9a0a-eda2d4a142d5")
-                        });
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.CourseAggregate.CourseStudent", b =>
@@ -97,13 +89,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasIndex("StudentId");
 
                     b.ToTable("CourseStudent", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            CourseId = new Guid("e5fa7d18-dddd-4969-b22a-12f89ac0b18a"),
-                            StudentId = new Guid("3e0fe3ab-3a84-43b1-a501-11ffb47fc894")
-                        });
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.CourseAggregate.CourseTeacher", b =>
@@ -119,13 +104,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasIndex("TeacherId");
 
                     b.ToTable("CourseTeacher", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            CourseId = new Guid("e5fa7d18-dddd-4969-b22a-12f89ac0b18a"),
-                            TeacherId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb")
-                        });
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.Booklet", b =>
@@ -193,17 +171,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasIndex("CreatorId");
 
                     b.ToTable("Exam", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("4c9be4e7-5507-46b2-9b9e-9746c931ee25"),
-                            CreatorId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
-                            Date = new DateTime(2022, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DueDate = new DateTime(2022, 4, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            State = 0,
-                            Title = "1. Schulaufgabe"
-                        });
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamParticipant", b =>
@@ -259,6 +226,29 @@ namespace SchoolExam.Persistence.Migrations
                     b.ToTable("GradingTable", (string)null);
                 });
 
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ScheduledExam", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("PublishTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId")
+                        .IsUnique();
+
+                    b.ToTable("ScheduledExam", (string)null);
+                });
+
             modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Person", b =>
                 {
                     b.Property<Guid>("Id")
@@ -289,26 +279,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.ToTable("Person", (string)null);
 
                     b.HasDiscriminator<string>("Discriminator").HasValue("Person");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
-                            DateOfBirth = new DateTime(1974, 5, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Discriminator = "Teacher",
-                            EmailAddress = "thorsten.thurn@school-exam.de",
-                            FirstName = "Briggite",
-                            LastName = "Schweinebauer"
-                        },
-                        new
-                        {
-                            Id = new Guid("3e0fe3ab-3a84-43b1-a501-11ffb47fc894"),
-                            DateOfBirth = new DateTime(2004, 7, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Discriminator = "Student",
-                            EmailAddress = "amira.jabbar@school-exam.de",
-                            FirstName = "Amira",
-                            LastName = "Jabbar"
-                        });
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.StudentLegalGuardian", b =>
@@ -339,28 +309,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("School", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("04bceee7-a744-48a7-9a0a-eda2d4a142d5"),
-                            Name = "Schmuttertal-Gymnasium Diedorf"
-                        });
-                });
-
-            modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.SchoolTeacher", b =>
-                {
-                    b.Property<Guid>("SchoolId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TeacherId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("SchoolId", "TeacherId");
-
-                    b.HasIndex("TeacherId");
-
-                    b.ToTable("SchoolTeacher", (string)null);
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SubmissionAggregate.Answer", b =>
@@ -380,6 +328,9 @@ namespace SchoolExam.Persistence.Migrations
 
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -480,22 +431,10 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasIndex("PersonId")
                         .IsUnique();
 
-                    b.ToTable("User", (string)null);
+                    b.HasIndex("Username")
+                        .IsUnique();
 
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("314ddd2e-62bb-4a29-8517-bb38ef96c897"),
-                            Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
-                            PersonId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
-                            Username = "admin"
-                        },
-                        new
-                        {
-                            Id = new Guid("16771069-c615-4e02-8703-0ff100d1b0b7"),
-                            Password = "$2a$11$3Q8Re.PhjBIPqPIqzAy3Y./XFRjcelEOr7kL0X27ljVbay1PwTMw2",
-                            Username = "admin2"
-                        });
+                    b.ToTable("User", (string)null);
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.BookletPdfFile", b =>
@@ -518,13 +457,6 @@ namespace SchoolExam.Persistence.Migrations
                     b.HasIndex("ParticipantId");
 
                     b.ToTable("ExamCourse", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            ExamId = new Guid("4c9be4e7-5507-46b2-9b9e-9746c931ee25"),
-                            ParticipantId = new Guid("e5fa7d18-dddd-4969-b22a-12f89ac0b18a")
-                        });
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ExamStudent", b =>
@@ -573,6 +505,8 @@ namespace SchoolExam.Persistence.Migrations
                     b.Property<Guid>("SchoolId")
                         .HasColumnType("uuid")
                         .HasColumnName("Teacher_SchoolId");
+
+                    b.HasIndex("SchoolId");
 
                     b.HasDiscriminator().HasValue("Teacher");
                 });
@@ -645,13 +579,6 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("CourseId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    CourseId = new Guid("e5fa7d18-dddd-4969-b22a-12f89ac0b18a"),
-                                    Name = "Sozialwissenschaften"
-                                });
                         });
 
                     b.Navigation("Topic");
@@ -761,13 +688,6 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("ExamId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    ExamId = new Guid("4c9be4e7-5507-46b2-9b9e-9746c931ee25"),
-                                    Name = "Sozialwissenschaften"
-                                });
                         });
 
                     b.Navigation("Topic")
@@ -864,11 +784,15 @@ namespace SchoolExam.Persistence.Migrations
                                 .HasColumnType("text")
                                 .HasColumnName("Grade");
 
+                            b1.Property<int>("Type")
+                                .HasColumnType("integer")
+                                .HasColumnName("Type");
+
                             b1.HasKey("GradingTableId", "Id");
 
                             b1.ToTable("GradingTableInterval");
 
-                            b1.WithOwner()
+                            b1.WithOwner("GradingTable")
                                 .HasForeignKey("GradingTableId");
 
                             b1.OwnsOne("SchoolExam.Domain.ValueObjects.GradingTableIntervalBound", "End", b2 =>
@@ -922,11 +846,24 @@ namespace SchoolExam.Persistence.Migrations
                             b1.Navigation("End")
                                 .IsRequired();
 
+                            b1.Navigation("GradingTable");
+
                             b1.Navigation("Start")
                                 .IsRequired();
                         });
 
                     b.Navigation("Intervals");
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ScheduledExam", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", "Exam")
+                        .WithOne()
+                        .HasForeignKey("SchoolExam.Domain.Entities.ExamAggregate.ScheduledExam", "ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Person", b =>
@@ -967,26 +904,6 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("PersonId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    PersonId = new Guid("c0242654-af32-4115-abea-c9814a8f91bb"),
-                                    City = "Hamburg",
-                                    Country = "Deutschland",
-                                    PostCode = "20095",
-                                    StreetName = "Klarer-Kopf-Weg",
-                                    StreetNumber = "1a"
-                                },
-                                new
-                                {
-                                    PersonId = new Guid("3e0fe3ab-3a84-43b1-a501-11ffb47fc894"),
-                                    City = "München",
-                                    Country = "Deutschland",
-                                    PostCode = "80333",
-                                    StreetName = "You-Go-Girl-Allee",
-                                    StreetNumber = "99"
-                                });
                         });
 
                     b.Navigation("Address");
@@ -1045,35 +962,9 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("SchoolId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    SchoolId = new Guid("04bceee7-a744-48a7-9a0a-eda2d4a142d5"),
-                                    City = "Diedorf",
-                                    Country = "Deutschland",
-                                    PostCode = "86420",
-                                    StreetName = "Schmetterlingsplatz",
-                                    StreetNumber = "1"
-                                });
                         });
 
                     b.Navigation("Location")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.SchoolTeacher", b =>
-                {
-                    b.HasOne("SchoolExam.Domain.Entities.SchoolAggregate.School", null)
-                        .WithMany("Teachers")
-                        .HasForeignKey("SchoolId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Teacher", null)
-                        .WithMany()
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -1196,8 +1087,7 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.HasKey("SubmissionPageId");
 
-                            b1.HasIndex("Data")
-                                .IsUnique();
+                            b1.HasIndex("Data");
 
                             b1.ToTable("SubmissionPage");
 
@@ -1211,7 +1101,7 @@ namespace SchoolExam.Persistence.Migrations
             modelBuilder.Entity("SchoolExam.Domain.Entities.UserAggregate.User", b =>
                 {
                     b.HasOne("SchoolExam.Domain.Entities.PersonAggregate.Person", "Person")
-                        .WithOne()
+                        .WithOne("User")
                         .HasForeignKey("SchoolExam.Domain.Entities.UserAggregate.User", "PersonId");
 
                     b.OwnsOne("SchoolExam.Domain.ValueObjects.Role", "Role", b1 =>
@@ -1230,18 +1120,6 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("UserId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    UserId = new Guid("314ddd2e-62bb-4a29-8517-bb38ef96c897"),
-                                    Name = "Teacher"
-                                },
-                                new
-                                {
-                                    UserId = new Guid("16771069-c615-4e02-8703-0ff100d1b0b7"),
-                                    Name = "Administrator"
-                                });
                         });
 
                     b.Navigation("Person");
@@ -1323,16 +1201,18 @@ namespace SchoolExam.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("StudentId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    StudentId = new Guid("3e0fe3ab-3a84-43b1-a501-11ffb47fc894"),
-                                    Data = "d18b19227701139f25eb4f205f785995"
-                                });
                         });
 
                     b.Navigation("QrCode")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Teacher", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.SchoolAggregate.School", null)
+                        .WithMany("Teachers")
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -1396,6 +1276,11 @@ namespace SchoolExam.Persistence.Migrations
                     b.Navigation("TaskPdfFile");
 
                     b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Person", b =>
+                {
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.SchoolAggregate.School", b =>

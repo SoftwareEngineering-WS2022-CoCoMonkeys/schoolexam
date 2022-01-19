@@ -2,6 +2,7 @@ using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
+using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
@@ -34,22 +35,29 @@ public class CourseService : ICourseService
 
     public async Task Update(Guid courseId, string name, string topic)
     {
-        var course = _repository.Find<Course>(courseId);
-        if (course == null)
-        {
-            throw new ArgumentException("Course does not exist.");
-        }
+        var course = EnsureExamExists(courseId);
         course.Name = name;
         course.Topic = new Topic(topic);
         await _repository.SaveChangesAsync();
     }
 
+    public async Task AddStudents(Guid courseId, List<Guid> students)
+    {
+        var course = EnsureExamExists(courseId);
+        foreach (var studentId in students)
+        {
+           var courseStudent = new CourseStudent(courseId, studentId);
+           course.Students.Add(courseStudent); 
+        }
+        await _repository.SaveChangesAsync();
+    }
+    
     public async Task Delete(Guid courseId)
     {
         var course = _repository.Find<Course>(courseId);
         if (course == null)
         {
-            throw new ArgumentException("Course does not exist.");
+            throw new DomainException("Course does not exist.");
         }
 
         _repository.Remove(course);
@@ -62,12 +70,15 @@ public class CourseService : ICourseService
         var result = courseTeachers.Select(x => x.Course);
         return result;
     }
-
-    public IEnumerable<Course> GetByStudent(Guid studentId)
+    
+    private Course EnsureExamExists(Guid courseId)
     {
-        // TODO
-        // return _context.Courses.Where(x => x.Students.Select( => x.StudentId).ToHashSet().Contains(studentId))
-        //     .AsEnumerable();
-        throw new NotImplementedException();
+        var course = _repository.Find<Course>(courseId);
+        if (course == null)
+        {
+            throw new DomainException("Course does not exist.");
+        }
+
+        return course;
     }
 }

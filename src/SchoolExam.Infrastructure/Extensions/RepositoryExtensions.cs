@@ -24,4 +24,11 @@ public static class RepositoryExtensions
         var spec = new TSpec();
         return repository.List(spec);
     }
+    
+    public static IEnumerable<TEntity> List<TEntity>(this IRepository repository, HashSet<Guid> ids)
+        where TEntity : class, IEntity
+    {
+        var spec = new EntityByIdsSpecification<TEntity>(ids);
+        return repository.List(spec);
+    }
 }

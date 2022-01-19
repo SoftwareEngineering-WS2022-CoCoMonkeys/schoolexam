@@ -20,6 +20,7 @@ using SchoolExam.Infrastructure.Services;
 using SchoolExam.Persistence.Base;
 using SchoolExam.Persistence.DataContext;
 using SchoolExam.Web.Authorization;
+using SchoolExam.Web.ErrorHandling;
 using SchoolExam.Web.Extensions;
 using SchoolExam.Web.Mapping;
 using SchoolExam.Web.Serialization;
@@ -31,10 +32,14 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new ExamParticipantReadModelJsonConverter());
     options.JsonSerializerOptions.Converters.Add(new GradingTableLowerBoundModelJsonConverter());
+    options.JsonSerializerOptions.Converters.Add(new ExamParticipantWriteModelJsonConverter());
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.UseAllOfForInheritance();
+});
 builder.Services.AddAutoMapper(config => { config.AddProfile<SchoolExamMappingProfile>(); });
 
 var key = Base64UrlEncoder.DecodeBytes("gLGtlGNQw8n7iHxUFjuDmHFcPRDUteRROdqhbhCstxEOIiit6kBT6exFo0Lm5uR");
@@ -135,15 +140,16 @@ builder.Services.AddTransient<IExamService, ExamService>();
 builder.Services.AddTransient<ISubmissionService, SubmissionService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IPersonService, PersonService>();
-builder.Services.AddScoped<ISchoolExamRepositoryInitService, SchoolExamRepositoryInitService>();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<ISchoolExamRepositoryInitService, DevelopmentSchoolExamRepositoryInitService>();   
+} else if (builder.Environment.IsProduction())
+{
+    builder.Services.AddScoped<ISchoolExamRepositoryInitService, ProductionSchoolExamRepositoryInitService>();
+}
 
 var app = builder.Build();
-
-using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
-{
-    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamRepositoryInitService>();
-    await initService!.Init();
-}
 
 // Configure the HTTP request pipeline.
 // swagger also added for production to make development easier
@@ -160,7 +166,15 @@ app.UseAuthorization();
 
 app.UseCors("CorsPolicy");
 
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 app.MapControllers();
+
+using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+{
+    var initService = serviceScope.ServiceProvider.GetService<ISchoolExamRepositoryInitService>();
+    await initService!.Init();
+}
 
 app.Run();
 

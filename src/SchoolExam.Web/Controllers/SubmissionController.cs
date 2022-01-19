@@ -11,11 +11,25 @@ namespace SchoolExam.Web.Controllers;
 public class SubmissionController : ApiController<SubmissionController>
 {
     private readonly ISubmissionService _submissionService;
+    private readonly IExamService _examService;
 
     public SubmissionController(ILogger<SubmissionController> logger, IMapper mapper,
-        ISubmissionService submissionService) : base(logger, mapper)
+        ISubmissionService submissionService, IExamService examService) : base(logger, mapper)
     {
         _submissionService = submissionService;
+        _examService = examService;
+    }
+    
+    [HttpPost]
+    [Route($"Upload/{{{RouteParameterNames.ExamIdParameterName}}}")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public async Task<IActionResult> Upload(Guid examId, [FromBody] UploadSubmissionsModel uploadSubmissionsModel)
+    {
+        var pdf = Convert.FromBase64String(uploadSubmissionsModel.Pdf);
+
+        await _examService.Match(examId, pdf, GetUserId()!.Value);
+
+        return Ok();
     }
 
     [HttpGet]
@@ -61,6 +75,16 @@ public class SubmissionController : ApiController<SubmissionController>
 
         return File(pdf, MediaTypeNames.Application.Pdf);
     }
+    
+    [HttpGet]
+    [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/DownloadRemark")]
+    [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
+    public IActionResult DownloadSubmissionRemark(Guid submissionId)
+    {
+        var pdf = _submissionService.GetRemarkPdf(submissionId);
+
+        return File(pdf, MediaTypeNames.Application.Pdf);
+    }
 
     [HttpPost]
     [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/SetPoints")]
@@ -74,7 +98,7 @@ public class SubmissionController : ApiController<SubmissionController>
 
     [HttpPost]
     [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/UploadRemark")]
-    [Authorize(PolicyNames.SubmissionsExamCreatorPolicyName)]
+    [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
     public async Task<IActionResult> UploadRemark(Guid submissionId, [FromBody] UploadRemarkModel uploadRemarkModel)
     {
         var remarkPdf = Convert.FromBase64String(uploadRemarkModel.RemarkPdf);

@@ -8,9 +8,11 @@ using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Application.TagLayout;
+using SchoolExam.Domain.Entities.CourseAggregate;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
+using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.Extensions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Extensions;
@@ -58,18 +60,15 @@ public class ExamService : IExamService
         return result;
     }
 
-    public IEnumerable<Exam> GetByStudent(Guid studentId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task Create(string title, DateTime date, Guid teacherId, string topic)
+    public async Task<Guid> Create(string title, DateTime date, Guid teacherId, string topic)
     {
         var examId = Guid.NewGuid();
         var exam = new Exam(examId, title, date, teacherId, new Topic(topic));
 
         _repository.Add(exam);
         await _repository.SaveChangesAsync();
+
+        return examId;
     }
 
     public async Task Update(Guid examId, string title, DateTime date)
@@ -87,27 +86,90 @@ public class ExamService : IExamService
         var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         if (exam.State.HasBeenBuilt())
         {
-            throw new InvalidOperationException("An exam that already has been built must not be deleted.");
+            throw new DomainException("An exam that already has been built must not be deleted.");
         }
 
         _repository.Remove(exam);
         await _repository.SaveChangesAsync();
     }
 
-    public async Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content)
+    public async Task SetParticipants(Guid examId, IEnumerable<Guid> courseIds, IEnumerable<Guid> studentIds)
     {
-        var exam = EnsureExamExists(new ExamWithTaskPdfFileByIdSpecification(examId));
+        var exam = EnsureExamExists(new ExamWithParticipantsById(examId));
+        
+        if (exam.State.HasBeenBuilt())
+        {
+            throw new DomainException(
+                "The participants of an exam that already has been built cannot be changed.");
+        }
+
+        var courseIdsSet = courseIds.ToHashSet();
+        var examCourses = _repository.List<Course>(courseIdsSet);
+        var studentIdsSet = studentIds.ToHashSet();
+        var examStudents = _repository.List<Student>(studentIdsSet);
+
+        if (examCourses.Count() != courseIdsSet.Count)
+        {
+            throw new DomainException("Course does not exist.");
+        }
+        
+        if (examStudents.Count() != studentIdsSet.Count)
+        {
+            throw new DomainException("Student does not exist.");
+        }
+        
+        // delete previously existing course participants
+        foreach (var examCourse in exam.Participants.OfType<ExamCourse>())
+        {
+            _repository.Remove(examCourse);
+        }
+
+        foreach (var examStudent in exam.Participants.OfType<ExamStudent>())
+        {
+            _repository.Remove(examStudent);
+        }
+
+        // add participants
+        foreach (var courseId in courseIdsSet)
+        {
+            var examCourse = new ExamCourse(examId, courseId);
+            _repository.Add(examCourse);
+        }
+
+        foreach (var studentId in studentIdsSet)
+        {
+            var examStudent = new ExamStudent(examId, studentId);
+            _repository.Add(examStudent);
+        }
+
+        await _repository.SaveChangesAsync();
+    }
+
+    public async Task SetTaskPdfFile(Guid examId, Guid userId, byte[] content, params ExamTaskInfo[] tasks)
+    {
+        var exam = EnsureExamExists(new ExamWithTaskPdfFileAndGradingTableByIdSpecification(examId));
 
         if (exam.State.HasBeenBuilt())
         {
-            throw new InvalidOperationException(
-                "The task PDF file of an exam that already has been built cannot be changed.");
+            throw new DomainException("The task PDF file of an exam that already has been built cannot be changed.");
         }
 
         // remove previously existing task PDF file
         if (exam.TaskPdfFile != null)
         {
             _repository.Remove(exam.TaskPdfFile);
+        }
+        
+        // remove previously existing grading table since points might not be valid anymore
+        if (exam.GradingTable != null)
+        {
+            _repository.Remove(exam.GradingTable);
+        }
+        
+        // make sure that the exam has at least one task
+        if (tasks.Length < 1)
+        {
+            throw new DomainException("An exam must contain at least one task.");
         }
 
         var taskPdfFile =
@@ -117,16 +179,15 @@ public class ExamService : IExamService
         exam.State = ExamState.BuildReady;
         _repository.Update(exam);
         _repository.Add(taskPdfFile);
+
+        FindTasks(examId, userId, content, tasks);
+
         await _repository.SaveChangesAsync();
     }
 
-    public async Task FindTasks(Guid examId, Guid userId, params ExamTaskInfo[] tasks)
+    private void FindTasks(Guid examId, Guid userId, byte[] taskPdf, params ExamTaskInfo[] tasks)
     {
         var exam = EnsureExamExists(new ExamWithTaskPdfFileAndTasksByIdSpecification(examId));
-        if (exam.TaskPdfFile == null)
-        {
-            throw new InvalidOperationException("Exam does not have a task PDF.");
-        }
 
         // reset existing exam tasks
         var currentExamTasks = exam.Tasks;
@@ -134,13 +195,30 @@ public class ExamService : IExamService
         {
             _repository.Remove(task);
         }
+        
+        // check that maximum points of all tasks are positive
+        foreach (var task in tasks)
+        {
+            if (task.MaxPoints <= 0.0)
+            {
+                throw new DomainException("Maximum number of points must be a positive number.");
+            }
+        }
 
-        var pdf = exam.TaskPdfFile!.Content;
+        var pdf = taskPdf;
         var links = _pdfService.GetUriLinkAnnotations(pdf).ToList();
         var tasksDict = tasks.ToDictionary(x => x.Id, x => x);
-        var startLinkCandidates = links.Where(x => Regex.IsMatch(x.Uri, $"^task-start-{_guidRegex}$"));
-        var endLinkCandidatesDict = links.Where(x => Regex.IsMatch(x.Uri, $"^task-end-{_guidRegex}$"))
-            .ToDictionary(x => x.Uri, x => x);
+        
+        var startLinkCandidates = links.Where(x => Regex.IsMatch(x.Uri, $"^task-start-{_guidRegex}$")).ToList();
+        var endLinkCandidates = links.Where(x => Regex.IsMatch(x.Uri, $"^task-end-{_guidRegex}$")).ToList();
+        var linkCandidates = startLinkCandidates.Union(endLinkCandidates).ToList();
+        // check if there are duplicate markers
+        if (linkCandidates.Select(x => x.Uri).Distinct().Count() != linkCandidates.Count)
+        {
+            var task = linkCandidates.GroupBy(x => x.Uri).First(x => x.Count() > 1);
+            throw new DomainException($"Task marker with text {task.Key} was found in PDF more than once.");
+        }
+        var endLinkCandidatesDict = endLinkCandidates.ToDictionary(x => x.Uri, x => x);
 
         var matchedLinks = new List<PdfUriLinkAnnotationInfo>();
         var matchedTaskIds = new HashSet<Guid>();
@@ -153,17 +231,11 @@ public class ExamService : IExamService
             // check if the exam has a task with the extracted identifier
             if (tasksDict.ContainsKey(taskId))
             {
-                // check if tasked occurs in multiple markers
-                if (matchedTaskIds.Contains(taskId))
-                {
-                    throw new InvalidOperationException($"Task with id {taskId} was found in PDF more than once.");
-                }
-
                 // find corresponding end marker
                 var taskEndString = $"task-end-{taskId}";
                 if (!endLinkCandidatesDict.ContainsKey(taskEndString))
                 {
-                    throw new InvalidOperationException($"No end marker was found for task with id {taskId}.");
+                    throw new DomainException($"No end marker was found for task with id {taskId}.");
                 }
 
                 var endLink = endLinkCandidatesDict[taskEndString];
@@ -173,7 +245,7 @@ public class ExamService : IExamService
                 // add start and end marker to list such that they can be removed from the PDF file afterwards
                 matchedLinks.Add(startLink);
                 matchedLinks.Add(endLink);
-                var examTask = new ExamTask(taskId, task.Title, task.MaxPoints, examId,
+                var examTask = new ExamTask(Guid.NewGuid(), task.Title, task.MaxPoints, examId,
                     new ExamPosition(startLink.Page, startLink.Top), new ExamPosition(endLink.Page, endLink.Bottom));
                 _repository.Add(examTask);
             }
@@ -182,34 +254,35 @@ public class ExamService : IExamService
         if (matchedTaskIds.Count != tasks.Length)
         {
             var unmatchedTask = tasks.First(x => !matchedTaskIds.Contains(x.Id));
-            throw new InvalidOperationException($"Task with id {unmatchedTask.Id} could not be found in PDF.");
+            throw new DomainException($"Task with id {unmatchedTask.Id} could not be found in PDF.");
         }
 
         var pdfWithoutTaskLinks = _pdfService.RemoveUriLinkAnnotations(pdf, matchedLinks.ToArray());
-        _repository.Remove(exam.TaskPdfFile);
+        _repository.Remove(exam.TaskPdfFile!);
         var newTaskPdfFile = new TaskPdfFile(Guid.NewGuid(), $"{examId}.pdf", pdfWithoutTaskLinks.LongLength,
             DateTime.Now, userId, pdfWithoutTaskLinks, examId);
         _repository.Add(newTaskPdfFile);
         _repository.Update(exam);
-
-        await _repository.SaveChangesAsync();
     }
 
     public async Task<int> Build(Guid examId, Guid userId)
     {
         var exam = EnsureExamExists(new ExamWithTaskPdfFileAndParticipantsById(examId));
-        var count = exam.Participants.Count(x => x is ExamStudent) +
-                    exam.Participants.OfType<ExamCourse>().Sum(x => x.Course.Students.Count);
+        var examStudentIds = exam.Participants.OfType<ExamStudent>().Select(x => x.ParticipantId);
+        var examCourseStudentIds = exam.Participants.OfType<ExamCourse>().SelectMany(x => x.Course.Students)
+            .Select(x => x.StudentId);
+        var studentIds = examStudentIds.Union(examCourseStudentIds).Distinct();
+        var count = studentIds.Count();
         if (count < 1)
         {
-            throw new ArgumentException("At least one exam booklet must be built.");
+            throw new DomainException("At least one exam booklet must be built.");
         }
 
         if (exam.TaskPdfFile == null)
         {
-            throw new InvalidOperationException("Exam does not have a task PDF file.");
+            throw new DomainException("Exam does not have a task PDF file.");
         }
-        
+
         // clean booklets from previous builds
         if (exam.State.HasBeenBuilt())
         {
@@ -308,19 +381,19 @@ public class ExamService : IExamService
         return pdfWithTexts;
     }
 
-    private async Task Clean(Guid examId)
+    public async Task Clean(Guid examId)
     {
         var exam = EnsureExamExists(new ExamWithBookletsByIdSpecification(examId));
 
         var submissionPages = _repository.List(new SubmissionPageByExamSpecification(examId));
         if (submissionPages.Any())
         {
-            throw new InvalidOperationException("An exam with existing submission pages must not be cleaned.");
+            throw new DomainException("An exam with existing submission pages must not be cleaned.");
         }
 
         if (!exam.State.HasBeenBuilt())
         {
-            throw new InvalidOperationException("The exam has not been built yet.");
+            throw new DomainException("The exam has not been built yet.");
         }
 
         var booklets = exam.Booklets;
@@ -351,7 +424,7 @@ public class ExamService : IExamService
         if (exam.State != ExamState.SubmissionReady && exam.State != ExamState.InCorrection &&
             exam.State != ExamState.Corrected)
         {
-            throw new InvalidOperationException("Exam is not ready to match submissions.");
+            throw new DomainException("Exam is not ready to match submissions.");
         }
 
         var pages = _pdfService.Split(pdf);
@@ -479,24 +552,24 @@ public class ExamService : IExamService
         var bookletPage = _repository.Find<BookletPage>(bookletPageId);
         if (bookletPage == null)
         {
-            throw new ArgumentException("Booklet page does not exist.");
+            throw new DomainException("Booklet page does not exist.");
         }
 
         var bookletExamId = _repository.Find<Booklet>(bookletPage.BookletId)!.ExamId;
         if (!examId.Equals(bookletExamId))
         {
-            throw new InvalidOperationException("Booklet page is not part of the exam.");
+            throw new DomainException("Booklet page is not part of the exam.");
         }
 
         var submissionPage = _repository.Find<SubmissionPage>(submissionPageId);
         if (submissionPage == null)
         {
-            throw new ArgumentException("Submission page does not exist.");
+            throw new DomainException("Submission page does not exist.");
         }
 
         if (!examId.Equals(submissionPage.ExamId))
         {
-            throw new InvalidOperationException("Submission page is not part of the exam.");
+            throw new DomainException("Submission page is not part of the exam.");
         }
 
         var bookletPageMatched = _repository.List(new SubmissionPageByBookletPageSpecification(bookletPageId)).Any();
@@ -504,7 +577,7 @@ public class ExamService : IExamService
         // not possible to manually match a previously matched pages
         if (bookletPageMatched || submissionPage.BookletPageId.HasValue)
         {
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "The booklet page and/or the submission page have already been matched.");
         }
 
@@ -538,7 +611,11 @@ public class ExamService : IExamService
     public async Task SetGradingTable(Guid examId, params GradingTableIntervalLowerBound[] lowerBounds)
     {
         var exam = EnsureExamExists(new ExamWithGradingTableById(examId));
-        
+        if (exam.State is ExamState.Planned)
+        {
+            throw new DomainException("An exam without a task PDF file cannot have a grading table.");
+        }
+
         // remove previously existing grading table
         if (exam.GradingTable != null)
         {
@@ -552,56 +629,66 @@ public class ExamService : IExamService
         var count = lowerBoundsOrdered.Length;
         if (count < 1)
         {
-            throw new ArgumentException("Grading table must contain at least one interval.");
+            throw new DomainException("Grading table must contain at least one interval.");
         }
 
         if (lowerBoundsOrdered[0].Points != 0.0)
         {
-            throw new ArgumentException("A grading interval starting from 0.0 points must be included.");
+            throw new DomainException("A grading interval starting from 0.0 points must be included.");
         }
-        
-        var intervals = new List<GradingTableInterval>();
-        for (int i = 0; i < count - 1; i++)
+
+        var gradingTableId = Guid.NewGuid();
+        for (int i = 0; i < count; i++)
         {
             var current = lowerBoundsOrdered[i];
             if (current.Points > maxPoints)
             {
-                throw new ArgumentException("A grading interval exceeds the maximum number of points.");
+                throw new DomainException("A grading interval exceeds the maximum number of points.");
             }
-            var next = lowerBoundsOrdered[i + 1];
-            if (current == next)
+            
+            if (i == count - 1)
             {
-                throw new ArgumentException("A grading interval must not be empty.");
+                break;
             }
+
+            var next = lowerBoundsOrdered[i + 1];
+            if (current.Points == next.Points)
+            {
+                throw new DomainException("A grading interval must not be empty.");
+            }
+
             var lowerBound = new GradingTableIntervalBound(current.Points, GradingTableIntervalBoundType.Inclusive);
             var upperBound = new GradingTableIntervalBound(next.Points, GradingTableIntervalBoundType.Exclusive);
-            intervals.Add(new GradingTableInterval(lowerBound, upperBound, current.Grade));
+            _repository.Add(new GradingTableInterval(lowerBound, upperBound, current.Grade, current.Type,
+                gradingTableId));
         }
 
         // deal with last bound separately
         var last = lowerBoundsOrdered[count - 1];
         var lowerBoundLast = new GradingTableIntervalBound(last.Points, GradingTableIntervalBoundType.Inclusive);
         var upperBoundLast = new GradingTableIntervalBound(maxPoints, GradingTableIntervalBoundType.Inclusive);
-        intervals.Add(new GradingTableInterval(lowerBoundLast, upperBoundLast, last.Grade));
-        
-        var gradingTable = new GradingTable(Guid.NewGuid(), examId)
-        {
-            Intervals = intervals
-        };
+        _repository.Add(new GradingTableInterval(lowerBoundLast, upperBoundLast, last.Grade, last.Type,
+            gradingTableId));
+
+        var gradingTable = new GradingTable(gradingTableId, examId);
         _repository.Add(gradingTable);
 
         await _repository.SaveChangesAsync();
     }
 
-    public async Task PublishExam(Guid examId, DateTime? publishDateTime)
+    public async Task Publish(Guid examId, DateTime? publishDateTime)
     {
         var exam = EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
         if (exam.State == ExamState.Published)
         {
-            throw new InvalidOperationException("Exam is already published.");
+            throw new DomainException("Exam is already published.");
         }
 
-        //var students = GetStudentsByExam(examId);
+        if (exam.State != ExamState.Corrected)
+        {
+            throw new DomainException("Correction of exam must be completed before publishing exam.");
+        }
+        
         var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
 
         if (publishDateTime.HasValue && publishDateTime.Value > DateTime.UtcNow)
@@ -622,7 +709,7 @@ public class ExamService : IExamService
         var exam = _repository.Find(spec);
         if (exam == null)
         {
-            throw new ArgumentException("Exam does not exist.");
+            throw new DomainException("Exam does not exist.");
         }
 
         return exam;
@@ -646,8 +733,7 @@ public class ExamService : IExamService
         // prepare outline to be added to all complete submission PDFs
         var outlineElements = exam.Tasks.Select(x => new PdfOutlineInfo(x.Title, x.Start.Page, (float) x.Start.Y))
             .ToArray();
-
-        // TODO: make sure that nothing has been corrected before deleting anything
+        
         foreach (var booklet in booklets)
         {
             var submission = updatedSubmissionsDict[booklet.Id];
@@ -665,7 +751,8 @@ public class ExamService : IExamService
             // add answers for all tasks to submission
             foreach (var task in exam.Tasks)
             {
-                var answer = new Answer(Guid.NewGuid(), task.Id, submission.Id, AnswerState.Pending, null);
+                var answer = new Answer(Guid.NewGuid(), task.Id, submission.Id, AnswerState.Pending, null,
+                    DateTime.Now.SetKindUtc());
                 var defaultSegmentAnswer = new AnswerSegment(Guid.NewGuid(),
                     new ExamPosition(task.Start.Page, task.Start.Y), new ExamPosition(task.End.Page, task.End.Y),
                     answer.Id);
@@ -702,8 +789,8 @@ public class ExamService : IExamService
         // check if submission has already been assigned to another student
         if (submission.StudentId.HasValue && studentId.HasValue && !studentId.Equals(submission.StudentId))
         {
-            throw new InvalidOperationException(
-                $"Submission cannot be assigned to student with identifier {studentId} because it was previously assigned to student with identifier {submission.StudentId.Value}");
+            throw new DomainException(
+                $"Submission cannot be assigned to student with identifier {studentId} because it was previously assigned to student with identifier {submission.StudentId.Value}.");
         }
 
         // assign student to submission

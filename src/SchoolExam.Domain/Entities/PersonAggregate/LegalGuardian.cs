@@ -10,7 +10,7 @@ public class LegalGuardian : Person
     {
     }
 
-    public LegalGuardian(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address,
+    public LegalGuardian(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address? address,
         string emailAddress) : base(id, firstName, lastName, dateOfBirth, address, emailAddress)
     {
         Children = new List<StudentLegalGuardian>();

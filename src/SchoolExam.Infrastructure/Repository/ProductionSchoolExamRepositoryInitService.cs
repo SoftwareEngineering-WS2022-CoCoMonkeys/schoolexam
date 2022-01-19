@@ -4,11 +4,11 @@ using SchoolExam.Persistence.DataContext;
 
 namespace SchoolExam.Infrastructure.Repository;
 
-public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
+public class ProductionSchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
 {
     private readonly SchoolExamDbContext _context;
     
-    public SchoolExamRepositoryInitService(SchoolExamDbContext context)
+    public ProductionSchoolExamRepositoryInitService(SchoolExamDbContext context)
     {
         _context = context;
     }

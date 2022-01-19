@@ -19,5 +19,6 @@ public class ExamByTeacherSpecification : EntitySpecification<Exam>
         AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Submission)}");
         AddInclude($"{nameof(Exam.Booklets)}.{nameof(Booklet.Submission)}.{nameof(Submission.Answers)}");
         AddInclude(x => x.Tasks);
+        AddInclude(x => x.GradingTable);
     }
 }

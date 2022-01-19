@@ -1,8 +1,9 @@
-﻿using SchoolExam.Application.Repository;
+﻿using SchoolExam.Application.RandomGenerator;
+using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Entities.PersonAggregate;
-using SchoolExam.Domain.Entities.UserAggregate;
+using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Infrastructure.Extensions;
 using SchoolExam.Infrastructure.Specifications;
@@ -11,48 +12,61 @@ namespace SchoolExam.Infrastructure.Services;
 
 public class PersonService : IPersonService
 {
-    private readonly ISchoolExamRepository _context;
-    private readonly IUserService _userService;
+    private readonly ISchoolExamRepository _repository;
+    private readonly IRandomGenerator _randomGenerator;
 
-    public PersonService(ISchoolExamRepository context, IUserService userService)
+    public PersonService(ISchoolExamRepository repository, IRandomGenerator randomGenerator)
     {
-        _context = context;
-        _userService = userService;
+        _repository = repository;
+        _randomGenerator = randomGenerator;
     }
-    
+
     public Person? GetById(Guid id)
     {
-        return _context.Find(new PersonByIdSpecification(id));
+        return _repository.Find(new PersonByIdSpecification(id));
     }
 
     public IEnumerable<Person> GetAllPersons()
     {
-        return _context.List<Person>();
+        return _repository.List<Person>();
     }
 
-    public async Task Create(string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress)
+    public async Task<Student> CreateStudent(string firstName, string lastName, DateTime dateOfBirth, Address? address,
+        string emailAddress, Guid schoolId)
     {
-        var personId = Guid.NewGuid();
-        var person = new Person(personId, firstName, lastName, dateOfBirth, address, emailAddress);
+        var studentId = Guid.NewGuid();
+        var qrCodeData = _randomGenerator.GenerateHexString(32);
+        var student = new Student(studentId, firstName, lastName, dateOfBirth, address, emailAddress, qrCodeData,
+            schoolId);
 
-        _context.Add(person);
-        await _context.SaveChangesAsync();
-        //return Task<>;
+        _repository.Add(student);
+        await _repository.SaveChangesAsync();
+        return student;
     }
 
-    public async Task CreateWithUser(string firstName, string lastName, DateTime dateOfBirth, Address? address,
-        string emailAddress, string username, string password, Role role)
+    public async Task<Teacher> CreateTeacher(string firstName, string lastName, DateTime dateOfBirth, Address? address,
+        string emailAddress, Guid schoolId)
     {
-        var personId = Guid.NewGuid();
-        var person = new Person(personId, firstName, lastName, dateOfBirth, address, emailAddress);
+        var studentId = Guid.NewGuid();
+        var teacher = new Teacher(studentId, firstName, lastName, dateOfBirth, address, emailAddress, schoolId);
 
-        _context.Add(person);
-        await _context.SaveChangesAsync();
-
-        await _userService.Create(username, password, role, personId);
+        _repository.Add(teacher);
+        await _repository.SaveChangesAsync();
+        return teacher;
     }
 
-    public async Task Update(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address,
+    public async Task<LegalGuardian> CreateLegalGuardian(string firstName, string lastName, DateTime dateOfBirth,
+        Address? address, string emailAddress)
+    {
+        var studentId = Guid.NewGuid();
+        var legalGuardian = new LegalGuardian(studentId, firstName, lastName, dateOfBirth, address, emailAddress);
+
+        _repository.Add(legalGuardian);
+        await _repository.SaveChangesAsync();
+        return legalGuardian;
+    }
+
+    public async Task<Person> Update(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address? address,
         string emailAddress)
     {
         var person = EnsurePersonExists(new PersonByIdSpecification(id));
@@ -62,22 +76,23 @@ public class PersonService : IPersonService
         person.DateOfBirth = dateOfBirth;
         person.Address = address;
         person.EmailAddress = emailAddress;
-        await _context.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
+        return person;
     }
 
     public async Task Delete(Guid id)
     {
         var person = EnsurePersonExists(new PersonByIdSpecification(id));
-        _context.Remove(person);
-        await _context.SaveChangesAsync();
+        _repository.Remove(person);
+        await _repository.SaveChangesAsync();
     }
-    
+
     private Person EnsurePersonExists(EntityByIdSpecification<Person> spec)
     {
-        var person = _context.Find(spec);
+        var person = _repository.Find(spec);
         if (person == null)
         {
-            throw new ArgumentException("Person does not exist");
+            throw new DomainException("Person does not exist.");
         }
 
         return person;

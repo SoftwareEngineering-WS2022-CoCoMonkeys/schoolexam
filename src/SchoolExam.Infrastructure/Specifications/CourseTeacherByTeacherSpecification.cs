@@ -10,5 +10,6 @@ public class CourseTeacherByTeacherSpecification : EntitySpecification<CourseTea
     {
         AddInclude(x => x.Course);
         AddInclude($"{nameof(CourseTeacher.Course)}.{nameof(Course.Students)}");
+        AddInclude($"{nameof(CourseTeacher.Course)}.{nameof(Course.Students)}.{nameof(CourseStudent.Student)}");
     }
 }

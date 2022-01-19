@@ -9,7 +9,7 @@ public class ScheduledExamConfiguration: IEntityTypeConfiguration<ScheduledExam>
 {
     public void Configure(EntityTypeBuilder<ScheduledExam> builder)
     {
-        builder.ToTable("ScheduledExams");
+        builder.ToTable("ScheduledExam");
         builder.HasKey(x => x.Id);
         builder.HasOne(x => x.Exam).WithOne().HasForeignKey<ScheduledExam>(x  => x.ExamId);
     }

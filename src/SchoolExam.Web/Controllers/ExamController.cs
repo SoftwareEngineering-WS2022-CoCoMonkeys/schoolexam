@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.TagLayout;
+using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Extensions;
 using SchoolExam.Web.Authorization;
+using SchoolExam.Web.Models;
 using SchoolExam.Web.Models.Exam;
 
 namespace SchoolExam.Web.Controllers;
@@ -32,11 +34,12 @@ public class ExamController : ApiController<ExamController>
     [HttpPost]
     [Route($"Create")]
     [Authorize(Roles = Role.TeacherName)]
-    public async Task<IActionResult> Create([FromBody] ExamWriteModel examWriteModel)
+    public async Task<IdReadModel> Create([FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Create(examWriteModel.Title, examWriteModel.Date.SetKindUtc(),
+        var examId = await _examService.Create(examWriteModel.Title, examWriteModel.Date.SetKindUtc(),
             GetPersonId()!.Value, examWriteModel.Topic);
-        return Ok();
+        var idReadModel = new IdReadModel {Id = examId};
+        return idReadModel;
     }
 
     [HttpPut]
@@ -58,15 +61,25 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpPost]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/SetParticipants")]
+    [Authorize(PolicyNames.ExamCreatorPolicyName)]
+    public async Task<IActionResult> SetParticipants(Guid examId, [FromBody] SetParticipantsModel setParticipantsModel)
+    {
+        var courseIds = setParticipantsModel.Participants.OfType<ExamCourseWriteModel>().Select(x => x.Id);
+        var studentIds = setParticipantsModel.Participants.OfType<ExamStudentWriteModel>().Select(x => x.Id);
+        await _examService.SetParticipants(examId, courseIds, studentIds);
+        return Ok();
+    }
+
+    [HttpPost]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/UploadTaskPdf")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> UploadTaskPdf(Guid examId, [FromBody] UploadTaskPdfModel uploadTaskPdfModel)
     {
         var pdf = Convert.FromBase64String(uploadTaskPdfModel.TaskPdf);
 
-        await _examService.SetTaskPdfFile(examId, GetUserId()!.Value, pdf);
         var tasks = Mapper.Map<IEnumerable<ExamTaskInfo>>(uploadTaskPdfModel.Tasks).ToArray();
-        await _examService.FindTasks(examId, GetUserId()!.Value, tasks);
+        await _examService.SetTaskPdfFile(examId, GetUserId()!.Value, pdf, tasks);
 
         return Ok();
     }
@@ -84,14 +97,11 @@ public class ExamController : ApiController<ExamController>
     }
 
     [HttpPost]
-    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/SubmitAndMatch")]
+    [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Clean")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> SubmitAndMatch(Guid examId, [FromBody] SubmitAndMatchModel submitAndMatchModel)
+    public async Task<IActionResult> Clean(Guid examId)
     {
-        var pdf = Convert.FromBase64String(submitAndMatchModel.Pdf);
-
-        await _examService.Match(examId, pdf, GetUserId()!.Value);
-
+        await _examService.Clean(examId);
         return Ok();
     }
 
@@ -131,9 +141,9 @@ public class ExamController : ApiController<ExamController>
     [HttpPost]
     [Route($"{{{RouteParameterNames.ExamIdParameterName}}}/Publish")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
-    public async Task<IActionResult> PublishExam(Guid examId, [FromBody] PublishExamWriteModel publishExamWriteModel)
+    public async Task<IActionResult> Publish(Guid examId, [FromBody] PublishExamWriteModel publishExamWriteModel)
     {
-        await _examService.PublishExam(examId, publishExamWriteModel.PublishingDateTime);
+        await _examService.Publish(examId, publishExamWriteModel.PublishingDateTime);
         return Ok();
     }
 
@@ -154,14 +164,30 @@ public class ExamController : ApiController<ExamController>
 
             if (lowerBound is GradingTableLowerBoundPercentageModel lowerBoundPercentage)
             {
-                return lowerBoundPercentage.Percentage / 100 * maxPoints;
+                return lowerBoundPercentage.Percentage / 100.0 * maxPoints;
             }
 
-            throw new InvalidOperationException("Invalid type for grading table lower bound");
+            throw new DomainException("Invalid type for grading table lower bound");
+        }
+
+        GradingTableLowerBoundType GetType(GradingTableLowerBoundModelBase lowerBound)
+        {
+            if (lowerBound is GradingTableLowerBoundPointsModel)
+            {
+                return GradingTableLowerBoundType.Points;
+            }
+
+            if (lowerBound is GradingTableLowerBoundPercentageModel)
+            {
+                return GradingTableLowerBoundType.Percentage;
+            }
+
+            throw new DomainException("Invalid type for grading table lower bound");
         }
 
         var lowerBounds =
-            gradingTableWriteModel.LowerBounds.Select(x => new GradingTableIntervalLowerBound(GetPoints(x), x.Grade));
+            gradingTableWriteModel.LowerBounds.Select(x =>
+                new GradingTableIntervalLowerBound(GetPoints(x), GetType(x), x.Grade));
 
         await _examService.SetGradingTable(examId, lowerBounds.ToArray());
 

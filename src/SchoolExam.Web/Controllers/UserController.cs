@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using SchoolExam.Application.Services;
 using SchoolExam.Domain.ValueObjects;
 using SchoolExam.Web.Authorization;
-using SchoolExam.Web.Models.Exam;
 using SchoolExam.Web.Models.User;
 
 namespace SchoolExam.Web.Controllers;
@@ -23,25 +21,25 @@ public class UserController : ApiController<UserController>
     [HttpGet]
     [Route($"{{{RouteParameterNames.UserNameParameterName}}}")]
     [Authorize(Roles = Role.AdministratorName)]
-    public UserReadModel GetUserByUsername(String username)
+    public UserReadModel GetUserByUsername(String userName)
     {
-        var user = _userService.GetByUsername(username);
+        var user = _userService.GetByUsername(userName);
         return Mapper.Map<UserReadModel>(user);
     }
     
     [HttpGet]
     [Route($"ById/{{{RouteParameterNames.UserIdParameterName}}}")]
     [Authorize(Roles = Role.AdministratorName)]
-    public UserReadModel GetUserById(Guid id)
+    public UserReadModel GetUserById(Guid userId)
     {
-        var user = _userService.GetById(id);
+        var user = _userService.GetById(userId);
         return Mapper.Map<UserReadModel>(user);
     }
     
     [HttpGet]
     [Route("GetAllUsers")]
     [Authorize(Roles = Role.AdministratorName)]
-    public List<UserReadModel> GetAllUser()
+    public IEnumerable<UserReadModel> GetAllUser()
     {
         var users = _userService.GetAllUsers();
         return Mapper.Map<List<UserReadModel>>(users);
@@ -49,24 +47,23 @@ public class UserController : ApiController<UserController>
     
     
     [HttpPost]
-    [Route("Create")]
+    [Route($"Create")]
     [Authorize(Roles = Role.AdministratorName)]
-    public async Task<IActionResult> Create(string username,  [FromBody] UserWriteModel userWriteModel)
+    public async Task<IActionResult> Create([FromBody] UserWriteModel userWriteModel)
     {
-        var personId = !string.IsNullOrEmpty(userWriteModel.PersonId) ? (Guid?) Guid.Parse(userWriteModel.PersonId) : null;
-        await _userService.Create(username, userWriteModel.Password, new Role(userWriteModel.Role), personId);
-        return Ok();
+        var user = await _userService.Create(userWriteModel.Username, userWriteModel.Password,
+            new Role(userWriteModel.Role), userWriteModel.PersonId);
+        return Ok(Mapper.Map<UserReadModel>(user));
     }
     
     [HttpPut]
     [Route($"{{{RouteParameterNames.UserNameParameterName}}}/Update")]
     [Authorize(Roles = Role.AdministratorName)]
-    public async Task<IActionResult> Update(string username, [FromBody] UserWriteModel userWriteModel)
+    public async Task<IActionResult> Update(string userName, [FromBody] UserWriteModel userWriteModel)
     {
-        
-        var personId = !string.IsNullOrEmpty(userWriteModel.PersonId) ? (Guid?) Guid.Parse(userWriteModel.PersonId) : null;
-        await _userService.Update( username, userWriteModel.Password, Mapper.Map<Role>(userWriteModel.Role), personId);
-        return Ok();
+        var user = await _userService.Update(userName, userWriteModel.Username, userWriteModel.Password,
+            new Role(userWriteModel.Role), userWriteModel.PersonId);
+        return Ok(Mapper.Map<UserReadModel>(user));
     }
 
     [HttpDelete]

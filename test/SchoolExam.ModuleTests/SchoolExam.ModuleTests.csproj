@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\SchoolExam.Core\SchoolExam.Core.csproj" />
+<!--      <ProjectReference Include="..\..\src\SchoolExam.Core\SchoolExam.Core.csproj" />-->
       <ProjectReference Include="..\..\src\SchoolExam.Domain\SchoolExam.Domain.csproj" />
       <ProjectReference Include="..\..\src\SchoolExam.Infrastructure\SchoolExam.Infrastructure.csproj" />
     </ItemGroup>

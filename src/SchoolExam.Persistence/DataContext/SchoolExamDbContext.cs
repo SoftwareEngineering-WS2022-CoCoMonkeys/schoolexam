@@ -25,7 +25,6 @@ public class SchoolExamDbContext : DbContextBase
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new SchoolConfiguration());
-        modelBuilder.ApplyConfiguration(new SchoolTeacherConfiguration());
 
         modelBuilder.ApplyConfiguration(new FileBaseConfiguration());
 
@@ -56,6 +55,7 @@ public class SchoolExamDbContext : DbContextBase
         modelBuilder.ApplyConfiguration(new SubmissionPagePdfFileConfiguration());
         modelBuilder.ApplyConfiguration(new AnswerConfiguration());
         modelBuilder.ApplyConfiguration(new AnswerSegmentConfiguration());
+        modelBuilder.ApplyConfiguration(new ScheduledExamConfiguration());
         modelBuilder.ApplyConfiguration(new RemarkPdfFileConfiguration());
 
         modelBuilder.ApplyConfiguration(new UserConfiguration());

@@ -8,13 +8,17 @@ public interface IPersonService
     Person? GetById(Guid id);
 
     IEnumerable<Person> GetAllPersons();
-    
-    Task Create(string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress);
 
-    Task CreateWithUser(string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress,
-        string username, string password, Role role);
+    Task<Student> CreateStudent(string firstName, string lastName, DateTime dateOfBirth, Address? address,
+        string emailAddress, Guid schoolId);
 
-    Task Update(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress);
+    Task<Teacher> CreateTeacher(string firstName, string lastName, DateTime dateOfBirth, Address? address,
+        string emailAddress, Guid schoolId);
+
+    Task<LegalGuardian> CreateLegalGuardian(string firstName, string lastName, DateTime dateOfBirth, Address? address,
+        string emailAddress);
+
+    Task<Person> Update(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address? address, string emailAddress);
 
     Task Delete(Guid id);
 }
