@@ -40,7 +40,6 @@
     <a href="https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    ·
     <a href="https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/
 schoolexam/issues">Report Bug</a>
     ·
@@ -167,7 +166,7 @@ git clone https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam.g
 
 ## Usage
 
-Serves as a backend for the [Word add-in](https://example.com) and the [Correction UI](https://example.com). Therefore
+Serves as a backend for the [Word add-in](https://www.github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam-word-addin) and the [Correction UI](https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam-correction-ui). Therefore
 it can be used to locally run those components.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -239,10 +238,10 @@ Link: [https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam](htt
 
 ## Acknowledgments
 
-* []()#wirfuerschule for the insights on the current situation in schools.
-* []()Capgemini for the valuable workshops with feedback for the architecture.
-* []()ISSE chair at the University of Augsburg for giving us room to implement our idea.
-* []()adesso for providing as a productive collaborative workspace.
+* []()#wirfuerschule for the insights on the current situation in schools
+* []()Capgemini for the valuable workshops with feedback for the architecture
+* []()ISSE chair at the University of Augsburg for giving us room to implement our idea
+* []()adesso for providing us a productive collaborative workspace
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -269,9 +268,7 @@ Link: [https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam](htt
 
 [license-shield]: https://img.shields.io/github/license/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam.svg?style=for-the-badge
 
-[license-url]: https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam/blob/master/LICENSE.txt
-
-[product-screenshot]: images/screenshot.png
+[license-url]: https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam/blob/main/gnu-agpl-v3.0.md
 
 # SchoolExam
 
