@@ -32,7 +32,7 @@ public class UserControllerTest : ApiIntegrationTestBase
     }
     
     [Test]
-    public async Task CourseController_GetUserByUsername_Administrator_Success()
+    public async Task UserController_GetUserByUsername_Administrator_Success()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Administrator));
 
@@ -50,7 +50,7 @@ public class UserControllerTest : ApiIntegrationTestBase
     }
     
     [Test]
-    public async Task CourseController_GetUserById_Administrator_Success()
+    public async Task UserController_GetUserById_Administrator_Success()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Administrator));
 
@@ -68,7 +68,7 @@ public class UserControllerTest : ApiIntegrationTestBase
     }
     
     [Test]
-    public async Task CourseController_GetAllUsers_Administrator_Success()
+    public async Task UserController_GetAllUsers_Administrator_Success()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Administrator));
 
@@ -93,7 +93,7 @@ public class UserControllerTest : ApiIntegrationTestBase
     }
     
     [Test]
-    public async Task CourseController_Create_Administrator_Success()
+    public async Task UserController_Create_Administrator_Success()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Administrator));
 
@@ -114,9 +114,9 @@ public class UserControllerTest : ApiIntegrationTestBase
         users.Should().ContainEquivalentOf(_user);
         users.Should().ContainEquivalentOf(_otherUser);
     }
-    
+
     [Test]
-    public async Task CourseController_Update_Administrator_Success()
+    public async Task UserController_Update_Administrator_Success()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Administrator));
 
@@ -138,7 +138,7 @@ public class UserControllerTest : ApiIntegrationTestBase
     }
     
     [Test]
-    public async Task CourseController_Delete_Administrator_Success()
+    public async Task UserController_Delete_Administrator_Success()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Administrator));
 
@@ -152,7 +152,7 @@ public class UserControllerTest : ApiIntegrationTestBase
     }
     
     [Test]
-    public async Task CourseController_Delete_UserDoesNotExist_ThrowsException()
+    public async Task UserController_Delete_UserDoesNotExist_ThrowsException()
     {
         SetClaims(new Claim(ClaimTypes.Role, Role.Administrator));
 

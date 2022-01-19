@@ -2,6 +2,7 @@ using SchoolExam.Application.Authentication;
 using SchoolExam.Application.Repository;
 using SchoolExam.Application.Services;
 using SchoolExam.Application.Specifications;
+using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.UserAggregate;
 using SchoolExam.Domain.Exceptions;
 using SchoolExam.Domain.ValueObjects;
@@ -44,6 +45,41 @@ public class UserService : IUserService
         _repository.Add(user);
          await _repository.SaveChangesAsync();
          return user;
+    }
+    
+    public async Task<User> CreateFromPerson(Guid personId, string username, string password)
+    {
+        var person = _repository.Find<Person>(personId);
+        if (person == null)
+        {
+            throw new DomainException("Person does not exist.");
+        }
+
+        var userPersonIds = _repository.List<User>().Where(x => x.PersonId.HasValue).Select(x => x.PersonId)
+            .ToHashSet();
+        if (userPersonIds.Contains(personId))
+        {
+            throw new DomainException("User connected to person identifier already exists");
+        }
+
+        Role role = null!;
+        if (person is Student)
+        {
+            role = Role.Student;
+        } else if (person is Teacher)
+        {
+            role = Role.Teacher;
+        } else if (person is LegalGuardian)
+        {
+            role = Role.LegalGuardian;
+        }
+        
+        var userId = Guid.NewGuid();
+        var user = new User(userId, username, _passwordHasher.HashPassword(password), role, personId);
+
+        _repository.Add(user);
+        await _repository.SaveChangesAsync();
+        return user;
     }
 
     public async Task<User> Update(string username, string newUsername, string password, Role role, Guid? personId)
