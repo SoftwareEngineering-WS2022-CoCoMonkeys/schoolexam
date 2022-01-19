@@ -152,7 +152,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
 
     private async Task<IEnumerable<Guid>> AddStudents()
     {
-        var count = 100;
+        var count = 40;
         var countFirstNames = _firstNames.Length;
         var countLastNames = _lastNames.Length;
 

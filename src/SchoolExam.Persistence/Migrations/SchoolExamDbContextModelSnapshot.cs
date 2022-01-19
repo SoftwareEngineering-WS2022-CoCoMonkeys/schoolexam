@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SchoolExam.Persistence.DataContext;
@@ -12,10 +11,9 @@ using SchoolExam.Persistence.DataContext;
 namespace SchoolExam.Persistence.Migrations
 {
     [DbContext(typeof(SchoolExamDbContext))]
-    [Migration("20220119012930_AddUserToPerson")]
-    partial class AddUserToPerson
+    partial class SchoolExamDbContextModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -226,6 +224,29 @@ namespace SchoolExam.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("GradingTable", (string)null);
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ScheduledExam", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("PublishTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId")
+                        .IsUnique();
+
+                    b.ToTable("ScheduledExam", (string)null);
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Person", b =>
@@ -832,6 +853,17 @@ namespace SchoolExam.Persistence.Migrations
                         });
 
                     b.Navigation("Intervals");
+                });
+
+            modelBuilder.Entity("SchoolExam.Domain.Entities.ExamAggregate.ScheduledExam", b =>
+                {
+                    b.HasOne("SchoolExam.Domain.Entities.ExamAggregate.Exam", "Exam")
+                        .WithOne()
+                        .HasForeignKey("SchoolExam.Domain.Entities.ExamAggregate.ScheduledExam", "ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
                 });
 
             modelBuilder.Entity("SchoolExam.Domain.Entities.PersonAggregate.Person", b =>
