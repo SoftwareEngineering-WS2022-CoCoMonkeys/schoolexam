@@ -152,7 +152,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
 
     private async Task<IEnumerable<Guid>> AddStudents()
     {
-        var count = 100;
+        var count = 40;
         var countFirstNames = _firstNames.Length;
         var countLastNames = _lastNames.Length;
 
@@ -161,7 +161,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
             var firstName = _firstNames[_random.Next(countFirstNames)];
             var lastName = _lastNames[_random.Next(countLastNames)];
             var dateOfBirth = CreateRandomDate(_minYear, _maxYear);
-            var emailAddress = "switcherlapp.97@gmail.com"; // $"{firstName}.{lastName}@schoolexam.de";
+            var emailAddress = "schoolexam@trash-mail.com"; // $"{firstName}.{lastName}@schoolexam.de";
             var qrCode = _randomGenerator.GenerateHexString(32);
             return new Student(Guid.NewGuid(), firstName, lastName, dateOfBirth, new Address("", "", "", "", ""),
                 emailAddress, qrCode, _gymnasiumDiedorfId);
