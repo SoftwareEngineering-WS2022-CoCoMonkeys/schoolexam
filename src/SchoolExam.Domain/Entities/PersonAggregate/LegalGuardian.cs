@@ -8,6 +8,7 @@ public class LegalGuardian : Person
 
     protected LegalGuardian(Guid id) : base(id)
     {
+        Children = new List<StudentLegalGuardian>();
     }
 
     public LegalGuardian(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address? address,

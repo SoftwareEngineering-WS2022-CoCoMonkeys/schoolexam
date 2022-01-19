@@ -6,7 +6,7 @@ namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 public class SubmissionPage : EntityBase
 {
     public Guid ExamId { get; set; }
-    public SubmissionPagePdfFile PdfFile { get; set; }
+    public SubmissionPagePdfFile PdfFile { get; set; } = null!;
     public Guid? SubmissionId { get; set; }
     public Guid? BookletPageId { get; set; }
     public bool IsMatched => SubmissionId.HasValue && BookletPageId.HasValue;

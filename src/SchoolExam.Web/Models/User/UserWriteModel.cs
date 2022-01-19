@@ -1,11 +1,9 @@
-﻿using SchoolExam.Domain.ValueObjects;
-
-namespace SchoolExam.Web.Models.User;
+﻿namespace SchoolExam.Web.Models.User;
 
 public class UserWriteModel
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
-    public string Role { get; set; }
+    public string Username { get; set; } = null!;
+    public string Password { get; set; } = null!;
+    public string Role { get; set; } = null!;
     public Guid? PersonId { get; set; }
 }

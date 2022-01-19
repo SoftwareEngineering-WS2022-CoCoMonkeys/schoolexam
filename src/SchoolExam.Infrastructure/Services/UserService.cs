@@ -39,7 +39,6 @@ public class UserService : IUserService
     public async Task<User> Create(string username, string password, Role role, Guid? personId)
     {
         var userId = Guid.NewGuid();
-        
         var user = new User(userId, username,_passwordHasher.HashPassword(password), role, personId);
 
         _repository.Add(user);
@@ -63,16 +62,14 @@ public class UserService : IUserService
         }
 
         Role role = null!;
-        if (person is Student)
+
+        role = person switch
         {
-            role = Role.Student;
-        } else if (person is Teacher)
-        {
-            role = Role.Teacher;
-        } else if (person is LegalGuardian)
-        {
-            role = Role.LegalGuardian;
-        }
+            Student => Role.Student,
+            Teacher => Role.Teacher,
+            LegalGuardian => Role.LegalGuardian,
+            _ => throw new ArgumentException($"{person.GetType().Name} is invalid")
+        };
         
         var userId = Guid.NewGuid();
         var user = new User(userId, username, _passwordHasher.HashPassword(password), role, personId);

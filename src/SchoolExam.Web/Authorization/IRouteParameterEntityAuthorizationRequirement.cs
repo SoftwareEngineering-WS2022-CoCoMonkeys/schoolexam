@@ -4,5 +4,5 @@ namespace SchoolExam.Web.Authorization;
 
 public interface IRouteParameterEntityAuthorizationRequirement : IAuthorizationRequirement
 {
-    string? ParameterName { get; }
+    string ParameterName { get; }
 }

@@ -7,7 +7,7 @@ namespace SchoolExam.Domain.Entities.SubmissionAggregate;
 public class Submission : EntityBase
 {
     public Guid BookletId { get; set; }
-    public Booklet Booklet { get; set; }
+    public Booklet Booklet { get; set; } = null!;
     public Guid? StudentId { get; set; }
     public Student? Student { get; set; }
     public ICollection<Answer> Answers { get; set; }
@@ -18,6 +18,8 @@ public class Submission : EntityBase
 
     public Submission(Guid id) : base(id)
     {
+        Answers = new List<Answer>();
+        Pages = new List<SubmissionPage>();
     }
 
     public Submission(Guid id, Guid? studentId, Guid bookletId, DateTime updatedAt) :
@@ -26,7 +28,5 @@ public class Submission : EntityBase
         StudentId = studentId;
         BookletId = bookletId;
         UpdatedAt = updatedAt;
-        Answers = new List<Answer>();
-        Pages = new List<SubmissionPage>();
     }
 }

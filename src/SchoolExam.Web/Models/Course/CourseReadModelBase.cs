@@ -2,7 +2,7 @@ namespace SchoolExam.Web.Models.Course;
 
 public abstract class CourseReadModelBase
 {
-    public string Id { get; set; }
-    public string Name { get; set; }
+    public Guid Id { get; set; }
+    public string Name { get; set; } = null!;
     public string? Topic { get; set; }
 }

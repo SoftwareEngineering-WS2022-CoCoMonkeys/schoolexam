@@ -5,16 +5,16 @@ namespace SchoolExam.Web.Authorization;
 public class
     ExamCreatorAuthorizationHandler : RouteParameterEntityAuthorizationHandler<ExamCreatorAuthorizationRequirement>
 {
-    private readonly IExamService _examService;
+    private readonly IExamManagementService _examManagementService;
 
-    public ExamCreatorAuthorizationHandler(IExamService examService)
+    public ExamCreatorAuthorizationHandler(IExamManagementService examManagementService)
     {
-        _examService = examService;
+        _examManagementService = examManagementService;
     }
 
     protected override Task<bool> IsAuthorized(Guid personId, string role, Guid entityId)
     {
-        var exam = _examService.GetById(entityId);
+        var exam = _examManagementService.GetById(entityId);
         if (exam != null)
         {
             var creatorId = exam.CreatorId;

@@ -2,9 +2,9 @@ namespace SchoolExam.Web.Models.Person;
 
 public class AddressWriteModel
 {
-    public string StreetName { get; set; }
-    public string StreetNumber { get; set; }
-    public string PostCode { get; set; }
-    public string City { get; set; }
-    public string Country { get; set; }
+    public string StreetName { get; set; } = null!;
+    public string StreetNumber { get; set; } = null!;
+    public string PostCode { get; set; } = null!;
+    public string City { get; set; } = null!;
+    public string Country { get; set; } = null!;
 }
