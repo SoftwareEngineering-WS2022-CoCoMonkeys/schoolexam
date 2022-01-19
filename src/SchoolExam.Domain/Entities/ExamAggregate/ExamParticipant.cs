@@ -5,7 +5,7 @@ public abstract class ExamParticipant
     public Guid ExamId { get; set; }
     public Guid ParticipantId { get; set; }
 
-    public ExamParticipant(Guid examId, Guid participantId)
+    protected ExamParticipant(Guid examId, Guid participantId)
     {
         ExamId = examId;
         ParticipantId = participantId;

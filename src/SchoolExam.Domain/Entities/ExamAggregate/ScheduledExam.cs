@@ -4,8 +4,7 @@ namespace SchoolExam.Domain.Entities.ExamAggregate;
 
 public class ScheduledExam : EntityBase
 {
-    public Exam Exam { get; set; }
-    
+    public Exam Exam { get; set; } = null!;
     public Guid ExamId { get; set; }
     public DateTime PublishTime { get; set; }
     public bool IsPublished { get; set; }

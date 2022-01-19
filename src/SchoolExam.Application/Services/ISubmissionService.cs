@@ -9,8 +9,4 @@ public interface ISubmissionService
     Submission? GetByIdWithDetails(Guid submissionId);
     IEnumerable<Submission> GetByIdsWithDetails(IEnumerable<Guid> ids);
     IEnumerable<Submission> GetByExam(Guid examId);
-    byte[] GetSubmissionPdf(Guid submissionId);
-    byte[] GetRemarkPdf(Guid submissionId);
-    Task SetPoints(Guid submissionId, Guid taskId, double? points);
-    Task SetRemark(Guid submissionId, byte[] remarkPdf, Guid userId);
 }

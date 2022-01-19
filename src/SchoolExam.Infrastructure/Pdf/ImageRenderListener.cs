@@ -8,8 +8,8 @@ namespace SchoolExam.Infrastructure.Pdf;
 
 internal class ImageRenderListener : IEventListener
 {
-    internal event EventHandler<ImageParsedEventArgs> ImageParsed;
-    internal event EventHandler<ImageParsingFailedEventArgs> ImageParsingFailed;
+    internal event EventHandler<ImageParsedEventArgs>? ImageParsed;
+    internal event EventHandler<ImageParsingFailedEventArgs>? ImageParsingFailed;
 
     public void EventOccurred(IEventData data, EventType type)
     {
@@ -33,13 +33,13 @@ internal class ImageRenderListener : IEventListener
         return new List<EventType> {EventType.RENDER_IMAGE};
     }
 
-    protected virtual void OnImageParsed(ImageParsedEventArgs e)
+    private void OnImageParsed(ImageParsedEventArgs e)
     {
-        ImageParsed(this, e);
+        ImageParsed?.Invoke(this, e);
     }
 
-    protected virtual void OnImageParsingFailed(ImageParsingFailedEventArgs e)
+    private void OnImageParsingFailed(ImageParsingFailedEventArgs e)
     {
-        ImageParsingFailed(this, e);
+        ImageParsingFailed?.Invoke(this, e);
     }
 }

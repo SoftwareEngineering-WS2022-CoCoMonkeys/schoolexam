@@ -10,16 +10,18 @@ namespace SchoolExam.Web.Controllers;
 
 public class SubmissionController : ApiController<SubmissionController>
 {
+    private readonly IMatchingService _matchingService;
     private readonly ISubmissionService _submissionService;
-    private readonly IExamService _examService;
+    private readonly ICorrectionService _correctionService;
 
-    public SubmissionController(ILogger<SubmissionController> logger, IMapper mapper,
-        ISubmissionService submissionService, IExamService examService) : base(logger, mapper)
+    public SubmissionController(ILogger<SubmissionController> logger, IMapper mapper, IMatchingService matchingService,
+        ISubmissionService submissionService, ICorrectionService correctionService) : base(logger, mapper)
     {
+        _matchingService = matchingService;
         _submissionService = submissionService;
-        _examService = examService;
+        _correctionService = correctionService;
     }
-    
+
     [HttpPost]
     [Route($"Upload/{{{RouteParameterNames.ExamIdParameterName}}}")]
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
@@ -27,7 +29,7 @@ public class SubmissionController : ApiController<SubmissionController>
     {
         var pdf = Convert.FromBase64String(uploadSubmissionsModel.Pdf);
 
-        await _examService.Match(examId, pdf, GetUserId()!.Value);
+        await _matchingService.Match(examId, pdf, GetUserId()!.Value);
 
         return Ok();
     }
@@ -71,17 +73,17 @@ public class SubmissionController : ApiController<SubmissionController>
     [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
     public IActionResult DownloadSubmission(Guid submissionId)
     {
-        var pdf = _submissionService.GetSubmissionPdf(submissionId);
+        var pdf = _correctionService.GetSubmissionPdf(submissionId);
 
         return File(pdf, MediaTypeNames.Application.Pdf);
     }
-    
+
     [HttpGet]
     [Route($"{{{RouteParameterNames.SubmissionIdParameterName}}}/DownloadRemark")]
     [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
     public IActionResult DownloadSubmissionRemark(Guid submissionId)
     {
-        var pdf = _submissionService.GetRemarkPdf(submissionId);
+        var pdf = _correctionService.GetRemarkPdf(submissionId);
 
         return File(pdf, MediaTypeNames.Application.Pdf);
     }
@@ -91,7 +93,7 @@ public class SubmissionController : ApiController<SubmissionController>
     [Authorize(PolicyNames.SubmissionExamCreatorPolicyName)]
     public async Task<IActionResult> SetPoints(Guid submissionId, [FromBody] SetPointsModel setPointsModel)
     {
-        await _submissionService.SetPoints(submissionId, setPointsModel.TaskId, setPointsModel.AchievedPoints);
+        await _correctionService.SetPoints(submissionId, setPointsModel.TaskId, setPointsModel.AchievedPoints);
 
         return Ok();
     }
@@ -102,7 +104,7 @@ public class SubmissionController : ApiController<SubmissionController>
     public async Task<IActionResult> UploadRemark(Guid submissionId, [FromBody] UploadRemarkModel uploadRemarkModel)
     {
         var remarkPdf = Convert.FromBase64String(uploadRemarkModel.RemarkPdf);
-        await _submissionService.SetRemark(submissionId, remarkPdf, GetUserId()!.Value);
+        await _correctionService.SetRemark(submissionId, remarkPdf, GetUserId()!.Value);
 
         return Ok();
     }

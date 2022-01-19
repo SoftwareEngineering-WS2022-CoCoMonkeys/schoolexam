@@ -5,12 +5,12 @@ namespace SchoolExam.Domain.Base;
 
 public abstract class FileBase : EntityBase
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
     public long Size { get; set; }
     public DateTime UploadedAt { get; set; }
     public Guid UploaderId { get; set; }
-    public User Uploader { get; set; }
-    public byte[] Content { get; set; }
+    public User Uploader { get; set; } = null!;
+    public byte[] Content { get; set; } = null!;
 
     protected FileBase(Guid id) : base(id)
     {
