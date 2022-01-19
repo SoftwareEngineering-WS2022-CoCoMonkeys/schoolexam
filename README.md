@@ -270,20 +270,3 @@ Link: [https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam](htt
 
 [license-url]: https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam/blob/main/gnu-agpl-v3.0.md
 
-# SchoolExam
-
-## Used Technology
-
--
-
-## iText 7 Community PDF library
-
-The SchoolExam logic heavily relies parsing and manipulating PDF files during multiple stages of the exam process. For
-this purpose, the library iText 7 Community for .NET is used under the AGPL license.
-
-## License
-
-When using iText 7 Community under AGPL, you must prominently mention iText and include the iText copyright and AGPL
-license in output file metadata, and also retain the producer line in every PDF that is created or manipulated using
-iText.
-
