@@ -2,5 +2,5 @@ namespace SchoolExam.Application.Repository;
 
 public interface ISchoolExamRepositoryInitService
 {
-    Task Init();
+    Task Init(bool reset);
 }

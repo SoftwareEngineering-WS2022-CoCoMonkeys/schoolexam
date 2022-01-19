@@ -22,7 +22,7 @@ using SchoolExam.Persistence.DataContext;
 namespace SchoolExam.Infrastructure.Repository;
 
 [ExcludeFromCodeCoverage]
-public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
+public class SchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
 {
     private readonly Guid _gymnasiumDiedorfId = Guid.Parse("ae6c71b1-9bb8-4272-812d-7268ac419242"),
         _brigitteSchweinebauerId = Guid.Parse("0e40059f-967a-404e-915c-c4c862e471ef"),
@@ -72,7 +72,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
     private static int _minYear = 2004;
     private static int _maxYear = 2008;
 
-    public DevelopmentSchoolExamRepositoryInitService(SchoolExamDbContext context, ICorrectionService correctionService,
+    public SchoolExamRepositoryInitService(SchoolExamDbContext context, ICorrectionService correctionService,
         IExamTaskService examTaskService, IExamBuildService examBuildService, ISubmissionService submissionService,
         IMatchingService matchingService, IPdfService pdfService, IQrCodeGenerator qrCodeGenerator)
     {
@@ -87,9 +87,14 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
         _qrCodeGenerator = qrCodeGenerator;
     }
 
-    public async Task Init()
+    public async Task Init(bool reset)
     {
         await _context.Database.MigrateAsync();
+        if (!reset)
+        {
+            return;
+        }
+        
         // clear database tables
         _context.RemoveRange(_context.Set<SubmissionPage>());
         _context.RemoveRange(_context.Set<Submission>());
