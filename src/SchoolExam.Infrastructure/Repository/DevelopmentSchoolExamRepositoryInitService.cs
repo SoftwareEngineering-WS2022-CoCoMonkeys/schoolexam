@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Action;
 using iText.Layout;
@@ -20,6 +21,7 @@ using SchoolExam.Persistence.DataContext;
 
 namespace SchoolExam.Infrastructure.Repository;
 
+[ExcludeFromCodeCoverage]
 public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
 {
     private readonly Guid _gymnasiumDiedorfId = Guid.Parse("ae6c71b1-9bb8-4272-812d-7268ac419242"),
@@ -180,10 +182,10 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
 
         var students = Enumerable.Range(0, count).Select(_ => GenerateStudent()).ToList();
         _context.AddRange(students);
-        var courseSozialwissenschaftenStudents = students.OrderBy(_ => _random.Next()).Take(20)
+        var courseSozialwissenschaftenStudents = students.OrderBy(_ => _random.Next()).Take(18)
             .Select(x => new CourseStudent(_sozialwissenschaftenCourseId, x.Id));
         _context.AddRange(courseSozialwissenschaftenStudents);
-        var courseNaturwissenschaftenStudents = students.OrderBy(_ => _random.Next()).Take(20)
+        var courseNaturwissenschaftenStudents = students.OrderBy(_ => _random.Next()).Take(18)
             .Select(x => new CourseStudent(_naturwissenschaftenCourseId, x.Id));
         _context.AddRange(courseNaturwissenschaftenStudents);
 
@@ -209,12 +211,6 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
             var date = DateTime.Now.AddDays(_random.Next(7, 56)).SetKindUtc();
             var exam = new Exam(examId, title, date, _brigitteSchweinebauerId, new Topic(topic));
             _context.Add(exam);
-
-            // additional students
-            var studentCount = _random.Next(5);
-            var additionalStudents = studentIds.OrderBy(_ => _random.Next()).Take(studentCount);
-            var examStudents = additionalStudents.Select(x => new ExamStudent(examId, x));
-            _context.AddRange(examStudents);
 
             // add one course to exam
             var courseId = isSozialwissenschaften ? _sozialwissenschaftenCourseId : _naturwissenschaftenCourseId;
