@@ -21,12 +21,16 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     ITestEntityFactory<Course>,
     ITestEntityFactory<Teacher>,
     ITestEntityFactory<Student>,
+    ITestEntityFactory<LegalGuardian>,
     ITestEntityFactory<Exam>,
+    ITestEntityFactory<ExamTask>,
     ITestEntityFactory<User>,
     ITestEntityFactory<TaskPdfFile>,
     ITestEntityFactory<Submission>,
     ITestEntityFactory<SubmissionPagePdfFile>,
     ITestEntityFactory<SubmissionPage>,
+    ITestEntityFactory<Answer>,
+    ITestEntityFactory<AnswerSegment>,
     ITestEntityFactory<Booklet>,
     ITestEntityFactory<BookletPage>,
     ITestEntityFactory<BookletPdfFile>
@@ -39,17 +43,24 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
 
         _fixture.Customize<School>(opts => opts.Without(x => x.Teachers));
         _fixture.Customize<Course>(opts => opts.Without(x => x.Students).Without(x => x.Teachers));
-        _fixture.Customize<Student>(opts => opts.Without(x => x.Courses).Without(x => x.LegalGuardians));
-        _fixture.Customize<Teacher>(opts => opts.Without(x => x.Courses));
+        _fixture.Customize<Student>(opts =>
+            opts.Without(x => x.Courses).Without(x => x.LegalGuardians).Without(x => x.User));
+        _fixture.Customize<Teacher>(opts => opts.Without(x => x.Courses).Without(x => x.User));
+        _fixture.Customize<LegalGuardian>(opts => opts.Without(x => x.Children).Without(x => x.User));
         _fixture.Customize<Exam>(opts =>
             opts.With(x => x.State, ExamState.Planned).Without(x => x.Booklets).Without(x => x.Tasks)
-                .Without(x => x.GradingTable).Without(x => x.TaskPdfFile).Without(x => x.Participants));
+                .Without(x => x.Participants));
+        _fixture.Customize<GradingTableInterval>(opts => opts.Without(x => x.GradingTable));
         _fixture.Customize<TaskPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<Booklet>(opts => opts.Without(x => x.Pages).Without(x => x.Exam));
         _fixture.Customize<BookletPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
-        _fixture.Customize<Submission>(opts => opts.Without(x => x.Pages).Without(x => x.Booklet));
+        _fixture.Customize<Submission>(opts =>
+            opts.Without(x => x.Pages).Without(x => x.Booklet).Without(x => x.Answers).Without(x => x.Student));
         _fixture.Customize<SubmissionPagePdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
         _fixture.Customize<BookletPage>(opts => opts.Without(x => x.SubmissionPage));
+        _fixture.Customize<Answer>(opts => opts.Without(x => x.Task));
+        _fixture.Customize<RemarkPdfFile>(opts => opts.With(x => x.Content, CreatePdfFile()));
+        _fixture.Customize<User>(opts => opts.Without(x => x.Person));
     }
 
     public TEntity Create<TEntity>() where TEntity : IEntity
@@ -82,10 +93,20 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     {
         return _fixture.Create<Student>();
     }
+    
+    LegalGuardian ITestEntityFactory<LegalGuardian>.Create()
+    {
+        return _fixture.Create<LegalGuardian>();
+    }
 
     public Exam Create()
     {
         return _fixture.Create<Exam>();
+    }
+
+    ExamTask ITestEntityFactory<ExamTask>.Create()
+    {
+        return _fixture.Create<ExamTask>();
     }
 
     User ITestEntityFactory<User>.Create()
@@ -126,6 +147,16 @@ public class AutoFixtureTestEntityFactory : ISchoolExamTestEntityFactory,
     BookletPdfFile ITestEntityFactory<BookletPdfFile>.Create()
     {
         return _fixture.Create<BookletPdfFile>();
+    }
+
+    Answer ITestEntityFactory<Answer>.Create()
+    {
+        return _fixture.Create<Answer>();
+    }
+
+    AnswerSegment ITestEntityFactory<AnswerSegment>.Create()
+    {
+        return _fixture.Create<AnswerSegment>();
     }
 
     private byte[] CreatePdfFile()

@@ -12,7 +12,7 @@ public class Teacher : Person
     {
     }
 
-    public Teacher(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address address,
+    public Teacher(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address? address,
         string emailAddress, Guid schoolId) : base(id, firstName, lastName, dateOfBirth, address, emailAddress)
     {
         SchoolId = schoolId;
