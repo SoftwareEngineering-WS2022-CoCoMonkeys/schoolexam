@@ -4,5 +4,5 @@ namespace SchoolExam.Web.Models.User;
 
 public class PersonWithUserReadModel : PersonReadModel
 {
-    public UserReadModel User { get; set; }
+    public UserReadModel User { get; set; } = null!;
 }

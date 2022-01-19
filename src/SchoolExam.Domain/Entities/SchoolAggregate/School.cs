@@ -6,18 +6,18 @@ namespace SchoolExam.Domain.Entities.SchoolAggregate;
 
 public class School : EntityBase
 {
-    public string Name { get; set; }
-    public Address Location { get; set; }
+    public string Name { get; set; } = null!;
+    public Address Location { get; set; } = null!;
     public ICollection<Teacher> Teachers { get; set; }
 
     protected School(Guid id) : base(id) 
     {
+        Teachers = new List<Teacher>();
     }
         
     public School(Guid id, string name, Address location) : this(id)
     {
         Name = name;
         Location = location;
-        Teachers = new List<Teacher>();
     }
 }

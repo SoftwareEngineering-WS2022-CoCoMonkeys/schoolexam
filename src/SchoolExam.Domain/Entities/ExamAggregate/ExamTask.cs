@@ -6,9 +6,9 @@ namespace SchoolExam.Domain.Entities.ExamAggregate;
 public class ExamTask : EntityBase
 {
     public double MaxPoints { get; set; }
-    public string Title { get; set; }
-    public ExamPosition Start { get; set; }
-    public ExamPosition End { get; set; }
+    public string Title { get; set; } = null!;
+    public ExamPosition Start { get; set; } = null!;
+    public ExamPosition End { get; set; } = null!;
     public Guid ExamId { get; set; }
 
     public ExamTask(Guid id) : base(id)

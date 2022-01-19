@@ -126,6 +126,8 @@ if (databaseUrl != null)
         $"host={databaseUri.Host};port={databaseUri.Port};username={userInfo[0]};password={userInfo[1]};database={databaseUri.LocalPath.TrimStart('/')};pooling=true;";
 }
 
+var resetDatabase = builder.Configuration["RESET_DATABASE"]?.Equals("1");
+
 builder.Services.AddSingleton<IDbConnectionConfiguration>(new DbConnectionConfiguration(connectionString));
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 builder.Services.AddSingleton<IQrCodeGenerator, QRCoderQrCodeGenerator>();
@@ -136,19 +138,23 @@ builder.Services.AddSingleton<IQrCodeReader, ZXingNetQrCodeReader>();
 builder.Services.AddTransient<IPublishingService, PublishingService>();
 builder.Services.AddTransient<ISchoolExamRepository, SchoolExamRepository>();
 builder.Services.AddTransient<ICourseService, CourseService>();
-builder.Services.AddTransient<IExamService, ExamService>();
+builder.Services.AddTransient<IExamManagementService, ExamManagementService>();
+builder.Services.AddTransient<IExamTaskService, ExamTaskService>();
+builder.Services.AddTransient<IExamBuildService, ExamBuildService>();
+builder.Services.AddTransient<IMatchingService, MatchingService>();
+builder.Services.AddTransient<ICorrectionService, CorrectionService>();
 builder.Services.AddTransient<ISubmissionService, SubmissionService>();
+builder.Services.AddTransient<IExamPublishService, ExamPublishService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IPersonService, PersonService>();
 
-if (builder.Environment.IsDevelopment() || builder.Environment.IsProduction())
+if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddScoped<ISchoolExamRepositoryInitService, DevelopmentSchoolExamRepositoryInitService>();
+} else if (builder.Environment.IsProduction())
+{
+    builder.Services.AddScoped<ISchoolExamRepositoryInitService, ProductionSchoolExamRepositoryInitService>();
 }
-// } else if (builder.Environment.IsProduction())
-// {
-//     builder.Services.AddScoped<ISchoolExamRepositoryInitService, ProductionSchoolExamRepositoryInitService>();
-// }
 
 var app = builder.Build();
 
@@ -171,8 +177,9 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
 
-using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+if (resetDatabase.HasValue && resetDatabase.Value)
 {
+    using var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
     var initService = serviceScope.ServiceProvider.GetService<ISchoolExamRepositoryInitService>();
     await initService!.Init();
 }

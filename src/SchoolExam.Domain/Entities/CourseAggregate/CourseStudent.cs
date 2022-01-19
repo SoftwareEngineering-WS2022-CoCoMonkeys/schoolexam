@@ -4,9 +4,9 @@ namespace SchoolExam.Domain.Entities.CourseAggregate;
 
 public class CourseStudent
 {
-    public Course Course { get; set; }
+    public Course Course { get; set; } = null!;
     public Guid CourseId { get; set; }
-    public Student Student { get; set; }
+    public Student Student { get; set; } = null!;
     public Guid StudentId { get; set; }
 
     public CourseStudent(Guid courseId, Guid studentId)

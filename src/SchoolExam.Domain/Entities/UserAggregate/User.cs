@@ -6,11 +6,11 @@ namespace SchoolExam.Domain.Entities.UserAggregate;
 
 public class User : EntityBase
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
-    public Role Role { get; set; }
+    public string Username { get; set; } = null!;
+    public string Password { get; set; } = null!;
+    public Role Role { get; set; } = null!;
     public Guid? PersonId { get; set; }
-    public Person Person { get; set; }
+    public Person Person { get; set; } = null!;
 
     protected User(Guid id) : base(id)
     {

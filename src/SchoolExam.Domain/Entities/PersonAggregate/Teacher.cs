@@ -10,6 +10,7 @@ public class Teacher : Person
 
     protected Teacher(Guid id) : base(id)
     {
+        Courses = new List<CourseTeacher>();
     }
 
     public Teacher(Guid id, string firstName, string lastName, DateTime dateOfBirth, Address? address,

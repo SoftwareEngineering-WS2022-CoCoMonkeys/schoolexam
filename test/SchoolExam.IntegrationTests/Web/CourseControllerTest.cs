@@ -66,7 +66,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
 
         var expectedCourse = new CourseReadModelTeacher
         {
-            Id = _course.Id.ToString(), Name = _course.Name,
+            Id = _course.Id, Name = _course.Name,
             Topic = _course.Topic?.Name, Students = new[]
             {
                 new CourseStudentReadModel
@@ -106,7 +106,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
 
         var expectedCourseDto = new CourseReadModelStudent
         {
-            Id = _course.Id.ToString(), Name = _course.Name,
+            Id = _course.Id, Name = _course.Name,
             Topic = _course.Topic?.Name
         };
         courseResult.Should().BeEquivalentTo(expectedCourseDto);
@@ -231,7 +231,7 @@ public class CourseControllerTest : ApiIntegrationTestBase
 
         var expectedCourse = new CourseReadModelTeacher
         {
-            Id = _course.Id.ToString(), Name = _course.Name,
+            Id = _course.Id, Name = _course.Name,
             Topic = _course.Topic?.Name, Students = new[]
             {
                 new CourseStudentReadModel

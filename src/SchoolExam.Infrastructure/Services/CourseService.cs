@@ -23,21 +23,21 @@ public class CourseService : ICourseService
         return _repository.Find(new CourseByIdSpecification(id));
     }
 
-    public async Task Create(Guid teacherId, string name,  string topic)
+    public async Task Create(Guid teacherId, string name, string? topic)
     {
-        var teacher = _repository.Find<Teacher>(teacherId);
-        var course = new Course(Guid.NewGuid(), name, new Topic(topic), teacher.SchoolId);
+        var teacher = _repository.Find<Teacher>(teacherId)!;
+        var course = new Course(Guid.NewGuid(), name, topic != null ? new Topic(topic) : null, teacher.SchoolId);
         var courseTeacher = new CourseTeacher(course.Id, teacherId);
         _repository.Add(course);
         _repository.Add(courseTeacher);
         await _repository.SaveChangesAsync();
     }
 
-    public async Task Update(Guid courseId, string name, string topic)
+    public async Task Update(Guid courseId, string name, string? topic)
     {
         var course = EnsureExamExists(courseId);
         course.Name = name;
-        course.Topic = new Topic(topic);
+        course.Topic = topic != null ? new Topic(topic) : null;
         await _repository.SaveChangesAsync();
     }
 
