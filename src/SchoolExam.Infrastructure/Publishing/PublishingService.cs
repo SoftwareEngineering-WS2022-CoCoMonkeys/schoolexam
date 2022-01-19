@@ -2,30 +2,35 @@
 using System.Net.Mail;
 using System.Net.Mime;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 using SchoolExam.Application.Pdf;
 using SchoolExam.Application.Publishing;
 using SchoolExam.Application.Repository;
+using SchoolExam.Application.Specifications;
 using SchoolExam.Domain.Entities.ExamAggregate;
 using SchoolExam.Domain.Entities.PersonAggregate;
 using SchoolExam.Domain.Entities.SubmissionAggregate;
 using SchoolExam.Domain.ValueObjects;
+using SchoolExam.Infrastructure.Specifications;
 
 namespace SchoolExam.Infrastructure.Publishing;
 
 public class PublishingService : IPublishingService
 {
-    private readonly ISchoolExamRepository _repository;
+    private ISchoolExamRepository _repository;
     private readonly IPdfService _pdfService;
     private Timer _timer;
     private readonly ILogger<PublishingService> _logger;
+    private readonly IServiceScopeFactory _factory;
 
-    public PublishingService(ISchoolExamRepository repository, IPdfService pdfService, ILogger<PublishingService> logger)
+    public PublishingService(ISchoolExamRepository repository, IPdfService pdfService, ILogger<PublishingService> logger, IServiceScopeFactory factory)
     {
         _repository = repository;
         _pdfService = pdfService;
         _logger = logger;
+        _factory = factory;
     }
     
     public bool SendEmailToStudent(Booklet booklet, Exam exam)
@@ -55,9 +60,7 @@ public class PublishingService : IPublishingService
 
         var messageMailKit = new MimeMessage();
         messageMailKit.From.Add(new MailboxAddress("SchoolExam", "schoolexam@rootitup.de"));
-
         messageMailKit.To.Add(new MailboxAddress($"{student.FirstName} {student.LastName}", student.EmailAddress));
-
         messageMailKit.Subject = mailSubject;
         messageMailKit.Body = new TextPart("html") { Text = string.Format($"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}")};
 
@@ -99,23 +102,39 @@ public class PublishingService : IPublishingService
         return protectedPdf;
     }
 
-    public async Task ScheduleSendEmailToStudent(IEnumerable<Booklet>  booklets, Exam exam, DateTime publishDateTime)
+    public async Task ScheduleSendEmailToStudent( Guid examId, DateTime publishDateTime)
     {
+        var scheduledExamId = Guid.NewGuid();
+        var scheduledExam = new ScheduledExam(scheduledExamId, examId, publishDateTime, false);
+        _repository.Add(scheduledExam);
+        await _repository.SaveChangesAsync();
+        
         DateTime current = DateTime.Now;
         TimeSpan timeToGo = publishDateTime - current;
         if (timeToGo < TimeSpan.Zero)
         {
-            await DoPublishExam(booklets, exam);
-            return;
+            await DoPublishExam(examId);
         }
-        _timer = new Timer(async x =>
+        else
         {
-            await DoPublishExam(booklets, exam);
-        }, null, timeToGo, Timeout.InfiniteTimeSpan);
+            _timer = new Timer(async x =>
+            {
+                using (var scope = _factory.CreateScope())
+                {
+                    _repository = scope.ServiceProvider.GetRequiredService<ISchoolExamRepository>();
+                    await DoPublishExam(examId);
+                }
+            }, null, timeToGo, Timeout.InfiniteTimeSpan);
+        }
+
+        scheduledExam.IsPublished = true;
+        await _repository.SaveChangesAsync();
     }
 
-    public async Task DoPublishExam(IEnumerable<Booklet> booklets, Exam exam)
+    public async Task DoPublishExam(Guid examId)
     {
+        var exam = _repository.Find(new EntityByIdSpecification<Exam>(examId))!;
+        var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
         foreach(Booklet booklet in booklets)
         {
            SendEmailToStudent(booklet, exam);

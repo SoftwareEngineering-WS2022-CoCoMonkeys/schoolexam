@@ -6,7 +6,7 @@ public interface IPublishingService
 {
     bool SendEmailToStudent(Booklet booklet, Exam exam);
 
-    Task ScheduleSendEmailToStudent(IEnumerable<Booklet>  booklets, Exam exam, DateTime publishDateTime);
+    Task ScheduleSendEmailToStudent(Guid examId, DateTime publishDateTime);
 
-    Task DoPublishExam(IEnumerable<Booklet> booklets, Exam exam);
+    Task DoPublishExam( Guid examId);
 }
