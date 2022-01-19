@@ -32,8 +32,11 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
     private readonly SchoolExamDbContext _context;
     private readonly Random _random = new(16012022);
     private readonly IRandomGenerator _randomGenerator;
-    private readonly IExamService _examService;
+    private readonly IExamTaskService _examTaskService;
+    private readonly IExamBuildService _examBuildService;
+    private readonly ICorrectionService _correctionService;
     private readonly ISubmissionService _submissionService;
+    private readonly IMatchingService _matchingService;
     private readonly IPdfService _pdfService;
     private readonly IQrCodeGenerator _qrCodeGenerator;
 
@@ -67,13 +70,17 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
     private static int _minYear = 2004;
     private static int _maxYear = 2008;
 
-    public DevelopmentSchoolExamRepositoryInitService(SchoolExamDbContext context, IExamService examService,
-        ISubmissionService submissionService, IPdfService pdfService, IQrCodeGenerator qrCodeGenerator)
+    public DevelopmentSchoolExamRepositoryInitService(SchoolExamDbContext context, ICorrectionService correctionService,
+        IExamTaskService examTaskService, IExamBuildService examBuildService, ISubmissionService submissionService,
+        IMatchingService matchingService, IPdfService pdfService, IQrCodeGenerator qrCodeGenerator)
     {
         _context = context;
         _randomGenerator = new RandomGenerator.RandomGenerator(_random);
-        _examService = examService;
+        _correctionService = correctionService;
+        _examTaskService = examTaskService;
+        _examBuildService = examBuildService;
         _submissionService = submissionService;
+        _matchingService = matchingService;
         _pdfService = pdfService;
         _qrCodeGenerator = qrCodeGenerator;
     }
@@ -93,7 +100,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
         _context.RemoveRange(_context.Set<Course>());
         _context.RemoveRange(_context.Set<School>());
         await _context.SaveChangesAsync();
-        
+
         // fill database tables
         await AddSchools();
         await AddCourses();
@@ -241,14 +248,15 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
             }
 
             var taskPdfFile = CreateTaskPdfFile(taskIds.ToArray());
-            await _examService.SetTaskPdfFile(examId, _brigitteSchweinebauerUserId, taskPdfFile, examTasks.ToArray());
+            await _examTaskService.SetTaskPdfFile(examId, _brigitteSchweinebauerUserId, taskPdfFile,
+                examTasks.ToArray());
 
             if (state == ExamState.BuildReady)
             {
                 continue;
             }
 
-            await _examService.Build(examId, _brigitteSchweinebauerUserId);
+            await _examBuildService.Build(examId, _brigitteSchweinebauerUserId);
 
             if (state == ExamState.SubmissionReady)
             {
@@ -281,7 +289,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
             }
 
             var submissionPdf = _pdfService.Merge(submissionPdfs);
-            await _examService.Match(examId, submissionPdf, _brigitteSchweinebauerUserId);
+            await _matchingService.Match(examId, submissionPdf, _brigitteSchweinebauerUserId);
 
             var exam = _context.Set<Exam>().Include(x => x.Tasks).Single(x => x.Id.Equals(examId));
             var submissions = _submissionService.GetByExam(examId);
@@ -292,7 +300,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
                     var isCorrected = _random.Next(2) == 0;
                     if (isCorrected || state is ExamState.Corrected or ExamState.Published)
                     {
-                        await _submissionService.SetPoints(submission.Id, examTask.Id,
+                        await _correctionService.SetPoints(submission.Id, examTask.Id,
                             Math.Round(_random.NextDouble() * examTask.MaxPoints));
                     }
                 }
@@ -302,7 +310,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
             {
                 continue;
             }
-            
+
             submissions = _submissionService.GetByExam(examId);
 
             foreach (var submission in submissions)
@@ -312,7 +320,7 @@ public class DevelopmentSchoolExamRepositoryInitService : ISchoolExamRepositoryI
                     DateTime.Now.SetKindUtc(), _brigitteSchweinebauerUserId, pdf.Content, submission.Id);
                 _context.Add(remarkPdfFile);
             }
-            
+
             await _context.SaveChangesAsync();
 
             // await _examService.Publish(examId, DateTime.Now.AddDays(-1));

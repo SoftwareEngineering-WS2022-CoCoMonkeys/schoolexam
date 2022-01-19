@@ -136,8 +136,13 @@ builder.Services.AddSingleton<IQrCodeReader, ZXingNetQrCodeReader>();
 builder.Services.AddTransient<IPublishingService, PublishingService>();
 builder.Services.AddTransient<ISchoolExamRepository, SchoolExamRepository>();
 builder.Services.AddTransient<ICourseService, CourseService>();
-builder.Services.AddTransient<IExamService, ExamService>();
+builder.Services.AddTransient<IExamManagementService, ExamManagementService>();
+builder.Services.AddTransient<IExamTaskService, ExamTaskService>();
+builder.Services.AddTransient<IExamBuildService, ExamBuildService>();
+builder.Services.AddTransient<IMatchingService, MatchingService>();
+builder.Services.AddTransient<ICorrectionService, CorrectionService>();
 builder.Services.AddTransient<ISubmissionService, SubmissionService>();
+builder.Services.AddTransient<IExamPublishService, ExamPublishService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IPersonService, PersonService>();
 

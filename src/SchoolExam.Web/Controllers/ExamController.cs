@@ -14,12 +14,23 @@ namespace SchoolExam.Web.Controllers;
 
 public class ExamController : ApiController<ExamController>
 {
-    private readonly IExamService _examService;
+    private readonly IExamManagementService _examManagementService;
+    private readonly IExamTaskService _examTaskService;
+    private readonly IExamBuildService _examBuildService;
+    private readonly IMatchingService _matchingService;
+    private readonly IExamPublishService _examPublishService;
+    private readonly ICorrectionService _correctionService;
 
-    public ExamController(ILogger<ExamController> logger, IMapper mapper, IExamService examService) : base(logger,
-        mapper)
+    public ExamController(ILogger<ExamController> logger, IMapper mapper, IExamManagementService examManagementService,
+        IExamTaskService examTaskService, IExamBuildService examBuildService, IMatchingService matchingService,
+        IExamPublishService examPublishService, ICorrectionService correctionService) : base(logger, mapper)
     {
-        _examService = examService;
+        _examManagementService = examManagementService;
+        _examTaskService = examTaskService;
+        _examBuildService = examBuildService;
+        _matchingService = matchingService;
+        _examPublishService = examPublishService;
+        _correctionService = correctionService;
     }
 
     [HttpGet]
@@ -27,7 +38,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(Roles = Role.TeacherName)]
     public IEnumerable<ExamReadModelTeacher> GetByTeacher()
     {
-        var exams = _examService.GetByTeacher(GetPersonId()!.Value);
+        var exams = _examManagementService.GetByTeacher(GetPersonId()!.Value);
         return Mapper.Map<IEnumerable<ExamReadModelTeacher>>(exams);
     }
 
@@ -36,7 +47,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(Roles = Role.TeacherName)]
     public async Task<IdReadModel> Create([FromBody] ExamWriteModel examWriteModel)
     {
-        var examId = await _examService.Create(examWriteModel.Title, examWriteModel.Date.SetKindUtc(),
+        var examId = await _examManagementService.Create(examWriteModel.Title, examWriteModel.Date.SetKindUtc(),
             GetPersonId()!.Value, examWriteModel.Topic);
         var idReadModel = new IdReadModel {Id = examId};
         return idReadModel;
@@ -47,7 +58,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> Update(Guid examId, [FromBody] ExamWriteModel examWriteModel)
     {
-        await _examService.Update(examId, examWriteModel.Title, examWriteModel.Date.SetKindUtc());
+        await _examManagementService.Update(examId, examWriteModel.Title, examWriteModel.Date.SetKindUtc());
         return Ok();
     }
 
@@ -56,7 +67,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> Delete(Guid examId)
     {
-        await _examService.Delete(examId);
+        await _examManagementService.Delete(examId);
         return Ok();
     }
 
@@ -67,7 +78,7 @@ public class ExamController : ApiController<ExamController>
     {
         var courseIds = setParticipantsModel.Participants.OfType<ExamCourseWriteModel>().Select(x => x.Id);
         var studentIds = setParticipantsModel.Participants.OfType<ExamStudentWriteModel>().Select(x => x.Id);
-        await _examService.SetParticipants(examId, courseIds, studentIds);
+        await _examManagementService.SetParticipants(examId, courseIds, studentIds);
         return Ok();
     }
 
@@ -79,7 +90,7 @@ public class ExamController : ApiController<ExamController>
         var pdf = Convert.FromBase64String(uploadTaskPdfModel.TaskPdf);
 
         var tasks = Mapper.Map<IEnumerable<ExamTaskInfo>>(uploadTaskPdfModel.Tasks).ToArray();
-        await _examService.SetTaskPdfFile(examId, GetUserId()!.Value, pdf, tasks);
+        await _examTaskService.SetTaskPdfFile(examId, GetUserId()!.Value, pdf, tasks);
 
         return Ok();
     }
@@ -89,9 +100,9 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<BuildResultModel> Build(Guid examId)
     {
-        var count = await _examService.Build(examId, GetUserId()!.Value);
-        var pdf = _examService.GetConcatenatedBookletPdfFile(examId);
-        var qrCodePdf = _examService.GetParticipantQrCodePdf<AveryZweckform3475200>(examId);
+        var count = await _examBuildService.Build(examId, GetUserId()!.Value);
+        var pdf = _examBuildService.GetConcatenatedBookletPdfFile(examId);
+        var qrCodePdf = _examBuildService.GetParticipantQrCodePdf<AveryZweckform3475200>(examId);
         return new BuildResultModel
             {Count = count, PdfFile = Convert.ToBase64String(pdf), QrCodePdfFile = Convert.ToBase64String(qrCodePdf)};
     }
@@ -101,7 +112,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> Clean(Guid examId)
     {
-        await _examService.Clean(examId);
+        await _examBuildService.Clean(examId);
         return Ok();
     }
 
@@ -110,10 +121,10 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public UnmatchedPagesReadModel GetUnmatchedPages(Guid examId)
     {
-        var unmatchedBookletPages = _examService.GetUnmatchedBookletPages(examId);
+        var unmatchedBookletPages = _matchingService.GetUnmatchedBookletPages(examId);
         var unmatchedBookletPagesMapped = Mapper.Map<IEnumerable<UnmatchedBookletPageReadModel>>(unmatchedBookletPages);
 
-        var unmatchedSubmissionPages = _examService.GetUnmatchedSubmissionPages(examId);
+        var unmatchedSubmissionPages = _matchingService.GetUnmatchedSubmissionPages(examId);
         var unmatchedSubmissionPagesMapped =
             Mapper.Map<IEnumerable<UnmatchedSubmissionPageReadModel>>(unmatchedSubmissionPages);
 
@@ -131,7 +142,7 @@ public class ExamController : ApiController<ExamController>
     {
         foreach (var manualMatchModel in manualMatchesModel.Matches)
         {
-            await _examService.MatchManually(examId, manualMatchModel.BookletPageId,
+            await _matchingService.MatchManually(examId, manualMatchModel.BookletPageId,
                 manualMatchModel.SubmissionPageId, GetUserId()!.Value);
         }
 
@@ -143,7 +154,7 @@ public class ExamController : ApiController<ExamController>
     [Authorize(PolicyNames.ExamCreatorPolicyName)]
     public async Task<IActionResult> Publish(Guid examId, [FromBody] PublishExamWriteModel publishExamWriteModel)
     {
-        await _examService.Publish(examId, publishExamWriteModel.PublishingDateTime);
+        await _examPublishService.Publish(examId, publishExamWriteModel.PublishingDateTime);
         return Ok();
     }
 
@@ -153,7 +164,7 @@ public class ExamController : ApiController<ExamController>
     public async Task<IActionResult> SetGradingTable(Guid examId,
         [FromBody] GradingTableWriteModel gradingTableWriteModel)
     {
-        var maxPoints = _examService.GetMaxPoints(examId);
+        var maxPoints = _correctionService.GetMaxPoints(examId);
 
         double GetPoints(GradingTableLowerBoundModelBase lowerBound)
         {
@@ -189,7 +200,7 @@ public class ExamController : ApiController<ExamController>
             gradingTableWriteModel.LowerBounds.Select(x =>
                 new GradingTableIntervalLowerBound(GetPoints(x), GetType(x), x.Grade));
 
-        await _examService.SetGradingTable(examId, lowerBounds.ToArray());
+        await _correctionService.SetGradingTable(examId, lowerBounds.ToArray());
 
         return Ok();
     }
