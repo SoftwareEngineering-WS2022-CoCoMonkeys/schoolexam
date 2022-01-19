@@ -102,7 +102,7 @@ public class ExamController : ApiController<ExamController>
     {
         var count = await _examBuildService.Build(examId, GetUserId()!.Value);
         var pdf = _examBuildService.GetConcatenatedBookletPdfFile(examId);
-        var qrCodePdf = _examBuildService.GetParticipantQrCodePdf<AveryZweckform3475200>(examId);
+        var qrCodePdf = _examBuildService.GetParticipantQrCodePdf<HermaMovables4203>(examId);
         return new BuildResultModel
             {Count = count, PdfFile = Convert.ToBase64String(pdf), QrCodePdfFile = Convert.ToBase64String(qrCodePdf)};
     }

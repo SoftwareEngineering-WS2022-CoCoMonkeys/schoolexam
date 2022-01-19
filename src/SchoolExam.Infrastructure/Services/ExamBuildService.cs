@@ -106,7 +106,7 @@ public class ExamBuildService : ExamServiceBase, IExamBuildService
     {
         EnsureExamExists(new EntityByIdSpecification<Exam>(examId));
 
-        var students = GetStudentsByExam(examId).ToArray();
+        var students = GetStudentsByExam(examId).OrderBy(x => x.LastName).ThenBy(x => x.FirstName).ToArray();
 
         var layout = new TLayout();
         var elements = layout.GetElements().ToArray();
