@@ -82,7 +82,7 @@ public class SubmissionService : ISubmissionService
         if (answer == null)
         {
             throw new DomainException(
-                $"There exists no submission with identifier {submissionId} that contains a task with identifier {taskId}");
+                $"There exists no submission with identifier {submissionId} that contains a task with identifier {taskId}.");
         }
 
         var task = _repository.Find<ExamTask>(taskId)!;
