@@ -166,7 +166,7 @@ git clone https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam.g
 ## Usage
 
 Serves as a backend for the [Word add-in](https://www.github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam-word-addin) and the [Correction UI](https://github.com/SoftwareEngineering-WS2022-CoCoMonkeys/schoolexam-correction-ui). Therefore
-it can be used to locally run those components.
+it can be used to provide a web API for those those components.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
