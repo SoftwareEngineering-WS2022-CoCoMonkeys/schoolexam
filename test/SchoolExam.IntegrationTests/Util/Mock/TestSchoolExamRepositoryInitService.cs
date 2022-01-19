@@ -5,7 +5,7 @@ namespace SchoolExam.IntegrationTests.Util.Mock;
 
 public class TestSchoolExamRepositoryInitService : ISchoolExamRepositoryInitService
 {
-    public Task Init()
+    public Task Init(bool reset)
     {
         return Task.CompletedTask;
     }
