@@ -1,5 +1,5 @@
-﻿using System.Net.Mail;
-using System.Text;
+﻿using System.Text;
+using MailKit.Net.Smtp;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MimeKit;
@@ -40,6 +40,8 @@ public class PublishingService : IPublishingService
         }
         var remarkPdf = booklet.Submission.RemarkPdfFile!;
         
+        
+        
         // Create a message and set up the recipients.
         var mailSubject =
             $"Deine Note in {exam.Title} am {exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year} {exam.Topic.Name}";
@@ -49,30 +51,29 @@ public class PublishingService : IPublishingService
         var mailLine4 =
             "Diese Mail wurde automatisch von SchoolExam erstellt. Bitte wende dich bei Fragen an deine Lehrkraft.";
 
-        var message = new MailMessage("schoolexam@rootitup.de", student.EmailAddress, mailSubject,
-            $"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}");
-
         var messageMailKit = new MimeMessage();
         messageMailKit.From.Add(new MailboxAddress("SchoolExam", "schoolexam@rootitup.de"));
         messageMailKit.To.Add(new MailboxAddress($"{student.FirstName} {student.LastName}", student.EmailAddress));
         messageMailKit.Subject = mailSubject;
 
+        var body = new TextPart("plain") {Text = $"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}"};
+
         var examToBePublishedPdf = GetExamPdfToBePublished(remarkPdf, student);
-            
-        using var stream = new MemoryStream(examToBePublishedPdf);
-        // Create  the file attachment for this email message.
-        var attachment = new MimePart ("pdf") {
-            Content = new MimeContent (stream),
-            ContentDisposition = new ContentDisposition (ContentDisposition.Attachment),
-            FileName = $"Prüfungskorrektur_{student.FirstName}_{exam.Title}_{exam.Date.Day}.{exam.Date.Month}.{exam.Date.Year}.pdf"
+
+        var attachment = new MimePart("application", "pdf")
+        {
+            Content = new MimeContent(new MemoryStream(examToBePublishedPdf)),
+            ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
+            ContentTransferEncoding = ContentEncoding.Base64,
+            FileName = $"Prüfungskorrektur_{student.LastName}_{exam.Title}_{exam.Date:dd.MM.yyyy}.pdf"
         };
-   
         var multipart = new Multipart("mixed");
-        multipart.Add(new TextPart("html") { Text = string.Format($"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}")});
+        multipart.Add(body);
         multipart.Add(attachment);
+
         messageMailKit.Body = multipart;
 
-        using MailKit.Net.Smtp.SmtpClient mailKitClient = new MailKit.Net.Smtp.SmtpClient();
+        using SmtpClient mailKitClient = new SmtpClient();
         mailKitClient.Connect("mail01.rootitup.de", 587, false);
         
         // Note: since we don't have an OAuth2 token, disable the XOAUTH2 authentication mechanism.
