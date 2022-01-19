@@ -126,6 +126,8 @@ if (databaseUrl != null)
         $"host={databaseUri.Host};port={databaseUri.Port};username={userInfo[0]};password={userInfo[1]};database={databaseUri.LocalPath.TrimStart('/')};pooling=true;";
 }
 
+var resetDatabase = builder.Configuration["RESET_DATABASE"]?.Equals("1");
+
 builder.Services.AddSingleton<IDbConnectionConfiguration>(new DbConnectionConfiguration(connectionString));
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 builder.Services.AddSingleton<IQrCodeGenerator, QRCoderQrCodeGenerator>();
@@ -175,8 +177,9 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
 
-using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+if (resetDatabase.HasValue && resetDatabase.Value)
 {
+    using var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
     var initService = serviceScope.ServiceProvider.GetService<ISchoolExamRepositoryInitService>();
     await initService!.Init();
 }
