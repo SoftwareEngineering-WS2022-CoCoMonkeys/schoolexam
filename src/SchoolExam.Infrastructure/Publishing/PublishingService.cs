@@ -52,7 +52,7 @@ public class PublishingService : IPublishingService
 
         var messageMailKit = new MimeMessage();
         messageMailKit.From.Add(new MailboxAddress("SchoolExam", "schoolexam@rootitup.de"));
-        messageMailKit.To.Add(new MailboxAddress($"{student.FirstName} {student.LastName}", student.EmailAddress));
+        messageMailKit.To.Add(new MailboxAddress($"{student.FirstName} {student.LastName}", "switcherlapp.97@gmail.com"));
         messageMailKit.Subject = mailSubject;
 
         var body = new TextPart("plain") {Text = $"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}"};
@@ -134,7 +134,10 @@ public class PublishingService : IPublishingService
         var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
         foreach (Booklet booklet in booklets)
         {
-            SendEmailToStudent(booklet, exam);
+            if (booklet.Submission != null)
+            {
+                SendEmailToStudent(booklet, exam);
+            }
         }
 
         exam.State = ExamState.Published;
