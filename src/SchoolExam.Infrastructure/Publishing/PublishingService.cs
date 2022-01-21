@@ -39,7 +39,7 @@ public class PublishingService : IPublishingService
             return false;
         }
 
-        var remarkPdf = booklet.Submission.RemarkPdfFile!.Content;
+        var remarkPdf = booklet.Submission.RemarkPdfFile?.Content ?? booklet.Submission.PdfFile!.Content;
 
         // Create a message and set up the recipients.
         var mailSubject =
@@ -52,7 +52,7 @@ public class PublishingService : IPublishingService
 
         var messageMailKit = new MimeMessage();
         messageMailKit.From.Add(new MailboxAddress("SchoolExam", "schoolexam@rootitup.de"));
-        messageMailKit.To.Add(new MailboxAddress($"{student.FirstName} {student.LastName}", "switcherlapp.97@gmail.com"));
+        messageMailKit.To.Add(new MailboxAddress($"{student.FirstName} {student.LastName}", "soennecken@rootitup.de"));
         messageMailKit.Subject = mailSubject;
 
         var body = new TextPart("plain") {Text = $"{mailLine1}\n\n{mailLine2}\n{mailLine3}\n\n{mailLine4}"};
@@ -131,7 +131,7 @@ public class PublishingService : IPublishingService
     public async Task DoPublishExam(Guid examId)
     {
         var exam = _repository.Find(new EntityByIdSpecification<Exam>(examId))!;
-        var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfByExamSpecification(exam.Id));
+        var booklets = _repository.List(new BookletWithSubmissionWithStudentWithRemarkPdfAndPdfFileByExamSpecification(exam.Id));
         foreach (Booklet booklet in booklets)
         {
             if (booklet.Submission != null)
